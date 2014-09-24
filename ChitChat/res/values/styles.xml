@@ -1,0 +1,16 @@
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Activity theme. -->
+    <style name="CommonStyle" parent="android:Theme.NoTitleBar">
+        <item name="android:windowIsTranslucent">true</item>
+    </style>
+
+    <!-- text -->
+
+    <style name="text_white_18">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+</resources>

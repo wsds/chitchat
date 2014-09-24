@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">ChitChat</string>
+
+    <!-- LOGIN ACTIVITY -->
+    <string name="login">登陆</string>
+    <string name="register">注册</string>
+    <string name="title_activity_register">RegisterActivity</string>
+
+</resources>
