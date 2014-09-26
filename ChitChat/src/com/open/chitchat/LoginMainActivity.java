@@ -1,10 +1,12 @@
-package com.example.chitchat;
+package com.open.chitchat;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -15,7 +17,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
 
-import com.example.chitchat.view.PageControlView;
+import com.open.chitchat.view.PageControlView;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 public class LoginMainActivity extends Activity implements OnClickListener, OnPageChangeListener {
@@ -36,9 +38,14 @@ public class LoginMainActivity extends Activity implements OnClickListener, OnPa
 
 	private void initData() {
 		images = new ArrayList<View>();
+		List<Integer> imagesId = new ArrayList<Integer>();
+		imagesId.add(R.drawable.turn_new_1);
+		imagesId.add(R.drawable.turn_new_2);
+		imagesId.add(R.drawable.turn_new_3);
 		for (int i = 0; i < 3; i++) {
 			ImageView view = new ImageView(LoginMainActivity.this);
-			view.setImageBitmap(BitmapFactory.decodeResource(getResources(), (0x7f020003 + i)));
+			view.setBackgroundColor(Color.parseColor("#44ddc9"));
+			view.setImageBitmap(BitmapFactory.decodeResource(getResources(), imagesId.get(i)));
 			images.add(view);
 		}
 
@@ -60,9 +67,9 @@ public class LoginMainActivity extends Activity implements OnClickListener, OnPa
 	@Override
 	public void onClick(View view) {
 		if (view.equals(this.register)) {
-
+			startActivity(new Intent(LoginMainActivity.this, RegisterStepOneActivity.class));
 		} else if (view.equals(this.login)) {
-
+			startActivity(new Intent(LoginMainActivity.this, LoginActivity.class));
 		}
 	}
 

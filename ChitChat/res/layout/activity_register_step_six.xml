@@ -1,0 +1,113 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/back"
+    tools:context="com.example.chitchat.RegisterStepSixActivity" >
+
+    <include layout="@layout/title" />
+
+    <View
+        android:id="@id/line1"
+        android:layout_width="fill_parent"
+        android:layout_height="1.0px"
+        android:layout_marginTop="90.0dip"
+        android:background="@color/clbg_diliver_color" />
+
+    <RelativeLayout
+        android:id="@id/rlGroup"
+        android:layout_width="fill_parent"
+        android:layout_height="170.0dip"
+        android:layout_below="@id/line1"
+        android:background="#ffffffff"
+        android:paddingRight="22.0dip" >
+
+        <FrameLayout
+            android:id="@id/flPortrait"
+            android:layout_width="101.0dip"
+            android:layout_height="101.0dip"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="25.0dip"
+            android:layout_marginRight="24.0dip"
+            android:background="@drawable/shape_portrait_border_gray" >
+
+            <ImageView
+                android:id="@id/ivPortrait"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_margin="@dimen/portrait_padding"
+                android:src="@drawable/bg_avatar" />
+        </FrameLayout>
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/flPortrait" >
+
+            <LinearLayout
+                android:id="@id/llAlbum"
+                android:layout_width="fill_parent"
+                android:layout_height="48.0dip"
+                android:background="@drawable/bg_group_search_buttons"
+                android:clickable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal" >
+
+                <ImageView
+                    android:id="@id/ivAblum"
+                    android:layout_width="23.0dip"
+                    android:layout_height="20.0dip"
+                    android:layout_marginLeft="37.0dip"
+                    android:src="@drawable/selector_select_album" />
+
+                <TextView
+                    android:id="@id/tvAblum"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="11.0dip"
+                    android:paddingBottom="2.0dip"
+                    android:text="@string/activity_register_sixthstep_xiangcexuanqu"
+                    android:textColor="@color/selector_color_register_button"
+                    android:textSize="14.0dip" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@id/llCamera"
+                android:layout_width="fill_parent"
+                android:layout_height="48.0dip"
+                android:layout_below="@id/llAlbum"
+                android:layout_marginTop="13.0dip"
+                android:background="@drawable/bg_group_search_buttons"
+                android:clickable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal" >
+
+                <ImageView
+                    android:id="@id/ivCamera"
+                    android:layout_width="23.0dip"
+                    android:layout_height="20.0dip"
+                    android:layout_marginLeft="37.0dip"
+                    android:src="@drawable/selector_now_shooting" />
+
+                <TextView
+                    android:id="@id/tvCamera"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="11.0dip"
+                    android:paddingBottom="1.0dip"
+                    android:text="@string/activity_register_sixthstep_xianzaipaise"
+                    android:textColor="@color/selector_color_register_button"
+                    android:textSize="14.0dip" />
+            </LinearLayout>
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="1.0px"
+        android:layout_below="@id/rlGroup"
+        android:background="@color/clbg_diliver_color" />
+
+</RelativeLayout>

@@ -1,0 +1,118 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/back"
+    tools:context="com.example.chitchat.RegisterStepTwoActivity" >
+
+    <include layout="@layout/title" />
+
+    <TextView
+        android:id="@id/tvTips"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="18.0dip"
+        android:layout_marginTop="83.0dip"
+        android:singleLine="true"
+        android:textColor="#ff3e3e3e"
+        android:textSize="16.0dip" />
+
+    <View
+        android:id="@id/line1"
+        android:layout_width="fill_parent"
+        android:layout_height="1.0px"
+        android:layout_below="@id/tvTips"
+        android:layout_marginTop="14.0dip"
+        android:background="@color/clbg_diliver_color" />
+
+    <LinearLayout
+        android:id="@id/llVerifyCode"
+        android:layout_width="fill_parent"
+        android:layout_height="48.0dip"
+        android:layout_below="@id/line1"
+        android:background="#ffffffff"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="18.0dip"
+        android:paddingRight="12.0dip" >
+
+        <TextView
+            android:id="@id/tvVerifyCode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/activity_register_secondstep_tvVerifyCode"
+            android:textColor="#ff3e3e3e"
+            android:textSize="16.0dip" />
+
+        <EditText
+            android:id="@id/edtVerifyCode"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="36.0dip"
+            android:background="@android:color/transparent"
+            android:hint="@string/activity_register_secondstep_edtVerifyCode"
+            android:inputType="number"
+            android:singleLine="true"
+            android:textColor="#ff3e3e3e"
+            android:textColorHint="#ffcdcdcd"
+            android:textSize="16.0dip" />
+    </LinearLayout>
+
+    <View
+        android:id="@id/line2"
+        android:layout_width="fill_parent"
+        android:layout_height="1.0px"
+        android:layout_below="@id/llVerifyCode"
+        android:background="@color/clbg_diliver_color" />
+
+    <LinearLayout
+        android:id="@id/llButtons"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/line2"
+        android:layout_marginLeft="18.0dip"
+        android:layout_marginRight="18.0dip"
+        android:layout_marginTop="22.0dip"
+        android:gravity="center"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@id/btnVerifyCodeSms"
+            android:layout_width="135.0dip"
+            android:layout_height="44.0dip"
+            android:layout_marginRight="8.0dip"
+            android:background="@drawable/retransmission_show_botton"
+            android:gravity="center"
+            android:paddingBottom="11.0dip"
+            android:paddingTop="11.0dip"
+            android:singleLine="true"
+            android:text="@string/resend_verification_code_via_sms"
+            android:textColor="@color/selector_color_register_button"
+            android:textSize="14.0dip" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/llButtons"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="22.0dip"
+        android:gravity="center"
+        android:orientation="horizontal" >
+
+        <ImageView
+            android:layout_width="72.0dip"
+            android:layout_height="72.0dip"
+            android:src="@drawable/icon_register_verifycode_more" />
+
+        <TextView
+            android:id="@id/tvMore"
+            android:layout_width="wrap_content"
+            android:layout_height="50.0dip"
+            android:gravity="center"
+            android:text="收不到验证码码？"
+            android:textColor="#ff2fd5b9"
+            android:textSize="14.0dip" />
+    </LinearLayout>
+
+</RelativeLayout>

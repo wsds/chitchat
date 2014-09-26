@@ -1,11 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.chitchat"
+    package="com.open.chitchat"
     android:versionCode="1"
     android:versionName="1.0" >
 
     <uses-sdk
-        android:minSdkVersion="14"
+        android:minSdkVersion="8"
         android:targetSdkVersion="21" />
 
     <application
@@ -14,7 +13,7 @@
         android:label="@string/app_name"
         android:theme="@style/CommonStyle" >
         <activity
-            android:name=".LaunchActivity"
+            android:name="com.open.chitchat.LaunchActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
             <intent-filter>
@@ -24,17 +23,67 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".LoginMainActivity"
+            android:name="com.open.chitchat.LoginMainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
         </activity>
         <activity
-            android:name=".RegisterActivity"
+            android:name="com.open.chitchat.MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name="com.open.chitchat.LoginActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/CommonStyle" >
+        </activity>
+        <activity
+            android:name="com.open.chitchat.RegisterStepOneActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/CommonStyle" >
+        </activity>
+        <activity
+            android:name="com.open.chitchat.RegisterStepTwoActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/CommonStyle" >
+        </activity>
+        <activity
+            android:name="com.open.chitchat.RegisterStepThreeActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/CommonStyle" >
+        </activity>
+        <activity
+            android:name="com.open.chitchat.RegisterStepFourActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/CommonStyle" >
+        </activity>
+        <activity
+            android:name="com.open.chitchat.RegisterStepFiveActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/CommonStyle" >
+        </activity>
+        <activity
+            android:name="com.open.chitchat.RegisterStepSixActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/CommonStyle" >
+        </activity>
+        <activity
+            android:name="com.open.chitchat.ResetPasswordStepOneActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/CommonStyle" >
+        </activity>
+        <activity
+            android:name="com.open.chitchat.ResetPasswordStepTwoActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/CommonStyle" >
+        </activity>
+        <activity
+            android:name="com.open.chitchat.ResetPasswordStepThreeActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/CommonStyle" >
+        </activity>
+        <activity
+            android:name="com.open.chitchat.ExplainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
         </activity>

@@ -1,6 +1,6 @@
-package com.example.chitchat.view;
+package com.open.chitchat.view;
 
-import com.example.chitchat.R;
+import com.open.chitchat.R;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -20,16 +20,19 @@ public class PageControlView extends LinearLayout {
 		this.context = context;
 		this.thisView = this;
 		thisView.setOrientation(LinearLayout.HORIZONTAL);
-		defaultImage = BitmapFactory.decodeResource(getResources(), R.drawable.dot_off);
-		seleteImage = BitmapFactory.decodeResource(getResources(), R.drawable.dot_on);
-		params = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+		defaultImage = BitmapFactory.decodeResource(getResources(),
+				R.drawable.dot_off);
+		seleteImage = BitmapFactory.decodeResource(getResources(),
+				R.drawable.dot_on);
+		params = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
+				LayoutParams.WRAP_CONTENT);
 	}
 
 	public void setCount(int count, int defaultItem) {
 		thisView.removeAllViews();
 		for (int i = 0; i < count; i++) {
 			ImageView view = new ImageView(context);
-			view.setPadding(10, 10, 10, 10);
+			view.setPadding(5, 5, 5, 5);
 			if (i == defaultItem - 1) {
 				view.setImageBitmap(seleteImage);
 			} else {
@@ -42,9 +45,11 @@ public class PageControlView extends LinearLayout {
 	public void setSeleteItem(int position) {
 		for (int i = 0; i < thisView.getChildCount(); i++) {
 			if (i == (position)) {
-				((ImageView) thisView.getChildAt(i)).setImageBitmap(seleteImage);
+				((ImageView) thisView.getChildAt(i))
+						.setImageBitmap(seleteImage);
 			} else {
-				((ImageView) thisView.getChildAt(i)).setImageBitmap(defaultImage);
+				((ImageView) thisView.getChildAt(i))
+						.setImageBitmap(defaultImage);
 			}
 		}
 	}
