@@ -2,6 +2,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/back"
     tools:context="com.example.chitchat.MainActivity" >
+
+    <FrameLayout
+        android:id="@+id/mainView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="60dp" >
+    </FrameLayout>
+
+    <com.open.chitchat.view.MainTabView
+        android:id="@+id/mainTabView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" >
+    </com.open.chitchat.view.MainTabView>
 
 </RelativeLayout>

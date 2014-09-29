@@ -30,7 +30,7 @@ public class ExplainActivity extends Activity implements OnClickListener {
 		if ("disclaimer".equals(type)) {
 			titleText.setText("用户协议");
 		} else if ("about".equals(type)) {
-			titleText.setText("关于“微型公社�??");
+			titleText.setText("关于“微型公社”");
 		}
 		getFromAssets(type + ".txt");
 	}

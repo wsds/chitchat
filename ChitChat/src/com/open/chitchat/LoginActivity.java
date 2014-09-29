@@ -11,7 +11,7 @@ import android.widget.TextView;
 
 public class LoginActivity extends Activity implements OnClickListener {
 
-	public View backView, login;
+	public View backView, login, selectCountry;
 	public TextView titleText, forget;
 
 	@Override
@@ -27,12 +27,13 @@ public class LoginActivity extends Activity implements OnClickListener {
 		login = findViewById(R.id.btnLogin);
 		titleText = (TextView) findViewById(R.id.titleText);
 		forget = (TextView) findViewById(R.id.tvForgetPW);
-
+		selectCountry = findViewById(R.id.llSelectCountry);
 		titleText.setText(R.string.login);
 
 		forget.setOnClickListener(this);
 		login.setOnClickListener(this);
 		backView.setOnClickListener(this);
+		selectCountry.setOnClickListener(this);
 	}
 
 	@Override
@@ -43,6 +44,8 @@ public class LoginActivity extends Activity implements OnClickListener {
 			startActivity(new Intent(LoginActivity.this, MainActivity.class));
 		} else if (view.equals(backView)) {
 			finish();
+		} else if (view.equals(selectCountry)) {
+			startActivityForResult(new Intent(LoginActivity.this, ChooseCountryActivity.class), 0);
 		}
 
 	}

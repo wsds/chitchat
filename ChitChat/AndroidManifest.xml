@@ -1,10 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.open.chitchat"
     android:versionCode="1"
     android:versionName="1.0" >
 
     <uses-sdk
-        android:minSdkVersion="8"
+        android:minSdkVersion="11"
         android:targetSdkVersion="21" />
 
     <application
@@ -13,7 +14,7 @@
         android:label="@string/app_name"
         android:theme="@style/CommonStyle" >
         <activity
-            android:name="com.open.chitchat.LaunchActivity"
+            android:name=".LaunchActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
             <intent-filter>
@@ -23,67 +24,72 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.open.chitchat.LoginMainActivity"
+            android:name=".LoginMainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
         </activity>
         <activity
-            android:name="com.open.chitchat.MainActivity"
+            android:name=".MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
         </activity>
         <activity
-            android:name="com.open.chitchat.LoginActivity"
+            android:name=".LoginActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
         </activity>
         <activity
-            android:name="com.open.chitchat.RegisterStepOneActivity"
+            android:name=".RegisterStepOneActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
         </activity>
         <activity
-            android:name="com.open.chitchat.RegisterStepTwoActivity"
+            android:name=".RegisterStepTwoActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
         </activity>
         <activity
-            android:name="com.open.chitchat.RegisterStepThreeActivity"
+            android:name=".RegisterStepThreeActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
         </activity>
         <activity
-            android:name="com.open.chitchat.RegisterStepFourActivity"
+            android:name=".RegisterStepFourActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
         </activity>
         <activity
-            android:name="com.open.chitchat.RegisterStepFiveActivity"
+            android:name=".RegisterStepFiveActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
         </activity>
         <activity
-            android:name="com.open.chitchat.RegisterStepSixActivity"
+            android:name=".RegisterStepSixActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
         </activity>
         <activity
-            android:name="com.open.chitchat.ResetPasswordStepOneActivity"
+            android:name=".ResetPasswordStepOneActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
         </activity>
         <activity
-            android:name="com.open.chitchat.ResetPasswordStepTwoActivity"
+            android:name=".ResetPasswordStepTwoActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
         </activity>
         <activity
-            android:name="com.open.chitchat.ResetPasswordStepThreeActivity"
+            android:name=".ResetPasswordStepThreeActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
         </activity>
         <activity
-            android:name="com.open.chitchat.ExplainActivity"
+            android:name=".ExplainActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/CommonStyle" >
+        </activity>
+        <activity
+            android:name=".ChooseCountryActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
         </activity>

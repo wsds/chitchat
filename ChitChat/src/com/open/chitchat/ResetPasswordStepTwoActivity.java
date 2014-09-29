@@ -39,7 +39,7 @@ public class ResetPasswordStepTwoActivity extends Activity implements OnClickLis
 
 		rightContainer.addView(next);
 
-		String tip = "包含验证码的短信已经发�?�至";
+		String tip = "包含验证码的短信已经发送至";
 
 		SpannableStringBuilder style = new SpannableStringBuilder(tip);
 		style.setSpan(new ForegroundColorSpan(Color.parseColor("#ff44ddcb")), 2, 5, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -79,7 +79,7 @@ public class ResetPasswordStepTwoActivity extends Activity implements OnClickLis
 
 							@Override
 							public void run() {
-								tvTime.setText("接收短信大约�?�?" + time + "�?");
+								tvTime.setText("接收短信大约需要" + time + "秒");
 							}
 						});
 					} catch (InterruptedException e) {

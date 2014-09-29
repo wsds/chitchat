@@ -70,6 +70,7 @@
     <string name="activity_registeruser_username_error">请输入正确的用户名：2-10个字且不能全为数字</string>
     <string name="activity_resetpasswordfirststep_edtMobile">输入手机号码</string>
     <string name="activity_resetpasswordfirststep_qingshuru">请选择所在国家和地区区号，并输入手机号码。</string>
+    <string name="activity_choosecountry_title">选择国家和地区</string>
     <string name="activity_resetpasswordfirststep_tvMobileTitle">手机号</string>
     <string name="activity_resetpasswordsecondstep_edtVerifyCode">输入收到的验证码</string>
     <string name="activity_resetpasswordsecondstep_fillVerifyCode">填写“验证码”</string>
