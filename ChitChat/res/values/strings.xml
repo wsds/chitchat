@@ -6,7 +6,7 @@
     <!-- LOGIN ACTIVITY -->
     <string name="login">登陆</string>
     <string name="register">注册</string>
-    <string name="activity_loginusernameinput_btnLogin">登录聊聊</string>
+    <string name="activity_loginusernameinput_btnLogin">登录ChitChat</string>
     <string name="activity_loginusernameinput_edtPassword">输入密码</string>
     <string name="activity_loginusernameinput_edtUserName">输入手机号码</string>
     <string name="activity_loginusernameinput_errormsg_error">登录失败</string>
@@ -82,5 +82,8 @@
     <string name="resend_verification_code_via_sms">重新获取短信</string>
     <string name="next_step">下一步</string>
     <string name="commit">完成</string>
+    <string name="find_title">找找</string>
+    <string name="chat_title">ChitChat</string>
+    <string name="friend_title">朋友</string>
 
 </resources>

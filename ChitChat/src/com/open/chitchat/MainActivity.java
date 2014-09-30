@@ -64,20 +64,37 @@ public class MainActivity extends Activity {
 	}
 
 	private void setDefaultFragment() {
-		mTransaction.replace(R.id.mainView, chatFragment);
+		mTransaction.add(R.id.mainView, chatFragment);
+		mTransaction.add(R.id.mainView, friendFragment);
+		mTransaction.add(R.id.mainView, findFragment);
+
+		mTransaction.show(chatFragment);
+		mTransaction.hide(friendFragment);
+		mTransaction.hide(findFragment);
+
 		mTransaction.commit();
+		mainTabView.setDefaultItem(1);
 	}
 
 	private void showFragment(int positions, int lastposition) {
+		FragmentTransaction transaction = mFragmentManager.beginTransaction();
 		if (positions == 1) {
-			mTransaction.replace(R.id.mainView, chatFragment);
+			// transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+			transaction.hide(friendFragment);
+			transaction.hide(findFragment);
+			transaction.show(chatFragment);
 		} else if (positions == 2) {
-			mTransaction.replace(R.id.mainView, friendFragment);
+			// transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+			transaction.hide(chatFragment);
+			transaction.hide(findFragment);
+			transaction.show(friendFragment);
 		} else if (positions == 3) {
-			mTransaction.replace(R.id.mainView, findFragment);
+			// transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE);
+			transaction.hide(friendFragment);
+			transaction.hide(chatFragment);
+			transaction.show(findFragment);
 		}
-		
-		mTransaction.commit();
+		transaction.commit();
 	}
 
 }

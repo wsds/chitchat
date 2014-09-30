@@ -42,6 +42,7 @@ public class LoginActivity extends Activity implements OnClickListener {
 			startActivity(new Intent(LoginActivity.this, ResetPasswordStepOneActivity.class));
 		} else if (view.equals(login)) {
 			startActivity(new Intent(LoginActivity.this, MainActivity.class));
+			finish();
 		} else if (view.equals(backView)) {
 			finish();
 		} else if (view.equals(selectCountry)) {
