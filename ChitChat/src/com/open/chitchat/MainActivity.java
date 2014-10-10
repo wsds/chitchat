@@ -1,6 +1,6 @@
 package com.open.chitchat;
 
-import com.open.chitchat.fragment.ChatFragment;
+import com.open.chitchat.fragment.ChatListFragment;
 import com.open.chitchat.fragment.FindFragment;
 import com.open.chitchat.fragment.FriendFragment;
 import com.open.chitchat.view.MainTabView;
@@ -56,7 +56,7 @@ public class MainActivity extends Activity {
 		mainView = (FrameLayout) findViewById(R.id.mainView);
 		mainTabView = (MainTabView) findViewById(R.id.mainTabView);
 
-		chatFragment = new ChatFragment();
+		chatFragment = new ChatListFragment();
 		friendFragment = new FriendFragment();
 		findFragment = new FindFragment();
 

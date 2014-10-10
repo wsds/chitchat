@@ -1,0 +1,86 @@
+.js_selected img {
+    border: 2px solid #0099cd
+}
+
+.js_none img {
+    border: 2px solid #ffffff
+}
+
+.js_moving {
+    position: fixed;
+    -webkit-animation: shake_icon 0.3s linear 0s forwards infinite;
+    z-index: 20000;
+}
+
+.js_icon_group_dropping {
+    -webkit-animation: scale_icon_group 0.05s linear 0s forwards;
+    border: 2px solid #779527;
+    opacity: 1;
+}
+
+@-webkit-keyframes scale_icon_group {
+    0% {
+        -webkit-transform: scale(1, 1);
+    }
+    100% {
+        -webkit-transform: scale(1.05, 1.05);
+    }
+}
+
+@-webkit-keyframes shake_icon {
+    0% {
+        -webkit-transform: rotateY(-25deg);
+    }
+    50% {
+        -webkit-transform: rotateY(25deg);
+    }
+    100% {
+        -webkit-transform: rotateY(-25deg);
+    }
+}
+
+#Scroll {
+    width: 400px;
+    height: 400px;
+    background: #f8f8f8
+}
+
+#ScroLeft {
+    float: left;
+    height: 100%;
+    width: 190px;
+    overflow: hidden
+}
+
+#ScroRight {
+    position: relative;
+    float: right;
+    z-index: 2000;
+    margin-left: 268px;
+    height: 100%;
+    width: 6px;
+    background: #F1F1F1;
+    overflow: hidden;
+}
+
+#ScroLine {
+    position: relative;
+    z-index: 2000;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    overflow: hidden;
+    background: #666666;
+}
+
+.js_chatonlyfriend {
+    margin-left: 290px;
+}
+
+.js_invite_chat_icon {
+    border: 2.5px solid #0099cd;
+}
+
+.js_no_invite_chat_icon {
+    border: 2.5px solid #ffffff;
+}

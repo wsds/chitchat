@@ -85,5 +85,7 @@
     <string name="find_title">找找</string>
     <string name="chat_title">ChitChat</string>
     <string name="friend_title">朋友</string>
+    <string name="send">发送</string>
+    
 
 </resources>

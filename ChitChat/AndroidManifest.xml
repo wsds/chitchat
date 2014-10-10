@@ -93,6 +93,12 @@
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle" >
         </activity>
+        <activity
+            android:name=".ChatActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/CommonStyle"
+            android:windowSoftInputMode="adjustResize" >
+        </activity>
     </application>
 
 </manifest>

@@ -1,0 +1,68 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title></title>
+    <script type="text/javascript" src="/static/js/jquery.js"></script>
+    <script type="text/javascript" src="/static/js/sha1.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.qrcode.min.js"></script>
+    <script type="text/javascript">
+        var time = new Date().getTime();
+        $(document).ready(function () {
+            var chars = [
+                "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k",
+                "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v",
+                "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G",
+                "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R",
+                "S", "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2",
+                "3", "4", "5", "6", "7", "8", "9"];
+            var count = 20;
+            var str = "";
+            for (var i = 0; i < count; i++) {
+                str += chars[parseInt(Math.random() * chars.length)];
+            }
+            $(".js_tdcode").attr("src", "http://qr.liantu.com/api.php?text=mc:weblogin:" + hex_sha1(str));
+            jQuery('#qrcode').qrcode("http://im.lejoying.com/api2/webcode/webcodelogin?sessionID=" + hex_sha1(str));
+            request(hex_sha1(str));
+        });
+        function request(str) {
+            var time1 = time - new Date().getTime();
+            if (time1 >= 60000) {
+                location.href = "./webCodeLogin.html";
+            }
+            var timeold = new Date().getTime();
+            $.ajax({
+                type: "POST",
+                url: "/api2/session/eventwebcodelogin?",
+                data: {
+                    sessionID: str
+                },
+                success: function (data) {
+                    if (data["提示信息"] == "web端二维码登录成功") {
+//                        alert("验证成功"+data);
+                        $(".js_msg").html(data);
+                    } else {
+                        location.reload();
+                    }
+                },
+                error: function () {
+                    request(str);
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+<div style="margin-left: 200px;">
+    <div style="float: left;">
+        <h3>API生成的二维码</h3>
+        <img class="js_tdcode" src=""/>
+        <label class="js_msg"></label>
+    </div>
+    <div style="float: left;margin-left: 300px;">
+        <h3>jQuery生成的二维码</h3>
+
+        <div id="qrcode" style="margin-top: 38px;"></div>
+    </div>
+</div>
+</body>
+</html>
