@@ -86,6 +86,18 @@
     <string name="chat_title">ChitChat</string>
     <string name="friend_title">朋友</string>
     <string name="send">发送</string>
-    
+    <string name="friends">好友</string>
+    <string name="fans">粉丝</string>
+    <string name="attention">关注</string>
+    <string name="add_friends">添加好友</string>
+    <string name="myGroup">我的群组</string>
+    <string name="myJoinGroup">我加入的群组</string>
+    <string name="myLike">聊你喜欢</string>
+    <string name="nearbyGroup">附近群</string>
+    <string name="hotGroup">热门群</string>
+    <string name="classifyGroup">分类群</string>
+    <string name="nearbyPeople">附近的人</string>
+    <string name="searchGroup">搜群</string>
+    <string name="searchGroupHint">请输入群的关键字或群号码</string>
 
 </resources>

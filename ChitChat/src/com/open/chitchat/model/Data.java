@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
-
 public class Data {
 
 	public static Data data;
@@ -63,7 +61,8 @@ public class Data {
 
 	public class Relationship {
 
-		public List<String> friends = new ArrayList<String>();
+		public List<String> fans = new ArrayList<String>();
+		public List<String> attentions = new ArrayList<String>();
 		public Map<String, Friend> friendsMap = new HashMap<String, Friend>();
 
 		public List<String> groups = new ArrayList<String>();
@@ -71,10 +70,10 @@ public class Data {
 
 		public class Friend {
 			public int id;
-			public String sex = "";
 			public int age;
-			public String phone = "";
 			public int distance;
+			public String sex = "";
+			public String phone = "";
 			public String nickName = "";
 			public String mainBusiness = "";
 			public String head = "Head";
