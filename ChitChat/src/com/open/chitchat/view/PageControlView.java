@@ -20,12 +20,9 @@ public class PageControlView extends LinearLayout {
 		this.context = context;
 		this.thisView = this;
 		thisView.setOrientation(LinearLayout.HORIZONTAL);
-		defaultImage = BitmapFactory.decodeResource(getResources(),
-				R.drawable.dot_off);
-		seleteImage = BitmapFactory.decodeResource(getResources(),
-				R.drawable.dot_on);
-		params = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
-				LayoutParams.WRAP_CONTENT);
+		defaultImage = BitmapFactory.decodeResource(getResources(), R.drawable.dot_off);
+		seleteImage = BitmapFactory.decodeResource(getResources(), R.drawable.dot_on);
+		params = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 	}
 
 	public void setCount(int count, int defaultItem) {
@@ -45,12 +42,15 @@ public class PageControlView extends LinearLayout {
 	public void setSeleteItem(int position) {
 		for (int i = 0; i < thisView.getChildCount(); i++) {
 			if (i == (position)) {
-				((ImageView) thisView.getChildAt(i))
-						.setImageBitmap(seleteImage);
+				((ImageView) thisView.getChildAt(i)).setImageBitmap(seleteImage);
 			} else {
-				((ImageView) thisView.getChildAt(i))
-						.setImageBitmap(defaultImage);
+				((ImageView) thisView.getChildAt(i)).setImageBitmap(defaultImage);
 			}
 		}
+	}
+
+	public void setImage(int defaultImageId, int seleteImageId) {
+		defaultImage = BitmapFactory.decodeResource(getResources(), defaultImageId);
+		seleteImage = BitmapFactory.decodeResource(getResources(), seleteImageId);
 	}
 }

@@ -3,6 +3,9 @@ package com.open.chitchat;
 import com.open.chitchat.fragment.ChatListFragment;
 import com.open.chitchat.fragment.FindFragment;
 import com.open.chitchat.fragment.FriendFragment;
+import com.open.chitchat.model.Data;
+import com.open.chitchat.model.Parser;
+import com.open.chitchat.service.PushService;
 import com.open.chitchat.view.MainTabView;
 import com.open.chitchat.view.MainTabView.OnTagClickListener;
 
@@ -10,10 +13,14 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.widget.FrameLayout;
 
 public class MainActivity extends Activity {
+	public Data data = Data.getInstance();
+	public Parser parser = Parser.getInstance();
 
 	public FrameLayout mainView;
 
@@ -32,6 +39,21 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 		initViews();
 		initListener();
+		startPushService();
+	}
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_MENU) {
+			if (chatFragment.isVisible()) {
+				((ChatListFragment) chatFragment).changePopMenuView();
+			} else if (friendFragment.isVisible()) {
+				((FriendFragment) friendFragment).changePopMenuView();
+			} else if (findFragment.isVisible()) {
+				((FindFragment) findFragment).changePopMenuView();
+			}
+		}
+		return false;
 	}
 
 	private void initListener() {
@@ -97,4 +119,14 @@ public class MainActivity extends Activity {
 		transaction.commit();
 	}
 
+	public void startPushService() {
+		Intent service = new Intent(this, PushService.class);
+		PushService.isRunning = false;
+		parser.initialize(this);
+		data = parser.check();
+		service.putExtra("phone", "151");
+		service.putExtra("accessKey", "lejoying");
+		service.putExtra("operation", true);
+		startService(service);
+	}
 }

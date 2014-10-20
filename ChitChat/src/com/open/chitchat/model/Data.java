@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.open.chitchat.model.Data.TempData.ImageBean;
+
 public class Data {
 
 	public static Data data;
@@ -16,12 +18,13 @@ public class Data {
 		return data;
 	}
 
+	public LocalStatus localStatus = new LocalStatus();
 	public BaseData baseData = new BaseData();
 	public TempData tempData = new TempData();
-	public UserInformation userInformation;
-	public Relationship relationship;
-	public Messages messages;
-	public Event event;
+	public UserInformation userInformation = new UserInformation();
+	public Relationship relationship = new Relationship();
+	public Messages messages = new Messages();
+	public Event event = new Event();
 
 	public class BaseData {
 		public boolean notification;
@@ -35,10 +38,46 @@ public class Data {
 	}
 
 	public class TempData {
+		public class ImageBean {
 
+			public String parentName;
+			public String path;
+
+			public String contentType;
+			public long size = 0;
+
+		}
+	}
+
+	public class LocalStatus {
+		public boolean isModified = false;
+		public String thisActivityName = "NONE";
+		public String thisActivityStatus = "";
+
+		public String debugMode = "NONE";// NONE
+
+		public LocalData localData;
+
+		public class LocalData {
+			public boolean isModified = true;
+			public ArrayList<ImageBean> prepareUploadImagesList = new ArrayList<ImageBean>();
+			public ArrayList<ImageBean> prepareDownloadImagesList = new ArrayList<ImageBean>();
+
+			public String currentSelectedGroup = "";
+			public String currentSelectedSquare = "";
+
+			public Map<String, String> notSentMessagesMap = new HashMap<String, String>();
+			public Map<String, ShareDraft> notSendShareMessagesMap = new HashMap<String, ShareDraft>();
+
+			public class ShareDraft {
+				public String content;
+				public String imagesContent;
+			}
+		}
 	}
 
 	public class UserInformation {
+		public boolean isModified = false;
 		public User currentUser;
 
 		public class User {
@@ -56,13 +95,17 @@ public class Data {
 			public String longitude;
 			public String latitude;
 
+			public List<String> faceList;
+
 		}
 	}
 
 	public class Relationship {
+		public boolean isModified = false;
 
 		public List<String> fans = new ArrayList<String>();
-		public List<String> attentions = new ArrayList<String>();
+		public List<String> follwers = new ArrayList<String>();
+		public List<String> friends = new ArrayList<String>();
 		public Map<String, Friend> friendsMap = new HashMap<String, Friend>();
 
 		public List<String> groups = new ArrayList<String>();
@@ -85,6 +128,7 @@ public class Data {
 			public String latitude;
 			public String alias = "";
 			public String lastlogintime;
+			public boolean notice;
 			// groups
 		}
 
@@ -105,7 +149,7 @@ public class Data {
 	}
 
 	public class Messages {
-
+		public boolean isModified = false;
 		public Map<String, ArrayList<Message>> messageMap = new HashMap<String, ArrayList<Message>>();
 
 		public List<String> messagesOrder = new ArrayList<String>();
@@ -121,16 +165,19 @@ public class Data {
 			public String contentType;
 			public String content;
 			public String phoneto;
+			public boolean anonymity;
 		}
 	}
 
 	public class Event {
-		public List<String> groupEvents = new ArrayList<String>();
+		public boolean isModified = false;
 
+		public boolean groupNotReadMessage = false;
+		public List<String> groupEvents = new ArrayList<String>();
 		public Map<String, EventMessage> groupEventsMap = new HashMap<String, EventMessage>();
 
+		public boolean userNotReadMessage = false;
 		public List<String> userEvents = new ArrayList<String>();
-
 		public Map<String, EventMessage> userEventsMap = new HashMap<String, EventMessage>();
 
 		public class EventMessage {
