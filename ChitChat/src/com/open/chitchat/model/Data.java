@@ -67,18 +67,13 @@ public class Data {
 			public String currentSelectedSquare = "";
 
 			public Map<String, String> notSentMessagesMap = new HashMap<String, String>();
-			public Map<String, ShareDraft> notSendShareMessagesMap = new HashMap<String, ShareDraft>();
 
-			public class ShareDraft {
-				public String content;
-				public String imagesContent;
-			}
 		}
 	}
 
 	public class UserInformation {
 		public boolean isModified = false;
-		public User currentUser;
+		public User currentUser = new User();
 
 		public class User {
 			public int id;
@@ -91,9 +86,11 @@ public class Data {
 			public String accessKey = "";
 			public String flag = "none";
 
-			public String lastlogintime;
+			public String lastLoginTime;
 			public String longitude;
 			public String latitude;
+			public String createTime;
+			public String userBackground;
 
 			public List<String> faceList;
 
@@ -127,7 +124,9 @@ public class Data {
 			public String longitude;
 			public String latitude;
 			public String alias = "";
-			public String lastlogintime;
+			public String lastLoginTime;
+			public String createTime;
+			public String userBackground;
 			public boolean notice;
 			// groups
 		}
@@ -162,6 +161,7 @@ public class Data {
 			public String status;
 			public String phone;
 			public String nickName;
+			public String sex;
 			public String contentType;
 			public String content;
 			public String phoneto;

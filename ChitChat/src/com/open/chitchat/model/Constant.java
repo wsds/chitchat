@@ -6,6 +6,8 @@ public class Constant {
 	// message sendType
 	public static final int MESSAGE_TYPE_SEND = 0x01;
 	public static final int MESSAGE_TYPE_RECEIVE = 0x02;
+	// handler
+	public static final int HANDLER_CHAT_NOTIFY = 0x11;
 	// tableId
 	public static final String ACCOUNTTABLEID = "53eacbe4e4b0693fbf5fd13b";
 	public static final String GROUPTABLEID = "53eacbb9e4b0693fbf5fd0f6";

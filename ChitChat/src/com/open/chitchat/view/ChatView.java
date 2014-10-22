@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.annotation.SuppressLint;
+import android.os.Handler;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -38,19 +39,22 @@ public class ChatView {
 	public RelativeLayout rightContainer;
 	public TextView titleText, chatSend;
 	public ListView chatContent;
-	public ImageView chatAdd, chatSmily, chatRecord, titleImage;
+	public ImageView chatAdd, chatSmily, chatRecord, titleImage, chatMenuBackground;
 	public EditText chatInput;
 	public GridView chatMenu;
 
 	public ChatAdapter mChatAdapter;
 	public ChatMenuAdapter mChatMenuAdapter;
 
-	private Animation inTranslateAnimation, outTranslateAnimation;
+	private Animation inTranslateAnimation, inAlphaAnimation, outTranslateAnimation;
+
+	public Handler handler;
 
 	public ChatView(ChatActivity activity) {
 		thisActivity = activity;
 	}
 
+	@SuppressLint("HandlerLeak")
 	public void initViews() {
 		thisActivity.setContentView(R.layout.activity_chat);
 		backView = thisActivity.findViewById(R.id.backView);
@@ -68,6 +72,7 @@ public class ChatView {
 		chatAdd = (ImageView) thisActivity.findViewById(R.id.chatAdd);
 		chatSmily = (ImageView) thisActivity.findViewById(R.id.chatSmily);
 		chatRecord = (ImageView) thisActivity.findViewById(R.id.chatRecord);
+		chatMenuBackground = (ImageView) thisActivity.findViewById(R.id.chatMenuBackground);
 		chatInput = (EditText) thisActivity.findViewById(R.id.chatInput);
 		chatMenu = (GridView) thisActivity.findViewById(R.id.chatMenu);
 
@@ -86,6 +91,19 @@ public class ChatView {
 
 		inTranslateAnimation = AnimationUtils.loadAnimation(thisActivity, R.anim.chat_menu_in);
 		outTranslateAnimation = AnimationUtils.loadAnimation(thisActivity, R.anim.chat_menu_out);
+		inAlphaAnimation = AnimationUtils.loadAnimation(thisActivity, R.anim.chat_menu_in_alpha);
+
+		handler = new Handler() {
+			@Override
+			public void handleMessage(android.os.Message msg) {
+				switch (msg.what) {
+				case Constant.HANDLER_CHAT_NOTIFY:
+					mChatAdapter.notifyDataSetChanged();
+					break;
+				}
+				super.handleMessage(msg);
+			}
+		};
 	}
 
 	public class ChatAdapter extends BaseAdapter {
@@ -112,6 +130,12 @@ public class ChatView {
 		}
 
 		@Override
+		public void notifyDataSetChanged() {
+			super.notifyDataSetChanged();
+			chatContent.setSelection(messages.size() - 1);
+		}
+
+		@Override
 		public int getCount() {
 			return messages.size();
 		}
@@ -128,23 +152,48 @@ public class ChatView {
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
-			Message message = messages.get(position);
 			ChatHolder holder = new ChatHolder();
+			Message message = messages.get(position);
+			int backgroundDrawableId = 0;
+			String lastPhone = "";
+			if (position != 0) {
+				lastPhone = messages.get(position - 1).phone;
+			}
 			if (message.type == Constant.MESSAGE_TYPE_SEND) {
 				convertView = thisActivity.mInflater.inflate(R.layout.f_chat_item_send, null);
+				if (message.phone.equals(lastPhone)) {
+					backgroundDrawableId = R.drawable.myself_chat_order_bg;
+				} else {
+					backgroundDrawableId = R.drawable.myself_chat_bg;
+				}
 			} else if (message.type == Constant.MESSAGE_TYPE_RECEIVE) {
 				convertView = thisActivity.mInflater.inflate(R.layout.f_chat_item_receive, null);
+				if (message.sex.equals("male") || message.sex.equals("男")) {
+					if (message.phone.equals(lastPhone)) {
+						backgroundDrawableId = R.drawable.man_chat_from_order_bg;
+					} else {
+						backgroundDrawableId = R.drawable.man_chat_from_bg;
+					}
+				} else {
+					if (message.phone.equals(lastPhone)) {
+						backgroundDrawableId = R.drawable.girl_chat_from_order_bg;
+					} else {
+						backgroundDrawableId = R.drawable.girl_chat_from_bg;
+					}
+				}
 			}
+
+			holder.chatLayout = convertView.findViewById(R.id.chatLayout);
 			holder.voice = convertView.findViewById(R.id.voice);
-			holder.images_layout = convertView.findViewById(R.id.images_layout);
 			holder.voice_icon = (ImageView) convertView.findViewById(R.id.voice_icon);
 			holder.image = (ImageView) convertView.findViewById(R.id.image);
-			holder.images = (ImageView) convertView.findViewById(R.id.images);
 			holder.head = (ImageView) convertView.findViewById(R.id.head);
 			holder.time = (TextView) convertView.findViewById(R.id.time);
 			holder.character = (TextView) convertView.findViewById(R.id.character);
 			holder.voicetime = (TextView) convertView.findViewById(R.id.voicetime);
-			holder.images_count = (TextView) convertView.findViewById(R.id.images_count);
+
+			holder.chatLayout.setBackgroundResource(backgroundDrawableId);
+
 			if (message.contentType.equals("text")) {
 				holder.character.setVisibility(View.VISIBLE);
 				holder.voice.setVisibility(View.GONE);
@@ -163,9 +212,9 @@ public class ChatView {
 		}
 
 		class ChatHolder {
-			View voice, images_layout;
-			ImageView voice_icon, image, images, head;
-			TextView time, character, voicetime, images_count;
+			View voice, chatLayout;
+			ImageView voice_icon, image, head;
+			TextView time, character, voicetime;
 		}
 
 	}
@@ -180,7 +229,7 @@ public class ChatView {
 			menuString = new ArrayList<String>();
 			menuImage = new ArrayList<Integer>();
 
-			if (weather) {
+			if (!weather) {
 				menuString.add(thisActivity.getString(R.string.groupDetails));
 				menuString.add(thisActivity.getString(R.string.groupMembers));
 				menuString.add(thisActivity.getString(R.string.groupAlbum));
@@ -241,10 +290,35 @@ public class ChatView {
 			this.titleImage.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_arrow_up));
 			this.chatMenuLayout.startAnimation(inTranslateAnimation);
 			this.chatMenuLayout.setVisibility(View.VISIBLE);
+			this.chatMenuBackground.startAnimation(inAlphaAnimation);
+			this.chatMenuBackground.setVisibility(View.VISIBLE);
 		} else {
 			this.titleImage.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_arrow_down));
 			this.chatMenuLayout.startAnimation(outTranslateAnimation);
 			this.chatMenuLayout.setVisibility(View.GONE);
+			this.chatMenuBackground.setVisibility(View.GONE);
+		}
+	}
+
+	public void changeChatRecord() {
+		if (this.textLayout.getVisibility() == View.VISIBLE) {
+			this.textLayout.setVisibility(View.GONE);
+			this.voiceLayout.setVisibility(View.VISIBLE);
+			this.chatRecord.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_chat_keyboard));
+		} else if (thisView.voiceLayout.getVisibility() == View.VISIBLE) {
+			this.textLayout.setVisibility(View.VISIBLE);
+			this.voiceLayout.setVisibility(View.GONE);
+			this.chatRecord.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_chat_record));
+		}
+	}
+
+	public void changeChatAdd() {
+		if (this.chatSmilyLayout.getVisibility() == View.VISIBLE) {
+			this.chatAdd.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_chat_add));
+			this.chatSmilyLayout.setVisibility(View.GONE);
+		} else {
+			this.chatAdd.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_chat_return));
+			this.chatSmilyLayout.setVisibility(View.VISIBLE);
 		}
 	}
 

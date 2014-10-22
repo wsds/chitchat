@@ -13,13 +13,17 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
+import com.lidroid.xutils.HttpUtils;
+import com.lidroid.xutils.http.RequestParams;
 import com.lidroid.xutils.http.ResponseInfo;
 import com.lidroid.xutils.http.callback.RequestCallBack;
+import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
 import com.open.chitchat.model.Data.Messages.Message;
 import com.open.chitchat.model.Data.Relationship;
 import com.open.chitchat.model.Data.Relationship.Friend;
 import com.open.chitchat.model.Data.Relationship.Group;
 import com.open.chitchat.model.Data.UserInformation.User;
+import com.open.chitchat.utils.RSAUtils;
 import com.open.lib.HttpClient;
 import com.open.lib.HttpClient.ResponseHandler;
 
@@ -30,6 +34,7 @@ public class ResponseHandlers {
 	public HttpClient httpClient = HttpClient.getInstance();
 	public Data data = Data.getInstance();
 	public Parser parser = Parser.getInstance();
+	public ActivityManager activityManager = ActivityManager.getInstance();
 	public ResponseEventHandlers responseEventHandlers = ResponseEventHandlers.getInstance();
 	public Gson gson = new Gson();
 
@@ -42,6 +47,7 @@ public class ResponseHandlers {
 		return responseHandlers;
 	}
 
+	// Message
 	public ResponseHandler<String> message_sendMessageCallBack = httpClient.new ResponseHandler<String>() {
 		class Response {
 			public String 提示信息;
@@ -239,7 +245,147 @@ public class ResponseHandlers {
 			}
 		};
 	};
+	// Relationship
+	public ResponseHandler<String> account_auth = httpClient.new ResponseHandler<String>() {
+		class Response {
+			public String 提示信息;
+			public String 失败原因;
+			public String uid;
+			public String accessKey;
+			public String PbKey;
+		}
 
+		public void onSuccess(ResponseInfo<String> responseInfo) {
+			Response response = gson.fromJson(responseInfo.result, Response.class);
+			if (response.提示信息.equals("普通鉴权成功")) {
+				String accessKey = "", phone = "";
+				try {
+					accessKey = RSAUtils.decrypt(response.PbKey, response.accessKey);
+					phone = RSAUtils.decrypt(response.PbKey, response.uid);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				data.userInformation.currentUser.phone = phone;
+				data.userInformation.currentUser.accessKey = accessKey;
+				data.userInformation.isModified = true;
+				if (activityManager.mLoginActivity != null) {
+					activityManager.mLoginActivity.loginUsePassWordSuccess();
+				}
+				HttpUtils httpUtils = new HttpUtils();
+				RequestParams params = new RequestParams();
+				params.addBodyParameter("phone", phone);
+				params.addBodyParameter("accessKey", accessKey);
+				params.addBodyParameter("target", "[\"" + phone + "\"]");
+				ResponseHandlers responseHandlers = getInstance();
+				httpUtils.send(HttpMethod.POST, API.ACCOUNT_GET, params, responseHandlers.account_get);
+			} else {
+				activityManager.mLoginActivity.loginUsePassWordFail(response.失败原因);
+			}
+		};
+
+	};
+	public ResponseHandler<String> account_get = httpClient.new ResponseHandler<String>() {
+		class Response {
+			public String 提示信息;
+			public String 失败原因;
+			public List<Account> accounts;
+		}
+
+		class Account {
+			public int ID;
+			public String phone;
+			public String nickName;
+			public String mainBusiness;
+			public String head;
+			public String sex;
+			public String age;
+			// public String byPhone;
+			public String createTime;
+			public String lastLoginTime;
+			public String userBackground;
+		}
+
+		public void onSuccess(ResponseInfo<String> responseInfo) {
+			Response response = gson.fromJson(responseInfo.result, Response.class);
+			if ("获取用户信息成功".equals(response.提示信息)) {
+				User user = data.userInformation.currentUser;
+				if (response.accounts.size() > 0) {
+					Account account = response.accounts.get(0);
+					if (user.phone.equals(account.phone)) {
+						user.id = account.ID;
+						user.head = account.head;
+						user.mainBusiness = account.mainBusiness;
+						user.nickName = account.nickName;
+						user.sex = account.sex;
+						user.age = account.age;
+						user.createTime = account.createTime;
+						user.lastLoginTime = account.lastLoginTime;
+						user.userBackground = account.userBackground;
+						data.userInformation.isModified = true;
+					} else {
+						// boolean isTemp = true;
+						// List<String> circles = data.relationship.circles;
+						// for (String circle : circles) {
+						// List<String> friends =
+						// data.relationship.circlesMap.get(circle).friends;
+						// if (friends.contains(account.phone)) {
+						// isTemp = false;
+						// break;
+						// }
+						// }
+						// if (data.relationship.circlesMap.get("8888888") !=
+						// null) {
+						// if
+						// (data.relationship.circlesMap.get("8888888").friends.contains(account.phone))
+						// {
+						// isTemp = false;
+						// }
+						// }
+						// if (isTemp) {
+						// Friend friend = data.relationship.new Friend();
+						// friend.phone = account.phone;
+						// friend.head = account.head;
+						// friend.nickName = account.nickName;
+						// friend.mainBusiness = account.mainBusiness;
+						// friend.sex = account.sex;
+						// friend.sex = account.sex;
+						// friend.age = Integer.valueOf(account.age);
+						// friend.createTime = account.createTime;
+						// friend.lastLoginTime = account.lastLoginTime;
+						// friend.userBackground = account.userBackground;
+						// friend.id = account.ID;
+						//
+						// data.tempData.tempFriend = friend;
+						//
+						// data.relationship.friendsMap.put(friend.phone,
+						// friend);
+						// } else {
+						// Friend friend =
+						// data.relationship.friendsMap.get(account.phone);
+						// if (friend != null) {
+						// friend.head = account.head;
+						// friend.nickName = account.nickName;
+						// friend.mainBusiness = account.mainBusiness;
+						// friend.sex = account.sex;
+						// friend.age = Integer.valueOf(account.age);
+						// friend.createTime = account.createTime;
+						// friend.lastLoginTime = account.lastLoginTime;
+						// friend.userBackground = account.userBackground;
+						// }
+						// }
+						// viewManage.searchFriendActivity.searchCallBack(account.phone,
+						// isTemp);
+					}
+					// viewManage.postNotifyView("MeSubView");
+				}
+			} else {
+				if ("获取用户信息失败".equals(response.提示信息) && "用户不存在".equals(response.失败原因)) {
+					// viewManage.searchFriendActivity.searchCallBack("",
+					// false);
+				}
+			}
+		};
+	};
 	public ResponseHandler<String> getIntimateFriends = httpClient.new ResponseHandler<String>() {
 		class Response {
 			public String 提示信息;

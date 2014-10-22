@@ -20,21 +20,19 @@
         android:layout_marginTop="10dp" >
 
         <RelativeLayout
+            android:id="@+id/chatLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
-            android:layout_marginLeft="20dp"
+            android:layout_marginLeft="40dp"
             android:layout_marginTop="20dp"
-            android:paddingBottom="10dp"
-            android:paddingLeft="20dp"
-            android:paddingRight="20dp"
-            android:paddingTop="10dp" >
+            android:padding="20dp" >
 
             <TextView
                 android:id="@+id/character"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#fff"
+                android:textColor="@color/black"
                 android:textSize="16sp" />
 
             <RelativeLayout
@@ -63,32 +61,6 @@
                 android:id="@+id/image"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
-
-            <FrameLayout
-                android:id="@+id/images_layout"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="gone" >
-
-                <ImageView
-                    android:id="@+id/images"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingBottom="30dip"
-                    android:paddingLeft="20dip"
-                    android:paddingRight="20dip"
-                    android:paddingTop="18dip"
-                    android:scaleType="fitXY" />
-
-                <TextView
-                    android:id="@+id/images_count"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|center_horizontal"
-                    android:layout_marginBottom="10dip"
-                    android:gravity="center"
-                    android:text="5" />
-            </FrameLayout>
         </RelativeLayout>
 
         <ImageView

@@ -1,9 +1,12 @@
 package com.open.chitchat.fragment;
 
+import java.io.File;
+
 import com.open.chitchat.ChatActivity;
 import com.open.chitchat.R;
 import com.open.chitchat.listener.MyOnClickListener;
 import com.open.chitchat.model.Data;
+import com.open.chitchat.view.GifView;
 import com.open.chitchat.view.PopMenuView;
 
 import android.annotation.SuppressLint;
@@ -11,6 +14,7 @@ import android.app.Fragment;
 import android.content.Intent;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,6 +40,7 @@ public class ChatListFragment extends Fragment {
 	private RelativeLayout rightContainer;
 	private ImageView titleImage;
 	private ListView chatList;
+	private GifView gifView;
 
 	public ChatListAdapter mChatListAdapter;
 
@@ -50,6 +55,9 @@ public class ChatListFragment extends Fragment {
 		mInflater = inflater;
 		mContentView = mInflater.inflate(R.layout.fragment_chat, null);
 		initViews();
+		gifView = (GifView) mContentView.findViewById(R.id.gif);
+		File file = new File(Environment.getExternalStorageDirectory(), "chitchat/1.gif");
+		gifView.setGifPath(file.getAbsolutePath());
 		initListeners();
 		return mContentView;
 	}

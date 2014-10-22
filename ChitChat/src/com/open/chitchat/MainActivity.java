@@ -124,8 +124,8 @@ public class MainActivity extends Activity {
 		PushService.isRunning = false;
 		parser.initialize(this);
 		data = parser.check();
-		service.putExtra("phone", "151");
-		service.putExtra("accessKey", "lejoying");
+		service.putExtra("phone", data.userInformation.currentUser.phone);
+		service.putExtra("accessKey", data.userInformation.currentUser.accessKey);
 		service.putExtra("operation", true);
 		startService(service);
 	}

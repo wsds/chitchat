@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -41,7 +42,7 @@ public class ChatController {
 	public OnItemClickListener mItemClickListener;
 	public TextWatcher mTextWatcher;
 
-	public String key = "151", type = "point";
+	public String key = "152", type = "point";
 	public User user;
 
 	public ChatController(ChatActivity activity) {
@@ -70,11 +71,11 @@ public class ChatController {
 				} else if (thisView.titleImage.equals(view)) {
 					thisView.changeChatMenu();
 				} else if (thisView.chatAdd.equals(view)) {
-					changeChatAdd();
+					thisView.changeChatAdd();
 				} else if (thisView.chatSmily.equals(view)) {
 
 				} else if (thisView.chatRecord.equals(view)) {
-					changeChatRecord();
+					thisView.changeChatRecord();
 				} else if (thisView.chatSend.equals(view)) {
 					addTextMessageToLocation();
 				} else if (thisView.voiceLayout.equals(view)) {
@@ -140,28 +141,6 @@ public class ChatController {
 		thisView.chatMenu.setOnItemClickListener(mItemClickListener);
 	}
 
-	public void changeChatRecord() {
-		if (thisView.textLayout.getVisibility() == View.VISIBLE) {
-			thisView.textLayout.setVisibility(View.GONE);
-			thisView.voiceLayout.setVisibility(View.VISIBLE);
-			thisView.chatRecord.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_chat_keyboard));
-		} else if (thisView.voiceLayout.getVisibility() == View.VISIBLE) {
-			thisView.textLayout.setVisibility(View.VISIBLE);
-			thisView.voiceLayout.setVisibility(View.GONE);
-			thisView.chatRecord.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_chat_record));
-		}
-	}
-
-	public void changeChatAdd() {
-		if (thisView.chatSmilyLayout.getVisibility() == View.VISIBLE) {
-			thisView.chatAdd.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_chat_add));
-			thisView.chatSmilyLayout.setVisibility(View.GONE);
-		} else {
-			thisView.chatAdd.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_chat_return));
-			thisView.chatSmilyLayout.setVisibility(View.VISIBLE);
-		}
-	}
-
 	private void addTextMessageToLocation() {
 		final long time = new Date().getTime();
 		final String messageContent = thisView.chatInput.getText().toString().trim();
@@ -176,6 +155,7 @@ public class ChatController {
 				message.contentType = "text";
 				message.phone = user.phone;
 				message.nickName = user.nickName;
+				message.sex = user.sex;
 				message.time = String.valueOf(time);
 				message.status = "sending";
 				message.type = Constant.MESSAGE_TYPE_SEND;
@@ -183,6 +163,11 @@ public class ChatController {
 				List<String> messagesOrder = data.messages.messagesOrder;
 				String orderKey = "";
 				if ("point".equals(type)) {
+					orderKey = "p" + key;
+					if (messagesOrder.contains(orderKey)) {
+						messagesOrder.remove(orderKey);
+					}
+					messagesOrder.add(0, orderKey);
 					message.sendType = "point";
 					message.phoneto = "[\"" + key + "\"]";
 					Map<String, ArrayList<Message>> friendMessageMap = data.messages.messageMap;
@@ -196,12 +181,12 @@ public class ChatController {
 						friendMessageMap.put(orderKey, messages);
 					}
 					messages.add(message);
-					orderKey = "p" + key;
+				} else if ("group".equals(type)) {
+					orderKey = "g" + key;
 					if (messagesOrder.contains(orderKey)) {
 						messagesOrder.remove(orderKey);
 					}
 					messagesOrder.add(0, orderKey);
-				} else if ("group".equals(type)) {
 					message.gid = key;
 					message.sendType = "group";
 
@@ -217,12 +202,10 @@ public class ChatController {
 						groupMessageMap.put(orderKey, messages);
 					}
 					messages.add(message);
-					orderKey = "g" + key;
-					if (messagesOrder.contains(orderKey)) {
-						messagesOrder.remove(orderKey);
-					}
-					messagesOrder.add(0, orderKey);
 				}
+				android.os.Message msg = new android.os.Message();
+				msg.what = Constant.HANDLER_CHAT_NOTIFY;
+				thisView.handler.sendMessage(msg);
 				sendMessage(message);
 			}
 		}).start();

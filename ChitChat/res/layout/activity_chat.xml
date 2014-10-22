@@ -12,11 +12,11 @@
         android:layout_marginBottom="1dp"
         android:layout_marginTop="55dp"
         android:background="@color/back"
-        android:cacheColorHint="#0000"
-        android:divider="#d8d8d8"
+        android:cacheColorHint="@color/transparent"
+        android:divider="@color/transparent"
         android:dividerHeight="1dp"
         android:fadingEdge="none"
-        android:listSelector="#0000"
+        android:listSelector="@color/transparent"
         android:scrollbars="none" >
     </ListView>
 
@@ -33,13 +33,21 @@
             android:id="@+id/chatMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:cacheColorHint="#00000000"
+            android:cacheColorHint="@color/transparent"
             android:fadingEdge="none"
-            android:listSelector="#00000000"
+            android:listSelector="@color/transparent"
             android:numColumns="4"
             android:scrollbars="none" >
         </GridView>
     </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/chatMenuBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/chatMenuLayout"
+        android:background="@color/black10"
+        android:visibility="gone" />
 
     <include layout="@layout/title" />
 

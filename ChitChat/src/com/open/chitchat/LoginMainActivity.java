@@ -18,7 +18,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 
 import com.open.chitchat.view.PageControlView;
-import com.nostra13.universalimageloader.core.ImageLoader;
 
 public class LoginMainActivity extends Activity implements OnClickListener, OnPageChangeListener {
 	private ViewPager loginPager;
@@ -26,7 +25,6 @@ public class LoginMainActivity extends Activity implements OnClickListener, OnPa
 	private PageControlView pageControlView;
 	private LoginPagerAdapter loginPagerAdapter;
 	private List<View> images;
-	public ImageLoader imageLoader = ImageLoader.getInstance();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
