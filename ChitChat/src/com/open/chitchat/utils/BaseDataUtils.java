@@ -11,8 +11,7 @@ public class BaseDataUtils {
 
 	public static void initBaseData(Context context) {
 		DisplayMetrics metric = new DisplayMetrics();
-		((Activity) context).getWindowManager().getDefaultDisplay()
-				.getMetrics(metric);
+		((Activity) context).getWindowManager().getDefaultDisplay().getMetrics(metric);
 
 		data.baseData.screenWidth = metric.widthPixels;
 		data.baseData.screenHeight = metric.heightPixels;
@@ -32,16 +31,47 @@ public class BaseDataUtils {
 			e.printStackTrace();
 		}
 		data.baseData.stateBar = statusBarHeight;
-		data.baseData.appHeight = data.baseData.screenHeight
-				- data.baseData.stateBar;
+		data.baseData.appHeight = data.baseData.screenHeight - data.baseData.stateBar;
 
 	}
 
-	public float dpToPx(int dp) {
-		return dp * data.baseData.density + 0.5f;
+	public static int dpToPx(int dp) {
+		return (int) (dp * data.baseData.density + 0.5f);
 	}
 
-	public float pxToDp(int px) {
-		return px / data.baseData.density + 0.5f;
+	public static int pxToDp(int px) {
+		return (int) (px / data.baseData.density + 0.5f);
+	}
+
+	public static int dpToPx(float dp) {
+		return (int) (dp * data.baseData.density + 0.5f);
+	}
+
+	public static int pxToDp(float px) {
+		return (int) (px / data.baseData.density + 0.5f);
+	}
+
+	/**
+	 * @param sex
+	 * @return male return true , female return false
+	 */
+	public static boolean determineSex(String sex) {
+		if ("男".equals(sex) || "male".equals(sex)) {
+			return true;
+		} else {
+			return false;
+		}
+
+	}
+
+	public static String generateUserName(String nickName, String alias) {
+		String showName = "";
+		if (alias != null && !"".equals(alias)) {
+			showName = alias + "(" + nickName + ")";
+		} else {
+			showName = nickName;
+		}
+
+		return showName;
 	}
 }

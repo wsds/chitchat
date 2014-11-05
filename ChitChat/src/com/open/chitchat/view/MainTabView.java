@@ -76,6 +76,17 @@ public class MainTabView extends FrameLayout {
 		onTagChanged(position);
 	}
 
+	public void setItem(int position) {
+		if (position == 1) {
+			chat.performClick();
+		} else if (position == 2) {
+			friend.performClick();
+		} else if (position == 3) {
+			find.performClick();
+		}
+
+	}
+
 	public void setOnTagClickListener(OnTagClickListener mOnTagClickListener) {
 		this.mOnTagClickListener = mOnTagClickListener;
 	}

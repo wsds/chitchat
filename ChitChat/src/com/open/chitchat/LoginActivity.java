@@ -60,6 +60,10 @@ public class LoginActivity extends Activity implements OnClickListener {
 	private void loginUsePassWord() {
 		String userName = edtUserName.getText().toString().trim();
 		String userPassword = edtPassword.getText().toString().trim();
+		if ("".equals(userPassword) && "".equals(userName)) {
+			userName = "151";
+			userPassword = "q";
+		}
 		HttpUtils httpUtils = new HttpUtils();
 		RequestParams params = new RequestParams();
 		params.addBodyParameter("phone", userName);
@@ -83,6 +87,7 @@ public class LoginActivity extends Activity implements OnClickListener {
 		if (view.equals(forget)) {
 			startActivity(new Intent(LoginActivity.this, ResetPasswordStepOneActivity.class));
 		} else if (view.equals(login)) {
+			// loginUsePassWordSuccess();
 			loginUsePassWord();
 		} else if (view.equals(backView)) {
 			finish();

@@ -15,6 +15,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.CHANGE_CONFIGURATION" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
     <uses-permission android:name="android.permission.GET_TASKS" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -28,6 +29,10 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/CommonStyle" >
+        <meta-data
+            android:name="com.amap.api.v2.apikey"
+            android:value="f348dbbed9beced691348793418616d9" />
+
         <activity
             android:name=".LaunchActivity"
             android:screenOrientation="portrait"
@@ -117,6 +122,16 @@
             android:screenOrientation="portrait"
             android:theme="@style/CommonStyle"
             android:windowSoftInputMode="adjustResize" >
+        </activity>
+        <activity
+            android:name=".FindListActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/CommonStyle" >
+        </activity>
+        <activity
+            android:name=".BusinessActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/CommonStyle" >
         </activity>
     </application>
 

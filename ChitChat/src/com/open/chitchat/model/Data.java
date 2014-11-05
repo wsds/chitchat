@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.open.chitchat.model.Data.Relationship.Friend;
+import com.open.chitchat.model.Data.Relationship.Group;
 import com.open.chitchat.model.Data.TempData.ImageBean;
 
 public class Data {
@@ -38,6 +40,11 @@ public class Data {
 	}
 
 	public class TempData {
+		public ArrayList<String> selectedImageList;
+
+		public Friend tempFriend;
+		public Group tempGroup;
+
 		public class ImageBean {
 
 			public String parentName;
@@ -76,7 +83,7 @@ public class Data {
 		public User currentUser = new User();
 
 		public class User {
-			public int id;
+			public int id = 0;
 			public String sex = "";
 			public String age;
 			public String phone = "";
@@ -86,13 +93,13 @@ public class Data {
 			public String accessKey = "";
 			public String flag = "none";
 
-			public String lastLoginTime;
-			public String longitude;
-			public String latitude;
-			public String createTime;
-			public String userBackground;
+			public String lastLoginTime = "";
+			public String longitude = "";
+			public String latitude = "";
+			public String createTime = "";
+			public String userBackground = "";
 
-			public List<String> faceList;
+			public List<String> faceList = new ArrayList<String>();
 
 		}
 	}
@@ -101,17 +108,19 @@ public class Data {
 		public boolean isModified = false;
 
 		public List<String> fans = new ArrayList<String>();
-		public List<String> follwers = new ArrayList<String>();
+		public List<String> attentions = new ArrayList<String>();
 		public List<String> friends = new ArrayList<String>();
 		public Map<String, Friend> friendsMap = new HashMap<String, Friend>();
 
 		public List<String> groups = new ArrayList<String>();
+		public List<String> createdGroups = new ArrayList<String>();
+		public List<String> joinedGroups = new ArrayList<String>();
 		public Map<String, Group> groupsMap = new HashMap<String, Group>();
 
 		public class Friend {
-			public int id;
-			public int age;
-			public int distance;
+			public int id = 0;
+			public int age = 0;
+			public int distance = 0;
 			public String sex = "";
 			public String phone = "";
 			public String nickName = "";
@@ -119,30 +128,33 @@ public class Data {
 			public String head = "Head";
 			public String friendStatus = "";
 			public String addMessage = "";
-			public boolean temp;
-			public int notReadMessagesCount;
-			public String longitude;
-			public String latitude;
+			public boolean temp = true;
+			public int notReadMessagesCount = 0;
+			public String longitude = "";
+			public String latitude = "";
 			public String alias = "";
-			public String lastLoginTime;
-			public String createTime;
-			public String userBackground;
-			public boolean notice;
+			public String lastLoginTime = "";
+			public String createTime = "";
+			public String userBackground = "";
+			public boolean notice = true;
+
+			public List<String> groups = new ArrayList<String>();
 			// groups
 		}
 
 		public class Group {
-			public boolean notification;
-			public int gid;
+			public boolean notification = true;
+			public int gid = 0;
 			public String icon = "";
 			public String create = "";
+			public String createTime = "";
 			public String name = "";
 			public int notReadMessagesCount;
-			public int distance;
-			public String longitude;
-			public String latitude;
-			public String description;
-
+			public int distance = 0;
+			public String longitude = "";
+			public String latitude = "";
+			public String description = "";
+			public long anonymityTime = 0;
 			public List<String> members = new ArrayList<String>();
 		}
 	}
@@ -155,17 +167,17 @@ public class Data {
 
 		public class Message {
 			public int type;
-			public String time;
-			public String sendType;
-			public String gid;
-			public String status;
-			public String phone;
-			public String nickName;
-			public String sex;
-			public String contentType;
-			public String content;
-			public String phoneto;
-			public boolean anonymity;
+			public String time = "";
+			public String sendType = "";
+			public String gid = "";
+			public String status = "";
+			public String phone = "";
+			public String nickName = "";
+			public String sex = "";
+			public String contentType = "";
+			public String content = "";
+			public String phoneto = "";
+			public boolean anonymity = false;
 		}
 	}
 

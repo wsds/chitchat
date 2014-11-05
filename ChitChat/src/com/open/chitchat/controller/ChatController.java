@@ -42,7 +42,7 @@ public class ChatController {
 	public OnItemClickListener mItemClickListener;
 	public TextWatcher mTextWatcher;
 
-	public String key = "152", type = "point";
+	public String key = "151", type = "point";
 	public User user;
 
 	public ChatController(ChatActivity activity) {
@@ -73,7 +73,7 @@ public class ChatController {
 				} else if (thisView.chatAdd.equals(view)) {
 					thisView.changeChatAdd();
 				} else if (thisView.chatSmily.equals(view)) {
-
+					thisView.changeChatSmily();
 				} else if (thisView.chatRecord.equals(view)) {
 					thisView.changeChatRecord();
 				} else if (thisView.chatSend.equals(view)) {

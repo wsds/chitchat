@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <item name="tag_first" type="id"></item>
+    <item name="tag_second" type="id"></item>
+    <item name="tag_third" type="id"></item>
+    <item name="tag_class" type="id"></item>
     <item name="menu_list" type="id">false</item>
     <item name="login_layout_content" type="id">false</item>
     <item name="login_id" type="id">false</item>
@@ -1441,18 +1445,5 @@
     <item name="llInput" type="id">false</item>
     <item name="etSearch" type="id">false</item>
     <item name="btnOk" type="id">false</item>
-    <item name="xlistview_footer_loading_layout" type="id">false</item>
-    <item name="xlistview_footer_progressbar" type="id">false</item>
-    <item name="xlistview_footer_loading_textview" type="id">false</item>
-    <item name="xlistview_footer_hint_textview" type="id">false</item>
-    <item name="xlistview_header_content" type="id">false</item>
-    <item name="xlistview_header_text" type="id">false</item>
-    <item name="xlistview_header_hint_textview" type="id">false</item>
-    <item name="xlistview_header_time_hint" type="id">false</item>
-    <item name="xlistview_header_time" type="id">false</item>
-    <item name="xlistview_header_arrow" type="id">false</item>
-    <item name="xlistview_header_progressbar" type="id">false</item>
-    <item name="action_settings" type="id">false</item>
-    <item name="menu_settings" type="id">false</item>
 
 </resources>

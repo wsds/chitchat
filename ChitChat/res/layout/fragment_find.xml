@@ -16,24 +16,35 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
+            android:layout_toLeftOf="@+id/search"
             android:background="@drawable/bg_round_white"
             android:gravity="center_vertical"
             android:orientation="horizontal" >
 
-            <TextView
+            <LinearLayout
+                android:id="@+id/searchLayout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:gravity="center"
-                android:text="@string/searchGroup"
-                android:textColor="@color/black25"
-                android:textSize="15sp" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal" >
 
-            <ImageView
-                android:layout_width="15dp"
-                android:layout_height="15dp"
-                android:layout_margin="5dp"
-                android:src="@drawable/activities_down" />
+                <TextView
+                    android:id="@+id/searchText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:gravity="center"
+                    android:text="@string/searchGroup"
+                    android:textColor="@color/black25"
+                    android:textSize="15sp" />
+
+                <ImageView
+                    android:id="@+id/searchImage"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:layout_margin="5dp"
+                    android:src="@drawable/activities_down" />
+            </LinearLayout>
 
             <ImageView
                 android:layout_width="1dp"
@@ -41,6 +52,7 @@
                 android:background="@color/black10" />
 
             <EditText
+                android:id="@+id/input"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="5dp"
@@ -53,9 +65,15 @@
         </LinearLayout>
 
         <TextView
+            android:id="@+id/search"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="搜索"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:text="@string/search"
+            android:textColor="@color/black"
+            android:textSize="15sp"
             android:visibility="gone" />
     </RelativeLayout>
 

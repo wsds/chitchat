@@ -1,56 +1,83 @@
 package com.open.chitchat.fragment;
 
+import com.open.chitchat.FindListActivity;
+import com.open.chitchat.MainActivity;
 import com.open.chitchat.R;
 import com.open.chitchat.listener.MyOnClickListener;
+import com.open.chitchat.utils.InputMethodManagerUtils;
 import com.open.chitchat.view.PopMenuView;
 
 import android.app.Fragment;
+import android.content.Intent;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnKeyListener;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
+import android.widget.PopupWindow.OnDismissListener;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.RelativeLayout.LayoutParams;
 
 public class FindFragment extends Fragment {
-	View mContentView, backView;
-	LayoutInflater mInflater;
+	private View mContentView, backView;
+	private LayoutInflater mInflater;
 
-	private TextView titleText;
+	private MainActivity thisActivity;
+
+	private TextView titleText, search, searchText;
 	private RelativeLayout rightContainer;
-	private ImageView titleImage;
-	private View myLike, nearbyGroup, hotGroup, classifyGroup, nearbyPeople;
+	private ImageView titleImage, searchImage;
+	private EditText input;
+	private View searchLayout, myLike, nearbyGroup, hotGroup, classifyGroup, nearbyPeople, mSearchPopupWindowView, searchGroup, searchPeople;
 
 	private PopMenuView mPopupWindowView;
-	private PopupWindow mPopupWindow;
+	private PopupWindow mPopupWindow, mSearchPopupWindow;
 
 	private MyOnClickListener mOnClickListener;
 	private OnKeyListener mOnKeyListener;
+	private OnDismissListener mOnDismissListener;
+	private TextWatcher mTextWatcher;
+
+	private InputMethodManagerUtils mInputManager;
+
+	private enum Status {
+		searchGroup, searchPeople
+	}
+
+	private Status status = Status.searchGroup;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		mInflater = inflater;
+		thisActivity = (MainActivity) this.getActivity();
 		mContentView = mInflater.inflate(R.layout.fragment_find, null);
+		mSearchPopupWindowView = mInflater.inflate(R.layout.fragment_find_searchpop, null);
 		initViews();
 		initListeners();
-		fillData();
+		initData();
 		return mContentView;
 	}
 
-	private void fillData() {
-		// TODO Auto-generated method stub
-
+	private void initData() {
+		mInputManager = new InputMethodManagerUtils(thisActivity);
 	}
 
 	private void initViews() {
 		backView = mContentView.findViewById(R.id.backView);
+		searchLayout = mContentView.findViewById(R.id.searchLayout);
 		titleText = (TextView) mContentView.findViewById(R.id.titleText);
+		search = (TextView) mContentView.findViewById(R.id.search);
+		searchText = (TextView) mContentView.findViewById(R.id.searchText);
+		searchImage = (ImageView) mContentView.findViewById(R.id.searchImage);
+		input = (EditText) mContentView.findViewById(R.id.input);
 		rightContainer = (RelativeLayout) mContentView.findViewById(R.id.rightContainer);
 
 		myLike = mContentView.findViewById(R.id.myLike);
@@ -59,18 +86,23 @@ public class FindFragment extends Fragment {
 		classifyGroup = mContentView.findViewById(R.id.classifyGroup);
 		nearbyPeople = mContentView.findViewById(R.id.nearbyPeople);
 
-		titleImage = new ImageView(getActivity());
+		titleImage = new ImageView(thisActivity);
 		titleImage.setImageResource(R.drawable.title_image);
 		rightContainer.addView(titleImage);
 
 		backView.setVisibility(View.INVISIBLE);
 		titleText.setText(R.string.find_title);
 
-		mPopupWindowView = new PopMenuView(getActivity());
+		mPopupWindowView = new PopMenuView(thisActivity);
 		mPopupWindow = new PopupWindow(mPopupWindowView, LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, true);
 		mPopupWindow.setBackgroundDrawable(new BitmapDrawable());
 		mPopupWindow.setOutsideTouchable(true);
 
+		searchGroup = mSearchPopupWindowView.findViewById(R.id.searchGroup);
+		searchPeople = mSearchPopupWindowView.findViewById(R.id.searchPeople);
+		mSearchPopupWindow = new PopupWindow(mSearchPopupWindowView, LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, true);
+		mSearchPopupWindow.setBackgroundDrawable(new BitmapDrawable());
+		mSearchPopupWindow.setOutsideTouchable(true);
 	}
 
 	private void initListeners() {
@@ -79,8 +111,34 @@ public class FindFragment extends Fragment {
 			public void onClickEffective(View view) {
 				if (view.equals(titleImage)) {
 					changePopMenuView();
+				} else if (view.equals(searchLayout)) {
+					changeSearchPopMenuView(true, false);
+				} else if (view.equals(searchGroup)) {
+					status = Status.searchGroup;
+					changeSearchPopMenuView(true, true);
+				} else if (view.equals(searchPeople)) {
+					status = Status.searchPeople;
+					changeSearchPopMenuView(true, true);
+				} else if (view.equals(nearbyGroup)) {
+					Intent intent = new Intent(thisActivity, FindListActivity.class);
+					intent.putExtra("type", "nearbyGroup");
+					thisActivity.startActivity(intent);
+				} else if (view.equals(nearbyPeople)) {
+					Intent intent = new Intent(thisActivity, FindListActivity.class);
+					intent.putExtra("type", "nearbyPeople");
+					thisActivity.startActivity(intent);
+				} else if (view.equals(search)) {
+					Intent intent = new Intent(thisActivity, FindListActivity.class);
+					if (status == Status.searchPeople) {
+						intent.putExtra("type", "searchPeople");
+					} else if (status == Status.searchGroup) {
+						intent.putExtra("type", "searchGroup");
+					}
+					intent.putExtra("key", input.getText().toString());
+					thisActivity.startActivity(intent);
 				}
 			}
+
 		};
 		mOnKeyListener = new OnKeyListener() {
 
@@ -93,6 +151,35 @@ public class FindFragment extends Fragment {
 				return false;
 			}
 		};
+		mTextWatcher = new TextWatcher() {
+
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+			}
+
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+			}
+
+			@Override
+			public void afterTextChanged(Editable s) {
+				if ("".equals(s.toString())) {
+					search.setVisibility(View.GONE);
+				} else {
+					search.setVisibility(View.VISIBLE);
+				}
+
+			}
+		};
+		mOnDismissListener = new OnDismissListener() {
+
+			@Override
+			public void onDismiss() {
+				searchImage.setImageResource(R.drawable.activities_down);
+			}
+		};
 		bindEvent();
 	}
 
@@ -103,9 +190,15 @@ public class FindFragment extends Fragment {
 		classifyGroup.setOnClickListener(mOnClickListener);
 		nearbyPeople.setOnClickListener(mOnClickListener);
 		titleImage.setOnClickListener(mOnClickListener);
-		
-		mPopupWindowView.setOnKeyListener(mOnKeyListener);
+		searchLayout.setOnClickListener(mOnClickListener);
+		searchGroup.setOnClickListener(mOnClickListener);
+		searchPeople.setOnClickListener(mOnClickListener);
+		search.setOnClickListener(mOnClickListener);
 
+		input.addTextChangedListener(mTextWatcher);
+
+		mPopupWindowView.setOnKeyListener(mOnKeyListener);
+		mSearchPopupWindow.setOnDismissListener(mOnDismissListener);
 	}
 
 	public void changePopMenuView() {
@@ -113,6 +206,33 @@ public class FindFragment extends Fragment {
 			mPopupWindow.dismiss();
 		} else {
 			mPopupWindow.showAsDropDown(titleImage);
+		}
+	}
+
+	public void changedSearchPeople() {
+		status = Status.searchPeople;
+		changeSearchPopMenuView(false, true);
+		mInputManager.show(input);
+	}
+
+	private void changeSearchPopMenuView(boolean showPop, boolean refresh) {
+		if (showPop) {
+			if (mSearchPopupWindow.isShowing()) {
+				mSearchPopupWindow.dismiss();
+				searchImage.setImageResource(R.drawable.activities_down);
+			} else {
+				mSearchPopupWindow.showAsDropDown(searchLayout);
+				searchImage.setImageResource(R.drawable.activities_up);
+			}
+		}
+		if (refresh) {
+			if (status == Status.searchGroup) {
+				searchText.setText(getResources().getText(R.string.searchGroup));
+				input.setHint(R.string.searchGroupHint);
+			} else if (status == Status.searchPeople) {
+				searchText.setText(getResources().getText(R.string.searchPeople));
+				input.setHint(R.string.searchPeopleHint);
+			}
 		}
 	}
 }

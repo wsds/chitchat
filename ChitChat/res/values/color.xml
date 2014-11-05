@@ -4,7 +4,6 @@
     <color name="card_color">#380099cd</color>
     <color name="text_color_black_2">#66000000</color>
     <color name="text_color_black">#99000000</color>
-    
     <color name="reset_green">#ff44ddcb</color>
     <color name="back">#fff0f0f0</color>
     <color name="bottom_back">#fff9f9f9</color>
@@ -146,5 +145,7 @@
     <color name="white80">#ccffffff</color>
     <color name="window_transparent">#99000000</color>
     <color name="yellow">#fffef693</color>
+    <color name="azure">#ff1cd2f0</color>
+    <color name="pink">#fffe94b1</color>
 
 </resources>

@@ -2,7 +2,7 @@ package com.open.chitchat.model;
 
 public class API {
 
-	public static String API_DOMAIN = "http://182.92.1.59/";// http://www.we-links.com/
+	public static String API_DOMAIN = "http://www.we-links.com/";// http://www.we-links.com/
 
 	/**
 	 * http://images2.we-links.com/
@@ -50,6 +50,10 @@ public class API {
 	 * http://www.we-links.com/api2/group/getgroupmembers
 	 */
 	public static String GROUP_GETGROUPMEMBERS = API_DOMAIN + "api2/group/getgroupmembers";
+	/**
+	 * http://www.we-links.com/api2/group/getgroupsandmembers
+	 */
+	public static String GROUP_GETGROUPSANDMEMBERS = API_DOMAIN + "api2/group/getgroupsandmembers";
 	/**
 	 * http://www.we-links.com/api2/group/addmembers
 	 */

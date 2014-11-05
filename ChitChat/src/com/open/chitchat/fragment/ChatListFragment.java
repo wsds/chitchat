@@ -1,24 +1,13 @@
 package com.open.chitchat.fragment;
 
-import java.io.File;
-
-import com.open.chitchat.ChatActivity;
-import com.open.chitchat.R;
-import com.open.chitchat.listener.MyOnClickListener;
-import com.open.chitchat.model.Data;
-import com.open.chitchat.view.GifView;
-import com.open.chitchat.view.PopMenuView;
-
 import android.annotation.SuppressLint;
 import android.app.Fragment;
 import android.content.Intent;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -26,12 +15,24 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.RelativeLayout.LayoutParams;
+import android.widget.TextView;
+
+import com.open.chitchat.ChatActivity;
+import com.open.chitchat.MainActivity;
+import com.open.chitchat.R;
+import com.open.chitchat.listener.MyOnClickListener;
+import com.open.chitchat.model.Data;
+import com.open.chitchat.view.PopMenuView;
+
+//import pl.droidsonroids.gif.GifDrawable;
+//import pl.droidsonroids.gif.GifImageView;
 
 @SuppressLint("InflateParams")
 public class ChatListFragment extends Fragment {
 	private Data date = Data.getInstance();
+
+	private MainActivity thisActivity;
 
 	private View mContentView, backView;
 	private LayoutInflater mInflater;
@@ -40,7 +41,7 @@ public class ChatListFragment extends Fragment {
 	private RelativeLayout rightContainer;
 	private ImageView titleImage;
 	private ListView chatList;
-	private GifView gifView;
+	// private GifView gifView;
 
 	public ChatListAdapter mChatListAdapter;
 
@@ -50,15 +51,29 @@ public class ChatListFragment extends Fragment {
 	private MyOnClickListener mOnClickListener;
 	private OnKeyListener mOnKeyListener;
 
+	// private GifImageView gif;
+
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		mInflater = inflater;
+		thisActivity = (MainActivity) this.getActivity();
 		mContentView = mInflater.inflate(R.layout.fragment_chat, null);
 		initViews();
-		gifView = (GifView) mContentView.findViewById(R.id.gif);
-		File file = new File(Environment.getExternalStorageDirectory(), "chitchat/1.gif");
-		gifView.setGifPath(file.getAbsolutePath());
 		initListeners();
+		// gifView = (GifView) mContentView.findViewById(R.id.gif);
+		// File file = new File(Environment.getExternalStorageDirectory(),
+		// "chitchat/1.gif");
+		// gifView.setGifPath(file.getAbsolutePath());
+		// gif = (GifImageView) mContentView.findViewById(R.id.gif);
+		// try {
+		// GifDrawable gifFromResource = new
+		// GifDrawable(getActivity().getResources(), R.drawable.gif_test);
+		// gif.setImageDrawable(gifFromResource);
+		// } catch (NotFoundException e) {
+		// e.printStackTrace();
+		// } catch (IOException e) {
+		// e.printStackTrace();
+		// }
 		return mContentView;
 	}
 
@@ -69,7 +84,7 @@ public class ChatListFragment extends Fragment {
 				if (view.equals(titleImage)) {
 					// changePopMenuView(mPopupWindow,
 					// titleImage);
-					startActivity(new Intent(getActivity(), ChatActivity.class));
+					startActivity(new Intent(thisActivity, ChatActivity.class));
 				}
 			}
 		};
@@ -98,14 +113,14 @@ public class ChatListFragment extends Fragment {
 		rightContainer = (RelativeLayout) mContentView.findViewById(R.id.rightContainer);
 		chatList = (ListView) mContentView.findViewById(R.id.chatList);
 
-		titleImage = new ImageView(getActivity());
+		titleImage = new ImageView(thisActivity);
 		titleImage.setImageResource(R.drawable.title_image);
 		rightContainer.addView(titleImage);
 
 		backView.setVisibility(View.INVISIBLE);
 		titleText.setText(R.string.app_name);
 
-		mPopupWindowView = new PopMenuView(getActivity());
+		mPopupWindowView = new PopMenuView(thisActivity);
 		mPopupWindow = new PopupWindow(mPopupWindowView, LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, true);
 		mPopupWindow.setBackgroundDrawable(new BitmapDrawable());
 

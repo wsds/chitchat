@@ -18,6 +18,7 @@ import com.lidroid.xutils.http.RequestParams;
 import com.lidroid.xutils.http.ResponseInfo;
 import com.lidroid.xutils.http.callback.RequestCallBack;
 import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
+import com.open.chitchat.fragment.FriendFragment;
 import com.open.chitchat.model.Data.Messages.Message;
 import com.open.chitchat.model.Data.Relationship;
 import com.open.chitchat.model.Data.Relationship.Friend;
@@ -194,6 +195,7 @@ public class ResponseHandlers {
 									}
 								}
 							}
+							activityManager.newMessageCallBack(key);
 						} else if ("group".equals(sendType)) {
 							String key = message.gid;
 							String messageKey = "g" + message.gid;
@@ -231,11 +233,11 @@ public class ResponseHandlers {
 									}
 								}
 							}
+							activityManager.newMessageCallBack(key);
 						}
 					}
 					data.event.isModified = true;
 					data.messages.isModified = true;
-					// viewManage.messagesSubView.showMessagesSequence();
 				} else {
 					Log.e(tag, response.提示信息 + "---------------------" + response.失败原因);
 				}
@@ -299,10 +301,11 @@ public class ResponseHandlers {
 			public String head;
 			public String sex;
 			public String age;
-			// public String byPhone;
 			public String createTime;
 			public String lastLoginTime;
 			public String userBackground;
+			public String longitude;
+			public String latitude;
 		}
 
 		public void onSuccess(ResponseInfo<String> responseInfo) {
@@ -310,73 +313,54 @@ public class ResponseHandlers {
 			if ("获取用户信息成功".equals(response.提示信息)) {
 				User user = data.userInformation.currentUser;
 				if (response.accounts.size() > 0) {
-					Account account = response.accounts.get(0);
-					if (user.phone.equals(account.phone)) {
-						user.id = account.ID;
-						user.head = account.head;
-						user.mainBusiness = account.mainBusiness;
-						user.nickName = account.nickName;
-						user.sex = account.sex;
-						user.age = account.age;
-						user.createTime = account.createTime;
-						user.lastLoginTime = account.lastLoginTime;
-						user.userBackground = account.userBackground;
-						data.userInformation.isModified = true;
-					} else {
-						// boolean isTemp = true;
-						// List<String> circles = data.relationship.circles;
-						// for (String circle : circles) {
-						// List<String> friends =
-						// data.relationship.circlesMap.get(circle).friends;
-						// if (friends.contains(account.phone)) {
-						// isTemp = false;
-						// break;
-						// }
-						// }
-						// if (data.relationship.circlesMap.get("8888888") !=
-						// null) {
-						// if
-						// (data.relationship.circlesMap.get("8888888").friends.contains(account.phone))
-						// {
-						// isTemp = false;
-						// }
-						// }
-						// if (isTemp) {
-						// Friend friend = data.relationship.new Friend();
-						// friend.phone = account.phone;
-						// friend.head = account.head;
-						// friend.nickName = account.nickName;
-						// friend.mainBusiness = account.mainBusiness;
-						// friend.sex = account.sex;
-						// friend.sex = account.sex;
-						// friend.age = Integer.valueOf(account.age);
-						// friend.createTime = account.createTime;
-						// friend.lastLoginTime = account.lastLoginTime;
-						// friend.userBackground = account.userBackground;
-						// friend.id = account.ID;
-						//
-						// data.tempData.tempFriend = friend;
-						//
-						// data.relationship.friendsMap.put(friend.phone,
-						// friend);
-						// } else {
-						// Friend friend =
-						// data.relationship.friendsMap.get(account.phone);
-						// if (friend != null) {
-						// friend.head = account.head;
-						// friend.nickName = account.nickName;
-						// friend.mainBusiness = account.mainBusiness;
-						// friend.sex = account.sex;
-						// friend.age = Integer.valueOf(account.age);
-						// friend.createTime = account.createTime;
-						// friend.lastLoginTime = account.lastLoginTime;
-						// friend.userBackground = account.userBackground;
-						// }
-						// }
-						// viewManage.searchFriendActivity.searchCallBack(account.phone,
-						// isTemp);
+					for (Account account : response.accounts) {
+						if (user.phone.equals(account.phone)) {
+							user.id = account.ID;
+							user.head = account.head;
+							user.mainBusiness = account.mainBusiness;
+							user.nickName = account.nickName;
+							user.sex = account.sex;
+							user.age = account.age;
+							user.createTime = account.createTime;
+							user.lastLoginTime = account.lastLoginTime;
+							user.userBackground = account.userBackground;
+							data.userInformation.isModified = true;
+						} else {
+							Friend friend = data.relationship.friendsMap.get(account.phone);
+							if (friend == null) {
+								friend = data.relationship.new Friend();
+								friend.phone = account.phone;
+								friend.head = account.head;
+								friend.nickName = account.nickName;
+								friend.mainBusiness = account.mainBusiness;
+								friend.sex = account.sex;
+								friend.age = Integer.valueOf(account.age);
+								friend.createTime = account.createTime;
+								friend.lastLoginTime = account.lastLoginTime;
+								friend.userBackground = account.userBackground;
+								friend.id = account.ID;
+								friend.longitude = account.longitude;
+								friend.latitude = account.latitude;
+								data.relationship.friendsMap.put(friend.phone, friend);
+							} else {
+								friend.phone = account.phone;
+								friend.head = account.head;
+								friend.nickName = account.nickName;
+								friend.mainBusiness = account.mainBusiness;
+								friend.sex = account.sex;
+								friend.age = Integer.valueOf(account.age);
+								friend.createTime = account.createTime;
+								friend.lastLoginTime = account.lastLoginTime;
+								friend.userBackground = account.userBackground;
+								friend.id = account.ID;
+								friend.longitude = account.longitude;
+								friend.latitude = account.latitude;
+							}
+						}
 					}
-					// viewManage.postNotifyView("MeSubView");
+					if (activityManager.mBusinessActivity != null) {
+						activityManager.mBusinessActivity.thisView.fillData();
+					}
 				}
 			} else {
 				if ("获取用户信息失败".equals(response.提示信息) && "用户不存在".equals(response.失败原因)) {
@@ -398,5 +382,107 @@ public class ResponseHandlers {
 		public void onSuccess(ResponseInfo<String> responseInfo) {
 			Response response = gson.fromJson(responseInfo.result, Response.class);
 		}
+	};
+	public ResponseHandler<String> getGroupsAndMembersCallBack = httpClient.new ResponseHandler<String>() {
+		class Response {
+			public String 提示信息;
+			public String 失败原因;
+			public Relationship relationship;
+		}
+
+		public void onSuccess(ResponseInfo<String> responseInfo) {
+			Response response = gson.fromJson(responseInfo.result, Response.class);
+			if ("获取群组成员成功".equals(response.提示信息)) {
+				User user = data.userInformation.currentUser;
+				data.relationship.groups = response.relationship.groups;
+				data.relationship.groupsMap.putAll(response.relationship.groupsMap);
+
+				for (String gid : data.relationship.groups) {
+					Group group = data.relationship.groupsMap.get(gid);
+					if (group.create != null && group.create.equals(user.phone)) {
+						if (!data.relationship.createdGroups.contains(gid)) {
+							data.relationship.createdGroups.add(gid);
+						}
+					} else {
+						if (!data.relationship.joinedGroups.contains(gid)) {
+							data.relationship.joinedGroups.add(gid);
+						}
+					}
+				}
+
+				Map<String, Friend> friendsMap = response.relationship.friendsMap;
+				Iterator<Entry<String, Friend>> iterator = friendsMap.entrySet().iterator();
+				if (data.relationship.friendsMap != null && data.relationship.friendsMap.size() != 0) {
+					while (iterator.hasNext()) {
+						Map.Entry<String, Friend> entry = iterator.next();
+						String key = entry.getKey();
+						Friend friend = entry.getValue();
+						if (data.relationship.friendsMap.get(key) != null) {
+							Friend oldFriend = data.relationship.friendsMap.get(key);
+							oldFriend.phone = friend.phone;
+							oldFriend.head = friend.head;
+							oldFriend.nickName = friend.nickName;
+							oldFriend.mainBusiness = friend.mainBusiness;
+							oldFriend.sex = friend.sex;
+							oldFriend.age = Integer.valueOf(friend.age);
+							oldFriend.createTime = friend.createTime;
+							oldFriend.lastLoginTime = friend.lastLoginTime;
+							oldFriend.userBackground = friend.userBackground;
+							oldFriend.id = friend.id;
+						} else {
+							data.relationship.friendsMap.put(key, friend);
+						}
+					}
+				} else {
+					data.relationship.friendsMap.putAll(response.relationship.friendsMap);
+				}
+				((FriendFragment) activityManager.mMainActivity.friendFragment).showGroupsView();
+			} else {
+				Log.e(tag, response.失败原因);
+			}
+		};
+	};
+
+	public RequestCallBack<String> group_get = httpClient.new ResponseHandler<String>() {
+		class Response {
+			public String 提示信息;
+			public String 失败原因;
+			public Group group;
+		}
+
+		public void onSuccess(ResponseInfo<String> responseInfo) {
+			Response response = gson.fromJson(responseInfo.result, Response.class);
+			if (response.提示信息.equals("获取群组信息成功")) {
+				Group group = data.relationship.groupsMap.get(String.valueOf(response.group.gid));
+				if (group != null) {
+					group.gid = response.group.gid;
+					group.icon = response.group.icon;
+					group.name = response.group.name;
+					group.longitude = response.group.longitude;
+					group.latitude = response.group.latitude;
+					group.description = response.group.description;
+					group.createTime = response.group.createTime;
+					group.create = response.group.create;
+					// group.members = response.group.members;
+				} else {
+					group = data.relationship.new Group();
+					group.gid = response.group.gid;
+					group.icon = response.group.icon;
+					group.name = response.group.name;
+					group.longitude = response.group.longitude;
+					group.latitude = response.group.latitude;
+					group.description = response.group.description;
+					group.createTime = response.group.createTime;
+					group.create = response.group.create;
+					// group.members = response.group.members;
+					data.relationship.groupsMap.put(String.valueOf(group.gid), group);
+				}
+				if (activityManager.mBusinessActivity != null) {
+					activityManager.mBusinessActivity.thisView.fillData();
+				}
+			} else {
+				activityManager.mBusinessActivity.finish();
+			}
+		};
 	};
 }

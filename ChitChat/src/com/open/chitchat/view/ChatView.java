@@ -42,6 +42,7 @@ public class ChatView {
 	public ImageView chatAdd, chatSmily, chatRecord, titleImage, chatMenuBackground;
 	public EditText chatInput;
 	public GridView chatMenu;
+	public ChatFaceView faceLayout;
 
 	public ChatAdapter mChatAdapter;
 	public ChatMenuAdapter mChatMenuAdapter;
@@ -75,6 +76,7 @@ public class ChatView {
 		chatMenuBackground = (ImageView) thisActivity.findViewById(R.id.chatMenuBackground);
 		chatInput = (EditText) thisActivity.findViewById(R.id.chatInput);
 		chatMenu = (GridView) thisActivity.findViewById(R.id.chatMenu);
+		faceLayout = (ChatFaceView) thisActivity.findViewById(R.id.faceLayout);
 
 		chatRecord.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_chat_record));
 		chatAdd.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_chat_add));
@@ -168,19 +170,24 @@ public class ChatView {
 				}
 			} else if (message.type == Constant.MESSAGE_TYPE_RECEIVE) {
 				convertView = thisActivity.mInflater.inflate(R.layout.f_chat_item_receive, null);
-				if (message.sex.equals("male") || message.sex.equals("男")) {
-					if (message.phone.equals(lastPhone)) {
-						backgroundDrawableId = R.drawable.man_chat_from_order_bg;
-					} else {
-						backgroundDrawableId = R.drawable.man_chat_from_bg;
-					}
+				if (message.phone.equals(lastPhone)) {
+					backgroundDrawableId = R.drawable.man_chat_from_order_bg;
 				} else {
-					if (message.phone.equals(lastPhone)) {
-						backgroundDrawableId = R.drawable.girl_chat_from_order_bg;
-					} else {
-						backgroundDrawableId = R.drawable.girl_chat_from_bg;
-					}
+					backgroundDrawableId = R.drawable.man_chat_from_bg;
 				}
+				// if (message.sex.equals("male") || message.sex.equals("男")) {
+				// if (message.phone.equals(lastPhone)) {
+				// backgroundDrawableId = R.drawable.man_chat_from_order_bg;
+				// } else {
+				// backgroundDrawableId = R.drawable.man_chat_from_bg;
+				// }
+				// } else {
+				// if (message.phone.equals(lastPhone)) {
+				// backgroundDrawableId = R.drawable.girl_chat_from_order_bg;
+				// } else {
+				// backgroundDrawableId = R.drawable.girl_chat_from_bg;
+				// }
+				// }
 			}
 
 			holder.chatLayout = convertView.findViewById(R.id.chatLayout);
@@ -320,6 +327,15 @@ public class ChatView {
 			this.chatAdd.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_chat_return));
 			this.chatSmilyLayout.setVisibility(View.VISIBLE);
 		}
+	}
+
+	public void changeChatSmily() {
+		if (this.faceLayout.getVisibility() == View.VISIBLE) {
+			this.faceLayout.setVisibility(View.GONE);
+		} else {
+			this.faceLayout.setVisibility(View.VISIBLE);
+		}
+
 	}
 
 }

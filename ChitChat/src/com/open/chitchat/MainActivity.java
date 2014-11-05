@@ -3,6 +3,7 @@ package com.open.chitchat;
 import com.open.chitchat.fragment.ChatListFragment;
 import com.open.chitchat.fragment.FindFragment;
 import com.open.chitchat.fragment.FriendFragment;
+import com.open.chitchat.model.ActivityManager;
 import com.open.chitchat.model.Data;
 import com.open.chitchat.model.Parser;
 import com.open.chitchat.service.PushService;
@@ -21,6 +22,7 @@ import android.widget.FrameLayout;
 public class MainActivity extends Activity {
 	public Data data = Data.getInstance();
 	public Parser parser = Parser.getInstance();
+	public ActivityManager mActivityManager = ActivityManager.getInstance();
 
 	public FrameLayout mainView;
 
@@ -37,9 +39,16 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		mActivityManager.mMainActivity = this;
 		initViews();
 		initListener();
 		startPushService();
+	}
+
+	@Override
+	protected void onDestroy() {
+		mActivityManager.mMainActivity = null;
+		super.onDestroy();
 	}
 
 	@Override

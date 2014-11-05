@@ -11,7 +11,6 @@ import com.lidroid.xutils.http.callback.RequestCallBack;
 import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
 import com.open.chitchat.model.Data.Messages.Message;
 import com.open.chitchat.model.Data.UserInformation.User;
-import com.open.chitchat.view.ViewManage;
 
 public class DataHandlers {
 
@@ -19,7 +18,6 @@ public class DataHandlers {
 	public static Data data = Data.getInstance();
 	public static Parser parser = Parser.getInstance();
 	public static ResponseHandlers responseHandlers = ResponseHandlers.getInstance();
-	public static ViewManage viewManage = ViewManage.getInstance();
 
 	public static void getIntimateFriends() {
 		data = parser.check();
@@ -158,7 +156,7 @@ public class DataHandlers {
 			data.messages.isModified = true;
 			messageOrder.removeAll(messageOrder2);
 			// if (messageOrder2.size() != 0) {
-			viewManage.postNotifyView("MessagesSubView");
+			// viewManage.postNotifyView("MessagesSubView");
 			// }
 		} catch (Exception e) {
 			e.printStackTrace();

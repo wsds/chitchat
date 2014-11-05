@@ -6,12 +6,6 @@
 
     <include layout="@layout/title" />
 
-    <com.open.chitchat.view.GifView
-        android:id="@+id/gif"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="55dp" />
-
     <ListView
         android:id="@+id/chatList"
         android:layout_width="match_parent"
@@ -22,8 +16,7 @@
         android:dividerHeight="1dp"
         android:fadingEdge="none"
         android:listSelector="#0000"
-        android:scrollbars="none"
-        android:visibility="gone" >
+        android:scrollbars="none" >
     </ListView>
 
 </RelativeLayout>
