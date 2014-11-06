@@ -10,6 +10,9 @@ import java.lang.ref.SoftReference;
 import java.util.Hashtable;
 import java.util.Map;
 
+import pl.droidsonroids.gif.GifDrawable;
+import pl.droidsonroids.gif.GifImageView;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
@@ -39,6 +42,7 @@ public class FileHandlers {
 	public File sdcardImageFolder;
 	public File sdcardVoiceFolder;
 	public File sdcardHeadImageFolder;
+	public File sdcardGifImageFolder;
 	public File sdcardBackImageFolder;
 	public File sdcardThumbnailFolder;
 	public File sdcardSquareThumbnailFolder;
@@ -53,6 +57,8 @@ public class FileHandlers {
 	public Bitmap defaultBitmap;
 
 	public DownloadFileList downloadFileList = DownloadFileList.getInstance();
+
+	public DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder().cacheInMemory(true).cacheOnDisk(true).considerExifParams(true).build();
 
 	{
 		onDownloadListener = new OnDownloadListener() {
@@ -138,6 +144,83 @@ public class FileHandlers {
 		sdcardSquareThumbnailFolder = new File(sdcardFolder, "squarethumbnails");
 		if (!sdcardSquareThumbnailFolder.exists()) {
 			sdcardSquareThumbnailFolder.mkdirs();
+		}
+		sdcardGifImageFolder = new File(sdcardFolder, "gifs");
+		if (!sdcardGifImageFolder.exists()) {
+			sdcardGifImageFolder.mkdirs();
+		}
+	}
+
+	public void getGifImage(String fileName, GifImageView imageView) {
+		File imageFile = new File(sdcardGifImageFolder, fileName);
+		final String path = imageFile.getAbsolutePath();
+		final String url = API.DOMAIN_COMMONIMAGE + "gifs/" + fileName;
+		if (imageFile.exists()) {
+			GifDrawable gifFromFile = null;
+			try {
+				gifFromFile = new GifDrawable(imageFile);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			imageView.setImageDrawable(gifFromFile);
+		} else {
+			downloadGifFile(url, path, imageView);
+		}
+	}
+
+	public void downloadGifFile(String url, String path, GifImageView imageView) {
+		DownloadFile downloadFile = new DownloadFile(url, path);
+		downloadFile.path = path;
+		downloadFile.view = imageView;
+		downloadFile.setDownloadFileListener(new OnDownloadListener() {
+			@Override
+			public void onSuccess(DownloadFile instance, int status) {
+				super.onSuccess(instance, status);
+				GifDrawable gifFromFile = null;
+				try {
+					gifFromFile = new GifDrawable("file://" + instance.path);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				((GifImageView) instance.view).setImageDrawable(gifFromFile);
+			}
+
+			@Override
+			public void onFailure(DownloadFile instance, int status) {
+				super.onFailure(instance, status);
+			}
+		});
+		downloadFileList.addDownloadFile(downloadFile);
+	}
+
+	public void getImage(String fileName, final ImageView imageView, File file, String webFolder, DisplayImageOptions mDisplayImageOptions) {
+		if (mDisplayImageOptions == null) {
+			mDisplayImageOptions = defaultOptions;
+		}
+		final DisplayImageOptions options = mDisplayImageOptions;
+		imageLoader.displayImage("drawable://" + R.drawable.ic_launcher, imageView, options);
+		if (!fileName.equals("")) {
+			File imageFile = new File(file, fileName);
+			final String path = imageFile.getAbsolutePath();
+			final String url = API.DOMAIN_COMMONIMAGE + webFolder + "/" + fileName;
+			if (imageFile.exists()) {
+				imageLoader.displayImage("file://" + path, imageView, options, new SimpleImageLoadingListener() {
+					@Override
+					public void onLoadingStarted(String imageUri, View view) {
+					}
+
+					@Override
+					public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
+						downloadHeadFile(url, path, imageView, options);
+					}
+
+					@Override
+					public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+					}
+				});
+			} else {
+				downloadHeadFile(url, path, imageView, options);
+			}
 		}
 	}
 

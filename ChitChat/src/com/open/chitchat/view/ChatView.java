@@ -3,6 +3,8 @@ package com.open.chitchat.view;
 import java.util.ArrayList;
 import java.util.List;
 
+import pl.droidsonroids.gif.GifImageView;
+
 import android.annotation.SuppressLint;
 import android.os.Handler;
 import android.view.View;
@@ -17,6 +19,8 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer;
 import com.open.chitchat.ChatActivity;
 import com.open.chitchat.R;
 import com.open.chitchat.controller.ChatController;
@@ -25,11 +29,13 @@ import com.open.chitchat.model.Data;
 import com.open.chitchat.model.Data.Messages.Message;
 import com.open.chitchat.model.Data.Relationship.Friend;
 import com.open.chitchat.model.Data.Relationship.Group;
+import com.open.chitchat.model.FileHandlers;
 import com.open.chitchat.model.Parser;
 
 public class ChatView {
 	public Data data = Data.getInstance();
 	public Parser parser = Parser.getInstance();
+	public FileHandlers fileHandlers = FileHandlers.getInstance();
 
 	public ChatView thisView;
 	public ChatController thisController;
@@ -48,6 +54,8 @@ public class ChatView {
 	public ChatMenuAdapter mChatMenuAdapter;
 
 	private Animation inTranslateAnimation, inAlphaAnimation, outTranslateAnimation;
+
+	private DisplayImageOptions headOptions;
 
 	public Handler handler;
 
@@ -84,6 +92,8 @@ public class ChatView {
 		titleImage = new ImageView(thisActivity);
 		titleImage.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_arrow_down));
 		rightContainer.addView(titleImage);
+
+		headOptions = new DisplayImageOptions.Builder().cacheInMemory(true).cacheOnDisk(true).considerExifParams(true).displayer(new RoundedBitmapDisplayer(40)).build();
 
 		mChatAdapter = new ChatAdapter();
 		chatContent.setAdapter(mChatAdapter);
@@ -157,7 +167,7 @@ public class ChatView {
 			ChatHolder holder = new ChatHolder();
 			Message message = messages.get(position);
 			int backgroundDrawableId = 0;
-			String lastPhone = "";
+			String lastPhone = "", messageHead = "";
 			if (position != 0) {
 				lastPhone = messages.get(position - 1).phone;
 			}
@@ -167,6 +177,7 @@ public class ChatView {
 					backgroundDrawableId = R.drawable.myself_chat_order_bg;
 				} else {
 					backgroundDrawableId = R.drawable.myself_chat_bg;
+					messageHead = "head";
 				}
 			} else if (message.type == Constant.MESSAGE_TYPE_RECEIVE) {
 				convertView = thisActivity.mInflater.inflate(R.layout.f_chat_item_receive, null);
@@ -174,6 +185,7 @@ public class ChatView {
 					backgroundDrawableId = R.drawable.man_chat_from_order_bg;
 				} else {
 					backgroundDrawableId = R.drawable.man_chat_from_bg;
+					messageHead = "head";
 				}
 				// if (message.sex.equals("male") || message.sex.equals("男")) {
 				// if (message.phone.equals(lastPhone)) {
@@ -198,22 +210,37 @@ public class ChatView {
 			holder.time = (TextView) convertView.findViewById(R.id.time);
 			holder.character = (TextView) convertView.findViewById(R.id.character);
 			holder.voicetime = (TextView) convertView.findViewById(R.id.voicetime);
+			holder.gif = (GifImageView) convertView.findViewById(R.id.gif);
 
 			holder.chatLayout.setBackgroundResource(backgroundDrawableId);
+
+			if (!"".equals(messageHead)) {
+				fileHandlers.getHeadImage(messageHead, holder.head, headOptions);
+			} else {
+				holder.head.setVisibility(View.GONE);
+			}
 
 			if (message.contentType.equals("text")) {
 				holder.character.setVisibility(View.VISIBLE);
 				holder.voice.setVisibility(View.GONE);
 				holder.image.setVisibility(View.GONE);
+				holder.gif.setVisibility(View.GONE);
 				holder.character.setText(message.content);
 			} else if (message.contentType.equals("voice")) {
 				holder.character.setVisibility(View.GONE);
 				holder.voice.setVisibility(View.VISIBLE);
 				holder.image.setVisibility(View.GONE);
+				holder.gif.setVisibility(View.GONE);
 			} else if (message.contentType.equals("image")) {
 				holder.character.setVisibility(View.GONE);
 				holder.voice.setVisibility(View.GONE);
 				holder.image.setVisibility(View.VISIBLE);
+				holder.gif.setVisibility(View.GONE);
+			} else if (message.contentType.equals("gif")) {
+				holder.character.setVisibility(View.GONE);
+				holder.voice.setVisibility(View.GONE);
+				holder.image.setVisibility(View.GONE);
+				holder.gif.setVisibility(View.VISIBLE);
 			}
 			return convertView;
 		}
@@ -222,6 +249,7 @@ public class ChatView {
 			View voice, chatLayout;
 			ImageView voice_icon, image, head;
 			TextView time, character, voicetime;
+			GifImageView gif;
 		}
 
 	}

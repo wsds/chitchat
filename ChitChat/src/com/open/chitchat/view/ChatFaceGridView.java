@@ -1,9 +1,5 @@
 package com.open.chitchat.view;
 
-import java.io.File;
-import java.io.IOException;
-
-import pl.droidsonroids.gif.GifDrawable;
 import pl.droidsonroids.gif.GifImageView;
 
 import com.open.chitchat.R;
@@ -26,6 +22,7 @@ public class ChatFaceGridView extends GridView implements android.widget.Adapter
 
 	private Context context;
 	private ChatFaceGridView thisView;
+	private ChatFaceView mChatFaceView;
 	private FaceViewPager parent;
 	private View currentView, popView;
 	private int row, line, viewHeight, viewWidth, lastposition = -1;
@@ -35,9 +32,10 @@ public class ChatFaceGridView extends GridView implements android.widget.Adapter
 	private boolean isLongClick;
 	private String type;
 
-	public ChatFaceGridView(Context context, FaceViewPager parent, String type) {
+	public ChatFaceGridView(Context context, ChatFaceView mChatFaceView, FaceViewPager parent, String type) {
 		super(context);
 		this.context = context;
+		this.mChatFaceView = mChatFaceView;
 		this.parent = parent;
 		this.type = type;
 		this.thisView = this;
@@ -45,7 +43,7 @@ public class ChatFaceGridView extends GridView implements android.widget.Adapter
 			this.row = 7;
 			this.line = 3;
 		} else {
-			this.row = 4;
+			this.row = 5;
 			this.line = 2;
 		}
 		onCreate();
@@ -66,8 +64,9 @@ public class ChatFaceGridView extends GridView implements android.widget.Adapter
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-		System.out.println("onItemClick::::::::::::::" + id + "," + position);
-
+		if (mChatFaceView.mOnFaceSeletedListener != null) {
+			mChatFaceView.mOnFaceSeletedListener.onFaceSeleted((String) view.getTag(R.id.tag_first));
+		}
 	}
 
 	@Override
@@ -145,15 +144,11 @@ public class ChatFaceGridView extends GridView implements android.widget.Adapter
 			currentView.setSelected(false);
 			currentView = this.getChildAt(position);
 			currentView.setSelected(true);
-			File gifFile = new File(fileHandlers.sdcardFolder, "1.gif");
-			GifDrawable gifFromFile = null;
-			try {
-				gifFromFile = new GifDrawable(gifFile);
-			} catch (IOException e) {
-				e.printStackTrace();
+			String fileName = (String) currentView.getTag(R.id.tag_first);
+			if (!"".equals(fileName) && fileName != null) {
+				fileHandlers.getGifImage(fileName, imageView);
+				mPopupWindow.showAsDropDown(currentView, -viewWidth / 2, -(viewHeight + BaseDataUtils.dpToPx(140)));
 			}
-			imageView.setImageDrawable(gifFromFile);
-			mPopupWindow.showAsDropDown(currentView, -viewWidth / 2, -(viewHeight + BaseDataUtils.dpToPx(140)));
 		}
 	}
 }

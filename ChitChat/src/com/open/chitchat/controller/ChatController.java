@@ -28,6 +28,7 @@ import com.open.chitchat.model.Data.Relationship.Group;
 import com.open.chitchat.model.Data.UserInformation.User;
 import com.open.chitchat.model.ResponseHandlers;
 import com.open.chitchat.view.ChatView;
+import com.open.chitchat.view.ChatFaceView.OnFaceSeletedListener;
 
 public class ChatController {
 	public Data data = Data.getInstance();
@@ -40,6 +41,7 @@ public class ChatController {
 
 	public OnClickListener mOnClickListener;
 	public OnItemClickListener mItemClickListener;
+	public OnFaceSeletedListener mOnFaceSeletedListener;
 	public TextWatcher mTextWatcher;
 
 	public String key = "151", type = "point";
@@ -122,6 +124,18 @@ public class ChatController {
 
 			}
 		};
+		mOnFaceSeletedListener = new OnFaceSeletedListener() {
+
+			@Override
+			public void onFaceSeleted(String faceName) {
+				if (faceName.indexOf("[") != -1) {
+
+				} else {
+					sendGif(faceName);
+				}
+			}
+
+		};
 		bindEvent();
 	}
 
@@ -136,6 +150,8 @@ public class ChatController {
 		thisView.takePhoto.setOnClickListener(mOnClickListener);
 		thisView.ablum.setOnClickListener(mOnClickListener);
 		thisView.location.setOnClickListener(mOnClickListener);
+
+		thisView.faceLayout.setOnFaceSeletedListener(mOnFaceSeletedListener);
 
 		thisView.chatInput.addTextChangedListener(mTextWatcher);
 		thisView.chatMenu.setOnItemClickListener(mItemClickListener);
@@ -209,6 +225,11 @@ public class ChatController {
 				sendMessage(message);
 			}
 		}).start();
+
+	}
+
+	private void sendGif(String faceName) {
+		// TODO Auto-generated method stub
 
 	}
 
