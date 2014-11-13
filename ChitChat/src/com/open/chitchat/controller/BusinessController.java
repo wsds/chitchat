@@ -11,6 +11,7 @@ import com.lidroid.xutils.http.RequestParams;
 import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
 import com.open.chitchat.BusinessActivity;
 import com.open.chitchat.ChatActivity;
+import com.open.chitchat.R;
 import com.open.chitchat.listener.MyOnClickListener;
 import com.open.chitchat.model.API;
 import com.open.chitchat.model.ActivityManager;
@@ -71,11 +72,20 @@ public class BusinessController {
 				} else if (view.equals(thisView.titleImage)) {
 					thisView.changePopMenuView();
 				} else if (view.equals(thisView.chat)) {
-					Toast.makeText(thisActivity, "chat", Toast.LENGTH_SHORT).show();
-					Intent intent = new Intent(thisActivity, ChatActivity.class);
-					intent.putExtra("type", type);
-					intent.putExtra("key", key);
-					thisActivity.startActivity(intent);
+					String tag_class = (String) view.getTag(R.id.tag_class);
+					if ("chat".equals(tag_class)) {
+						Toast.makeText(thisActivity, "chat", Toast.LENGTH_SHORT).show();
+						Intent intent = new Intent(thisActivity, ChatActivity.class);
+						intent.putExtra("type", type);
+						intent.putExtra("key", key);
+						thisActivity.startActivity(intent);
+					} else if ("joinGroup".equals(tag_class)) {
+						joinGroup();
+						view.setTag(R.id.tag_class, "chat");
+						thisView.chatText.setText("聊天");
+					} else {
+						Toast.makeText(thisActivity, tag_class, Toast.LENGTH_SHORT).show();
+					}
 				} else if (view.equals(thisView.attention)) {
 					Toast.makeText(thisActivity, "attention", Toast.LENGTH_SHORT).show();
 					thisView.attention.setVisibility(View.GONE);
@@ -96,6 +106,18 @@ public class BusinessController {
 			}
 		};
 		bindEvent();
+	}
+
+	private void joinGroup() {
+		User currentUser = data.userInformation.currentUser;
+		HttpUtils httpUtils = new HttpUtils();
+		RequestParams params = new RequestParams();
+		params.addBodyParameter("phone", currentUser.phone);
+		params.addBodyParameter("accessKey", currentUser.accessKey);
+		params.addBodyParameter("gid", key);
+		params.addBodyParameter("members", "[\"" + currentUser.phone + "\"]");
+
+		httpUtils.send(HttpMethod.POST, API.GROUP_ADDMEMBERS, params, responseHandlers.addMemberCallBack);
 	}
 
 	protected void followAccount() {

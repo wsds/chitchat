@@ -195,6 +195,7 @@ public class BusinessView {
 			style.setSpan(new ForegroundColorSpan(Color.RED), groupTitle.indexOf("(") + 1, groupTitle.indexOf(")"), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 			myGroupTitle.setText(style);
 
+			chat.setTag(R.id.tag_class, "chat");
 			chatText.setText(thisActivity.getString(R.string.personalChat));
 			chatImage.setImageResource(R.drawable.icon_chat);
 
@@ -235,6 +236,7 @@ public class BusinessView {
 			imageThree.setImageResource(R.drawable.pop_block);
 			imageFour.setImageResource(R.drawable.pop_report);
 
+			chat.setTag(R.id.tag_class, "chat");
 			chatText.setText(thisActivity.getString(R.string.personalChat));
 			chatImage.setImageResource(R.drawable.icon_chat);
 			int count = 0;
@@ -288,6 +290,7 @@ public class BusinessView {
 			imageThree.setImageResource(R.drawable.pop_block);
 			imageFour.setImageResource(R.drawable.pop_report);
 
+			chat.setTag(R.id.tag_class, "chat");
 			chatText.setText(thisActivity.getString(R.string.personalChat));
 			chatImage.setImageResource(R.drawable.icon_chat);
 
@@ -368,6 +371,7 @@ public class BusinessView {
 			memberTitle.setText(style);
 
 			chat.setBackgroundResource(R.drawable.bg_round_azure);
+			chat.setTag(R.id.tag_class, "chat");
 			chatText.setText(thisActivity.getString(R.string.chat));
 			chatImage.setImageResource(R.drawable.btn_find_off);
 
@@ -405,6 +409,7 @@ public class BusinessView {
 			memberTitle.setText(style);
 
 			chat.setBackgroundResource(R.drawable.bg_round_azure);
+			chat.setTag(R.id.tag_class, "joinGroup");
 			chatText.setText(thisActivity.getString(R.string.join));
 			chatImage.setImageResource(R.drawable.chat_add_off);
 

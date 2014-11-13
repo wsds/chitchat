@@ -124,8 +124,7 @@ public class DataHandlers {
 		params.addBodyParameter("phone", data.userInformation.currentUser.phone);
 		params.addBodyParameter("accessKey", data.userInformation.currentUser.accessKey);
 
-		// httpUtils.send(HttpMethod.POST, API.GROUP_GETGROUPMEMBERS, params,
-		// responseHandlers.getGroupMembersCallBack);
+		httpUtils.send(HttpMethod.POST, API.GROUP_GETGROUPMEMBERS, params, responseHandlers.getGroupsAndMembersCallBack);
 	}
 
 	public static void clearInvalidGroupMessages() {

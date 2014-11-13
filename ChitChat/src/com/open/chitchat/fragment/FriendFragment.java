@@ -1,6 +1,26 @@
 package com.open.chitchat.fragment;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import android.annotation.SuppressLint;
+import android.app.Fragment;
+import android.content.Intent;
+import android.graphics.drawable.BitmapDrawable;
+import android.os.Bundle;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnKeyListener;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
+import android.widget.RelativeLayout.LayoutParams;
+import android.widget.ScrollView;
+import android.widget.TextView;
 
 import com.lidroid.xutils.HttpUtils;
 import com.lidroid.xutils.http.RequestParams;
@@ -20,25 +40,6 @@ import com.open.chitchat.model.FileHandlers;
 import com.open.chitchat.model.ResponseHandlers;
 import com.open.chitchat.utils.BaseDataUtils;
 import com.open.chitchat.view.PopMenuView;
-
-import android.annotation.SuppressLint;
-import android.app.Fragment;
-import android.content.Intent;
-import android.graphics.drawable.BitmapDrawable;
-import android.os.Bundle;
-import android.view.KeyEvent;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.View.OnKeyListener;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.PopupWindow;
-import android.widget.RelativeLayout;
-import android.widget.ScrollView;
-import android.widget.TextView;
-import android.widget.RelativeLayout.LayoutParams;
 
 @SuppressLint("InflateParams")
 public class FriendFragment extends Fragment {
@@ -195,11 +196,24 @@ public class FriendFragment extends Fragment {
 		if (friendsCount == null) {
 			return;
 		}
+		if (data.relationship.friends == null) {
+			data.relationship.friends = new ArrayList<String>();
+		}
+		if (data.relationship.fans == null) {
+			data.relationship.fans = new ArrayList<String>();
+		}
+		if (data.relationship.attentions == null) {
+			data.relationship.attentions = new ArrayList<String>();
+		}
 		friendsCount.setText(String.valueOf(data.relationship.friends.size()));
 		fansCount.setText(String.valueOf(data.relationship.fans.size()));
 		attentionCount.setText(String.valueOf(data.relationship.attentions.size()));
-		mCreatedGroupAdapter.notifyDataSetChanged();
-		mJoinedGroupAdapter.notifyDataSetChanged();
+		if (mCreatedGroupAdapter != null) {
+			mCreatedGroupAdapter.notifyDataSetChanged();
+		}
+		if (mJoinedGroupAdapter != null) {
+			mJoinedGroupAdapter.notifyDataSetChanged();
+		}
 	}
 
 	public void changePopMenuView() {

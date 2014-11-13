@@ -486,6 +486,23 @@ public class ResponseHandlers {
 			}
 		}
 	};
+	public ResponseHandler<String> addMemberCallBack = httpClient.new ResponseHandler<String>() {
+		class Response {
+			public String 提示信息;
+			public String 失败原因;
+		}
+
+		@Override
+		public void onSuccess(ResponseInfo<String> responseInfo) {
+			Response response = gson.fromJson(responseInfo.result, Response.class);
+			if (response.提示信息.equals("加入群组成功")) {
+				DataHandlers.getUserCurrentAllGroup();
+				Log.e(tag, "addMemberCallBack：" + response.提示信息);
+			} else {
+				Log.e(tag, "addMemberCallBack：" + response.失败原因);
+			}
+		}
+	};
 	public ResponseHandler<String> getGroupsAndMembersCallBack = httpClient.new ResponseHandler<String>() {
 		class Response {
 			public String 提示信息;
@@ -539,7 +556,9 @@ public class ResponseHandlers {
 				} else {
 					data.relationship.friendsMap.putAll(response.relationship.friendsMap);
 				}
-				((FriendFragment) activityManager.mMainActivity.friendFragment).showGroupsView();
+				if(((FriendFragment) activityManager.mMainActivity.friendFragment).mJoinedGroupAdapter!=null){
+					((FriendFragment) activityManager.mMainActivity.friendFragment).mJoinedGroupAdapter.notifyDataSetChanged();
+				}
 			} else {
 				Log.e(tag, response.失败原因);
 			}
