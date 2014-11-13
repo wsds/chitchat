@@ -5,17 +5,18 @@ import com.open.chitchat.model.Data;
 import android.content.Context;
 import android.app.Activity;
 import android.util.DisplayMetrics;
+import android.util.TypedValue;
 
 public class BaseDataUtils {
 	public static Data data = Data.getInstance();
 
 	public static void initBaseData(Context context) {
-		DisplayMetrics metric = new DisplayMetrics();
-		((Activity) context).getWindowManager().getDefaultDisplay().getMetrics(metric);
+		data.baseData.metrics = new DisplayMetrics();
+		((Activity) context).getWindowManager().getDefaultDisplay().getMetrics(data.baseData.metrics);
 
-		data.baseData.screenWidth = metric.widthPixels;
-		data.baseData.screenHeight = metric.heightPixels;
-		data.baseData.density = metric.density;
+		data.baseData.screenWidth = data.baseData.metrics.widthPixels;
+		data.baseData.screenHeight = data.baseData.metrics.heightPixels;
+		data.baseData.density = data.baseData.metrics.density;
 
 		Class<?> c = null;
 		Object obj = null;
@@ -35,20 +36,20 @@ public class BaseDataUtils {
 
 	}
 
-	public static int dpToPx(int dp) {
-		return (int) (dp * data.baseData.density + 0.5f);
+	public static float dpToPx(int dp) {
+		return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, data.baseData.metrics);
 	}
 
-	public static int pxToDp(int px) {
-		return (int) (px / data.baseData.density + 0.5f);
+	public static float pxToDp(int px) {
+		return (int) (px / data.baseData.density);
 	}
 
-	public static int dpToPx(float dp) {
-		return (int) (dp * data.baseData.density + 0.5f);
+	public static float dpToPx(float dp) {
+		return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, data.baseData.metrics);
 	}
 
-	public static int pxToDp(float px) {
-		return (int) (px / data.baseData.density + 0.5f);
+	public static float pxToDp(float px) {
+		return (int) (px / data.baseData.density);
 	}
 
 	/**

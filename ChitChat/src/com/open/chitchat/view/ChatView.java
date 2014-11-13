@@ -31,17 +31,15 @@ import com.open.chitchat.model.Data.Relationship.Friend;
 import com.open.chitchat.model.Data.Relationship.Group;
 import com.open.chitchat.model.FileHandlers;
 import com.open.chitchat.model.Parser;
+import com.open.chitchat.utils.BaseDataUtils;
 
 public class ChatView {
-	public Data data = Data.getInstance();
-	public Parser parser = Parser.getInstance();
-	public FileHandlers fileHandlers = FileHandlers.getInstance();
 
 	public ChatView thisView;
 	public ChatController thisController;
 	public ChatActivity thisActivity;
 
-	public View backView, chatMenuLayout, textLayout, voiceLayout, chatSmilyLayout, takePhoto, ablum, location;
+	public View backView, chatMenuLayout, textLayout, voiceLayout, chatAddLayout, takePhoto, ablum, location;
 	public RelativeLayout rightContainer;
 	public TextView titleText, chatSend;
 	public ListView chatContent;
@@ -60,6 +58,7 @@ public class ChatView {
 	public Handler handler;
 
 	public ChatView(ChatActivity activity) {
+		thisView = this;
 		thisActivity = activity;
 	}
 
@@ -70,7 +69,7 @@ public class ChatView {
 		chatMenuLayout = thisActivity.findViewById(R.id.chatMenuLayout);
 		textLayout = thisActivity.findViewById(R.id.textLayout);
 		voiceLayout = thisActivity.findViewById(R.id.voiceLayout);
-		chatSmilyLayout = thisActivity.findViewById(R.id.chatSmilyLayout);
+		chatAddLayout = thisActivity.findViewById(R.id.chatSmilyLayout);
 		takePhoto = thisActivity.findViewById(R.id.takePhoto);
 		ablum = thisActivity.findViewById(R.id.ablum);
 		location = thisActivity.findViewById(R.id.location);
@@ -124,18 +123,18 @@ public class ChatView {
 		public ChatAdapter() {
 			String type = thisController.type, key = thisController.key;
 			ArrayList<Message> messages = null;
-			parser.check();
+			thisController.parser.check();
 			if ("group".equals(type)) {
-				messages = data.messages.messageMap.get("g" + key);
+				messages = thisController.data.messages.messageMap.get("g" + key);
 				if (messages == null) {
 					messages = new ArrayList<Data.Messages.Message>();
-					data.messages.messageMap.put("g" + key, messages);
+					thisController.data.messages.messageMap.put("g" + key, messages);
 				}
 			} else if ("point".equals(type)) {
-				messages = data.messages.messageMap.get("p" + key);
+				messages = thisController.data.messages.messageMap.get("p" + key);
 				if (messages == null) {
 					messages = new ArrayList<Data.Messages.Message>();
-					data.messages.messageMap.put("p" + key, messages);
+					thisController.data.messages.messageMap.put("p" + key, messages);
 				}
 			}
 			this.messages = messages;
@@ -215,7 +214,7 @@ public class ChatView {
 			holder.chatLayout.setBackgroundResource(backgroundDrawableId);
 
 			if (!"".equals(messageHead)) {
-				fileHandlers.getHeadImage(messageHead, holder.head, headOptions);
+				thisController.fileHandlers.getHeadImage(messageHead, holder.head, headOptions);
 			} else {
 				holder.head.setVisibility(View.GONE);
 			}
@@ -236,11 +235,13 @@ public class ChatView {
 				holder.voice.setVisibility(View.GONE);
 				holder.image.setVisibility(View.VISIBLE);
 				holder.gif.setVisibility(View.GONE);
+				thisController.fileHandlers.getThumbleImage(message.content, holder.image, (int) BaseDataUtils.dpToPx(178), (int) BaseDataUtils.dpToPx(106), thisController.fileHandlers.defaultOptions);
 			} else if (message.contentType.equals("gif")) {
 				holder.character.setVisibility(View.GONE);
 				holder.voice.setVisibility(View.GONE);
 				holder.image.setVisibility(View.GONE);
 				holder.gif.setVisibility(View.VISIBLE);
+				thisController.fileHandlers.getGifImage(message.content, holder.gif);
 			}
 			return convertView;
 		}
@@ -260,11 +261,9 @@ public class ChatView {
 		public List<Integer> menuImage;
 
 		public ChatMenuAdapter() {
-			boolean weather = true;
 			menuString = new ArrayList<String>();
 			menuImage = new ArrayList<Integer>();
-
-			if (!weather) {
+			if (thisController.type.equals("group")) {
 				menuString.add(thisActivity.getString(R.string.groupDetails));
 				menuString.add(thisActivity.getString(R.string.groupMembers));
 				menuString.add(thisActivity.getString(R.string.groupAlbum));
@@ -340,20 +339,37 @@ public class ChatView {
 			this.textLayout.setVisibility(View.GONE);
 			this.voiceLayout.setVisibility(View.VISIBLE);
 			this.chatRecord.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_chat_keyboard));
-		} else if (thisView.voiceLayout.getVisibility() == View.VISIBLE) {
+			if (this.faceLayout.getVisibility() == View.VISIBLE) {
+				this.faceLayout.setVisibility(View.GONE);
+			}
+			if (thisController.inputManager.isActive(chatInput)) {
+				thisController.inputManager.hide(chatInput);
+			}
+		} else if (this.voiceLayout.getVisibility() == View.VISIBLE) {
 			this.textLayout.setVisibility(View.VISIBLE);
 			this.voiceLayout.setVisibility(View.GONE);
 			this.chatRecord.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_chat_record));
+			this.chatInput.requestFocus();
+		}
+		if (this.chatAddLayout.getVisibility() == View.VISIBLE) {
+			this.chatAdd.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_chat_add));
+			this.chatAddLayout.setVisibility(View.GONE);
 		}
 	}
 
 	public void changeChatAdd() {
-		if (this.chatSmilyLayout.getVisibility() == View.VISIBLE) {
+		if (this.chatAddLayout.getVisibility() == View.VISIBLE) {
 			this.chatAdd.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_chat_add));
-			this.chatSmilyLayout.setVisibility(View.GONE);
+			this.chatAddLayout.setVisibility(View.GONE);
 		} else {
 			this.chatAdd.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_chat_return));
-			this.chatSmilyLayout.setVisibility(View.VISIBLE);
+			if (thisController.inputManager.isActive(chatInput)) {
+				thisController.inputManager.hide(chatInput);
+			}
+			if (this.faceLayout.getVisibility() == View.VISIBLE) {
+				this.faceLayout.setVisibility(View.GONE);
+			}
+			this.chatAddLayout.setVisibility(View.VISIBLE);
 		}
 	}
 
@@ -361,7 +377,28 @@ public class ChatView {
 		if (this.faceLayout.getVisibility() == View.VISIBLE) {
 			this.faceLayout.setVisibility(View.GONE);
 		} else {
+			if (thisController.inputManager.isActive(chatInput)) {
+				thisController.inputManager.hide(chatInput);
+			}
+			if (this.chatAddLayout.getVisibility() == View.VISIBLE) {
+				this.chatAdd.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_chat_add));
+				this.chatAddLayout.setVisibility(View.GONE);
+			}
 			this.faceLayout.setVisibility(View.VISIBLE);
+		}
+
+	}
+
+	public void changeChatInput() {
+		if (this.faceLayout.getVisibility() == View.VISIBLE) {
+			this.faceLayout.setVisibility(View.GONE);
+		}
+		if (this.chatAddLayout.getVisibility() == View.VISIBLE) {
+			this.chatAdd.setImageDrawable(thisActivity.getResources().getDrawable(R.drawable.selector_chat_add));
+			this.chatAddLayout.setVisibility(View.GONE);
+		}
+		if (this.faceLayout.getVisibility() == View.VISIBLE) {
+			this.faceLayout.setVisibility(View.GONE);
 		}
 
 	}

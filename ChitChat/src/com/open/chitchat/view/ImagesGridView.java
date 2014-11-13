@@ -29,6 +29,7 @@ import com.open.chitchat.controller.ImagesDirectoryController;
 import com.open.chitchat.controller.ImagesGridController;
 import com.open.chitchat.model.Data;
 import com.open.chitchat.model.FileHandlers;
+import com.open.chitchat.utils.BaseDataUtils;
 
 public class ImagesGridView {
 
@@ -56,8 +57,6 @@ public class ImagesGridView {
 	public TextView directoryNameView;
 	public TextView backTitleView;
 
-	public DisplayMetrics displayMetrics;
-
 	public LinearLayout alreadyListContainer;
 	public FileHandlers fileHandlers = FileHandlers.getInstance();
 	public DisplayImageOptions smallOptions;
@@ -68,10 +67,6 @@ public class ImagesGridView {
 		// RoundedBitmapDisplayer(60)).build();
 		smallOptions = new DisplayImageOptions.Builder().showImageOnLoading(R.drawable.ic_stub).showImageForEmptyUri(R.drawable.ic_empty).showImageOnFail(R.drawable.ic_error).cacheInMemory(true).cacheOnDisk(true).considerExifParams(true).displayer(new RoundedBitmapDisplayer(10)).build();
 
-		displayMetrics = new DisplayMetrics();
-
-		thisActivity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-
 		thisActivity.setContentView(R.layout.activity_image_grid);
 		alreadyListContainer = (LinearLayout) thisActivity.findViewById(R.id.alreadyListContainer);
 		mGridView = (GridView) thisActivity.findViewById(R.id.gridview);
@@ -81,15 +76,14 @@ public class ImagesGridView {
 
 		rightContainerView = (RelativeLayout) thisActivity.findViewById(R.id.rightContainer);
 
-		int dp_5 = (int) (5 * displayMetrics.density);
 		mConfirm = new TextView(context);
 		mConfirm.setGravity(Gravity.CENTER);
-		mConfirm.setPadding(dp_5 * 2, dp_5, dp_5 * 2, dp_5);
+		// mConfirm.setPadding(dp_5 * 2, dp_5, dp_5 * 2, dp_5);
 		mConfirm.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
 		mConfirm.setText("确定(0)");
 		mConfirm.setBackgroundResource(R.drawable.textview_bg);
 		RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-		layoutParams.setMargins(0, dp_5, (int) 0, dp_5);
+		// layoutParams.setMargins(0, dp_5, (int) 0, dp_5);
 		layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT);
 		rightContainerView.addView(mConfirm, layoutParams);
 		showAlreayList();
@@ -114,8 +108,8 @@ public class ImagesGridView {
 	}
 
 	public void showAlreayList() {
-		int width = (int) (40 * displayMetrics.density);
-		int spacing = (int) (5 * displayMetrics.density);
+		int width = (int)BaseDataUtils.dpToPx(40);
+		int spacing = (int)BaseDataUtils.dpToPx(5);
 		LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(width, width);
 		layoutParams.setMargins(spacing, spacing, spacing, spacing);
 		alreadyListContainer.removeAllViews();

@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import android.util.DisplayMetrics;
+
 import com.open.chitchat.model.Data.Relationship.Friend;
 import com.open.chitchat.model.Data.Relationship.Group;
 import com.open.chitchat.model.Data.TempData.ImageBean;
@@ -31,6 +33,7 @@ public class Data {
 	public class BaseData {
 		public boolean notification;
 
+		public DisplayMetrics metrics;
 		public float screenWidth;
 		public float screenHeight;
 		public float appHeight;
@@ -100,7 +103,6 @@ public class Data {
 			public String userBackground = "";
 
 			public List<String> faceList = new ArrayList<String>();
-
 		}
 	}
 

@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -15,6 +16,7 @@ import pl.droidsonroids.gif.GifImageView;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
@@ -29,6 +31,7 @@ import com.open.chitchat.R;
 import com.open.chitchat.controller.DownloadFile;
 import com.open.chitchat.controller.DownloadFileList;
 import com.open.chitchat.listener.OnDownloadListener;
+import com.open.chitchat.utils.SHA1;
 import com.open.chitchat.utils.StreamParser;
 
 public class FileHandlers {
@@ -50,7 +53,11 @@ public class FileHandlers {
 
 	public Handler handler = new Handler();
 
+	public SHA1 sha1 = new SHA1();
+
 	public ImageLoader imageLoader = ImageLoader.getInstance();
+	public Data data = Data.getInstance();
+	public AudioHandlers audioHandlers = AudioHandlers.getInstance();
 
 	public OnDownloadListener onDownloadListener;
 
@@ -58,8 +65,7 @@ public class FileHandlers {
 
 	public DownloadFileList downloadFileList = DownloadFileList.getInstance();
 
-	public DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder().cacheInMemory(true).cacheOnDisk(true).considerExifParams(true).build();
-
+	public DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder().showImageOnLoading(R.drawable.defaultimage).showImageForEmptyUri(R.drawable.defaultimage).showImageOnFail(R.drawable.defaultimage).cacheInMemory(true).cacheOnDisk(true).considerExifParams(true).bitmapConfig(Bitmap.Config.RGB_565).build();
 	{
 		onDownloadListener = new OnDownloadListener() {
 			@Override
@@ -274,6 +280,108 @@ public class FileHandlers {
 		downloadFileList.addDownloadFile(downloadFile);
 	}
 
+	public void downloadVoiceFile(File file, final String fileName) {
+		DownloadFile downloadFile = new DownloadFile(API.DOMAIN_COMMONIMAGE + "voices/" + fileName, file.getAbsolutePath());
+		downloadFile.setDownloadFileListener(new OnDownloadListener() {
+			@Override
+			public void onSuccess(DownloadFile instance, int status) {
+				super.onSuccess(instance, status);
+				audioHandlers.prepare(fileName);
+			}
+
+			@Override
+			public void onFailure(DownloadFile instance, int status) {
+				super.onFailure(instance, status);
+			}
+		});
+		downloadFileList.addDownloadFile(downloadFile);
+	}
+
+	public Map<String, Object> processVoiceInformation(String filePath) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		String suffixName = ".osa";
+		String fileName = "";
+		File fromFile = new File(filePath);
+		byte[] bytes = StreamParser.parseToByteArray(fromFile);
+		map.put("bytes", bytes);
+		String sha1FileName = sha1.getDigestOfString(bytes);
+		fileName = sha1FileName + suffixName;
+		map.put("fileName", fileName);
+		File toFile = new File(this.sdcardImageFolder, fileName);
+		fromFile.renameTo(toFile);
+		return map;
+	}
+
+	public Map<String, Object> processImagesInformation(String filePath) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		String suffixName = filePath.substring(filePath.lastIndexOf("."));
+		if (suffixName.equals(".jpg") || suffixName.equals(".jpeg")) {
+			suffixName = ".osj";
+		} else if (suffixName.equals(".png")) {
+			suffixName = ".osp";
+		}
+		String fileName = "";
+		File fromFile = new File(filePath);
+		byte[] bytes = this.getImageFileBytes(fromFile, (int) data.baseData.screenWidth, (int) data.baseData.screenHeight);
+		map.put("bytes", bytes);
+		String sha1FileName = sha1.getDigestOfString(bytes);
+		fileName = sha1FileName + suffixName;
+		map.put("fileName", fileName);
+		File toFile = new File(this.sdcardImageFolder, fileName);
+		try {
+			FileOutputStream fileOutputStream = new FileOutputStream(toFile);
+			StreamParser.parseToFile(bytes, fileOutputStream);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		File toSnapFile = new File(this.sdcardThumbnailFolder, fileName);
+		this.makeImageThumbnail(fromFile, (int) (data.baseData.screenWidth / 3), (int) (data.baseData.screenHeight / 4), toSnapFile, fileName);
+		return map;
+	}
+
+	public void getThumbleImage(String fileName, final ImageView imageView, int width, int height, final DisplayImageOptions options) {
+		if (fileName == null || "".equals(fileName)) {
+			imageView.setBackgroundColor(Color.parseColor("#990099cd"));
+			return;
+		}
+		final String url = API.DOMAIN_OSS_THUMBNAIL + "images/" + fileName + "@" + width + "w_" + height + "h_1c_1e_100q";
+		File file = null;
+
+		file = new File(sdcardThumbnailFolder, fileName);
+
+		if (file != null) {
+			final String path = file.getAbsolutePath();
+			if (file.exists()) {
+				imageLoader.displayImage("file://" + path, imageView, options, new SimpleImageLoadingListener() {
+					@Override
+					public void onLoadingStarted(String imageUri, View view) {
+					}
+
+					@Override
+					public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
+						imageView.setBackgroundColor(Color.parseColor("#990099cd"));
+						downloadImageFile(url, path, imageView, options, DownloadFile.TYPE_THUMBLE_IMAGE);
+					}
+
+					@Override
+					public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+					}
+				});
+			} else {
+				downloadImageFile(url, path, imageView, options, DownloadFile.TYPE_THUMBLE_IMAGE);
+			}
+		}
+	}
+
+	private void downloadImageFile(String url, String path, ImageView imageView, DisplayImageOptions options, int downloadType) {
+		DownloadFile downloadFile = new DownloadFile(url, path);
+		downloadFile.view = imageView;
+		downloadFile.options = options;
+		downloadFile.type = downloadType;
+		downloadFile.setDownloadFileListener(onDownloadListener);
+		downloadFileList.addDownloadFile(downloadFile);
+	}
+
 	// TODO file deal with
 	public int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
 		// Raw height and width of image
@@ -359,8 +467,6 @@ public class FileHandlers {
 		return byteArrayOutputStream;
 	}
 
-	// public byte[] bytes;
-
 	public byte[] getImageFileBytes(File fromFile, int width, int height) {
 
 		long fileLength = fromFile.length();
@@ -387,7 +493,6 @@ public class FileHandlers {
 			ByteArrayOutputStream snapByteStream = decodeSnapBitmapFromFileInputStream(fromFile, showImageWidth, showImageHeight);
 			byte[] snapBytes = snapByteStream.toByteArray();
 			FileOutputStream toSnapFileOutputStream = new FileOutputStream(toSnapFile);
-			Log.d(tag, "file saved to " + fileName);
 			StreamParser.parseToFile(snapBytes, toSnapFileOutputStream);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();

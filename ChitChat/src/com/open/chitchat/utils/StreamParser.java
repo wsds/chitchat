@@ -1,6 +1,9 @@
 package com.open.chitchat.utils;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +38,16 @@ public class StreamParser {
 			}
 		}
 		return data;
+	}
+
+	public static byte[] parseToByteArray(File file) {
+		FileInputStream stream = null;
+		try {
+			stream = new FileInputStream(file);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		return parseToByteArray(stream);
 	}
 
 	public static void parseToFile(InputStream inputStream, FileOutputStream outputStream) {

@@ -218,7 +218,7 @@ public class FriendFragment extends Fragment {
 
 		@Override
 		public void notifyDataSetChanged() {
-			params.height = BaseDataUtils.dpToPx(51 * createdGroups.size());
+			params.height = (int) BaseDataUtils.dpToPx(51 * createdGroups.size());
 			myGroupNum.setText(String.valueOf(createdGroups.size()));
 			super.notifyDataSetChanged();
 			myGroupList.post(new Runnable() {
@@ -284,7 +284,7 @@ public class FriendFragment extends Fragment {
 
 		@Override
 		public void notifyDataSetChanged() {
-			params.height = BaseDataUtils.dpToPx(51 * joinedGroups.size());
+			params.height = (int) BaseDataUtils.dpToPx(51 * joinedGroups.size());
 			myJoinedGroupNum.setText(String.valueOf(joinedGroups.size()));
 			super.notifyDataSetChanged();
 			myJoinGroupList.post(new Runnable() {

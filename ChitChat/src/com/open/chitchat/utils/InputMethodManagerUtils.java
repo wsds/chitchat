@@ -19,6 +19,14 @@ public class InputMethodManagerUtils {
 	}
 
 	public void hide(EditText editText) {
-		mInputMethodManager.hideSoftInputFromWindow(editText.getWindowToken(), 0);
+		mInputMethodManager.hideSoftInputFromWindow(editText.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+	}
+
+	public boolean isActive() {
+		return mInputMethodManager.isActive();
+	}
+
+	public boolean isActive(EditText editText) {
+		return mInputMethodManager.isActive(editText);
 	}
 }

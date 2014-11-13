@@ -17,6 +17,7 @@
         android:dividerHeight="1dp"
         android:fadingEdge="none"
         android:listSelector="@color/transparent"
+        android:padding="5dp"
         android:scrollbars="none" >
     </ListView>
 
@@ -99,7 +100,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="5dp"
                         android:layout_weight="1.0"
-                        android:background="#0000" />
+                        android:background="#0000" >
+                    </EditText>
 
                     <ImageView
                         android:id="@+id/chatSmily"

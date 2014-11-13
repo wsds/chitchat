@@ -11,11 +11,9 @@ import com.open.chitchat.model.Constant;
 import com.open.chitchat.model.Data;
 import com.open.chitchat.model.FileHandlers;
 import com.open.chitchat.utils.BaseDataUtils;
-import com.open.chitchat.view.ChatFaceHorizontalScrollView.OnChatFaceHorizontalScrollViewItemClickListener;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.BitmapFactory;
 import android.os.Parcelable;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
@@ -25,10 +23,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
-import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.FrameLayout.LayoutParams;
 
 public class ChatFaceView extends FrameLayout {
 	private Data data = Data.getInstance();
@@ -139,7 +135,6 @@ public class ChatFaceView extends FrameLayout {
 	}
 
 	private void fillFaces() {
-		faceList.add("tosiji");
 		int total, line, row, eachPageNum, pageTotal;
 		for (int i = 0; i < (faceList.size() + 1); i++) {
 			if (i == 0) {
@@ -182,8 +177,8 @@ public class ChatFaceView extends FrameLayout {
 
 	public void addFaceView(int resource) {
 		ImageView image = new ImageView(context);
-		LayoutParams params = new LayoutParams(BaseDataUtils.dpToPx(50), BaseDataUtils.dpToPx(50));
-		image.setPadding(BaseDataUtils.dpToPx(5), BaseDataUtils.dpToPx(5), BaseDataUtils.dpToPx(5), BaseDataUtils.dpToPx(5));
+		LayoutParams params = new LayoutParams((int) BaseDataUtils.dpToPx(50), (int) BaseDataUtils.dpToPx(50));
+		image.setPadding((int) BaseDataUtils.dpToPx(5), (int) BaseDataUtils.dpToPx(5), (int) BaseDataUtils.dpToPx(5), (int) BaseDataUtils.dpToPx(5));
 		image.setImageResource(resource);
 		image.setLayoutParams(params);
 		image.setBackgroundResource(R.drawable.selector_chat_face_item);
@@ -197,8 +192,8 @@ public class ChatFaceView extends FrameLayout {
 
 	private void addFaceView(String filePath) {
 		ImageView image = new ImageView(context);
-		LayoutParams params = new LayoutParams(BaseDataUtils.dpToPx(50), BaseDataUtils.dpToPx(50));
-		image.setPadding(BaseDataUtils.dpToPx(5), BaseDataUtils.dpToPx(5), BaseDataUtils.dpToPx(5), BaseDataUtils.dpToPx(5));
+		LayoutParams params = new LayoutParams((int) BaseDataUtils.dpToPx(50), (int) BaseDataUtils.dpToPx(50));
+		image.setPadding((int) BaseDataUtils.dpToPx(5), (int) BaseDataUtils.dpToPx(5), (int) BaseDataUtils.dpToPx(5), (int) BaseDataUtils.dpToPx(5));
 		image.setLayoutParams(params);
 		image.setBackgroundResource(R.drawable.selector_chat_face_item);
 		image.setOnClickListener(mOnClickListener);
@@ -209,8 +204,8 @@ public class ChatFaceView extends FrameLayout {
 	}
 
 	private void addFaceView(View view) {
-		LayoutParams params = new LayoutParams(BaseDataUtils.dpToPx(50), BaseDataUtils.dpToPx(50));
-		view.setPadding(BaseDataUtils.dpToPx(5), BaseDataUtils.dpToPx(5), BaseDataUtils.dpToPx(5), BaseDataUtils.dpToPx(5));
+		LayoutParams params = new LayoutParams((int) BaseDataUtils.dpToPx(50), (int) BaseDataUtils.dpToPx(50));
+		view.setPadding((int) BaseDataUtils.dpToPx(5), (int) BaseDataUtils.dpToPx(5), (int) BaseDataUtils.dpToPx(5), (int) BaseDataUtils.dpToPx(5));
 		view.setLayoutParams(params);
 		view.setBackgroundResource(R.drawable.selector_chat_face_item);
 		faceViewList.addView(view);
@@ -221,7 +216,7 @@ public class ChatFaceView extends FrameLayout {
 
 	private void addSpaceView() {
 		ImageView image = new ImageView(context);
-		LayoutParams params = new LayoutParams(BaseDataUtils.dpToPx(0.5f), LayoutParams.MATCH_PARENT);
+		LayoutParams params = new LayoutParams((int) BaseDataUtils.dpToPx(0.5f), LayoutParams.MATCH_PARENT);
 		image.setBackgroundColor(color.black70);
 		image.setLayoutParams(params);
 		faceViewList.addView(image);
@@ -297,9 +292,9 @@ public class ChatFaceView extends FrameLayout {
 		public View getView(int position, View convertView, ViewGroup parent) {
 			if (type.equals("default")) {
 				convertView = new ImageView(context);
-				android.widget.AbsListView.LayoutParams params = new android.widget.AbsListView.LayoutParams(LayoutParams.WRAP_CONTENT, BaseDataUtils.dpToPx(60));
+				android.widget.AbsListView.LayoutParams params = new android.widget.AbsListView.LayoutParams(LayoutParams.WRAP_CONTENT, (int) BaseDataUtils.dpToPx(60));
 				convertView.setLayoutParams(params);
-				convertView.setPadding(BaseDataUtils.dpToPx(5), BaseDataUtils.dpToPx(5), BaseDataUtils.dpToPx(5), BaseDataUtils.dpToPx(5));
+				convertView.setPadding((int) BaseDataUtils.dpToPx(5), (int) BaseDataUtils.dpToPx(5), (int) BaseDataUtils.dpToPx(5), (int) BaseDataUtils.dpToPx(5));
 				if (position == total) {
 					convertView.setBackgroundResource(R.drawable.selector_chat_face_item);
 					((ImageView) convertView).setImageResource(R.drawable.emotion_del);
@@ -315,9 +310,9 @@ public class ChatFaceView extends FrameLayout {
 			} else {
 				if (faceNames != null) {
 					convertView = new ImageView(context);
-					android.widget.AbsListView.LayoutParams params = new android.widget.AbsListView.LayoutParams(LayoutParams.WRAP_CONTENT, BaseDataUtils.dpToPx(90));
+					android.widget.AbsListView.LayoutParams params = new android.widget.AbsListView.LayoutParams(LayoutParams.WRAP_CONTENT, (int) BaseDataUtils.dpToPx(90));
 					convertView.setLayoutParams(params);
-					convertView.setPadding(BaseDataUtils.dpToPx(5), BaseDataUtils.dpToPx(5), BaseDataUtils.dpToPx(5), BaseDataUtils.dpToPx(5));
+					convertView.setPadding((int) BaseDataUtils.dpToPx(5), (int) BaseDataUtils.dpToPx(5), (int) BaseDataUtils.dpToPx(5), (int) BaseDataUtils.dpToPx(5));
 					int resource = total * current + position;
 					if (resource < faceNames.size()) {
 						convertView.setBackgroundResource(R.drawable.selector_chat_face_item);

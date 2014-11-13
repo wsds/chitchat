@@ -269,6 +269,7 @@ public class ResponseHandlers {
 				}
 				data.userInformation.currentUser.phone = phone;
 				data.userInformation.currentUser.accessKey = accessKey;
+				data.userInformation.currentUser.faceList.add("tosiji");
 				data.userInformation.isModified = true;
 				if (activityManager.mLoginActivity != null) {
 					activityManager.mLoginActivity.loginUsePassWordSuccess();

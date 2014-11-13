@@ -147,7 +147,7 @@ public class ChatFaceGridView extends GridView implements android.widget.Adapter
 			String fileName = (String) currentView.getTag(R.id.tag_first);
 			if (!"".equals(fileName) && fileName != null) {
 				fileHandlers.getGifImage(fileName, imageView);
-				mPopupWindow.showAsDropDown(currentView, -viewWidth / 2, -(viewHeight + BaseDataUtils.dpToPx(140)));
+				mPopupWindow.showAsDropDown(currentView, -viewWidth / 2, -(viewHeight + (int) BaseDataUtils.dpToPx(140)));
 			}
 		}
 	}

@@ -6,7 +6,9 @@ import com.open.chitchat.view.ChatView;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 
 public class ChatActivity extends Activity {
@@ -35,8 +37,25 @@ public class ChatActivity extends Activity {
 	}
 
 	@Override
+	protected void onResume() {
+		super.onResume();
+		this.thisController.onResume();
+	}
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		return super.onKeyDown(keyCode, event);
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		this.thisController.onActivityResult(requestCode, resultCode, data);
+	}
+
+	@Override
 	protected void onDestroy() {
-		this.mActivityManager.mChatActivity = null;
+		this.thisController.onDestroy();
 		super.onDestroy();
 	}
 
