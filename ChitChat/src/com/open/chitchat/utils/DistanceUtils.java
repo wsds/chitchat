@@ -18,7 +18,7 @@ public class DistanceUtils {
 		}
 	}
 
-	public static String getDistance(int distance) {
+	public static String getDistance(float distance) {
 		if (distance < 1000) {
 			return distance + "m";
 		} else {

@@ -2,7 +2,7 @@ package com.open.chitchat.model;
 
 public class API {
 
-	public static String API_DOMAIN = "http://www.we-links.com/";// http://www.we-links.com/
+	public static String API_DOMAIN = "http://192.168.0.105/";// http://www.we-links.com/
 
 	/**
 	 * http://images2.we-links.com/
@@ -147,6 +147,19 @@ public class API {
 	 * http://www.we-links.com/api2/relation/addfriendagree
 	 */
 	public static String RELATION_ADDFRIENDAGREE = API_DOMAIN + "api2/relation/addfriendagree";
+
+	/**
+	 * http://www.we-links.com/api2/relation/fuzzyquery
+	 */
+	public static String RELATION_FUZZYQUERY = API_DOMAIN + "api2/relation/fuzzyquery";
+	/**
+	 * http://www.we-links.com/api2/relation/follow
+	 */
+	public static String RELATION_FOLLOW = API_DOMAIN + "api2/relation/follow";
+	/**
+	 * http://www.we-links.com/api2/relation/getfollow
+	 */
+	public static String RELATION_GETFOLLOW = API_DOMAIN + "api2/relation/getfollow";
 
 	// circle
 	/**

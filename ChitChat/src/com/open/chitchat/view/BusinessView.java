@@ -5,6 +5,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -236,8 +237,11 @@ public class BusinessView {
 
 			chatText.setText(thisActivity.getString(R.string.personalChat));
 			chatImage.setImageResource(R.drawable.icon_chat);
-
-			String groupTitle = thisActivity.getString(R.string.belongGroup) + "(" + friend.groups.size() + ")";
+			int count = 0;
+			if (friend.groups != null) {
+				count = friend.groups.size();
+			}
+			String groupTitle = thisActivity.getString(R.string.belongGroup) + "(" + count + ")";
 			SpannableStringBuilder style = new SpannableStringBuilder(groupTitle);
 			style.setSpan(new ForegroundColorSpan(Color.RED), groupTitle.indexOf("(") + 1, groupTitle.indexOf(")"), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 			myGroupTitle.setText(style);

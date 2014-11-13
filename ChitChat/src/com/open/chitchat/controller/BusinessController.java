@@ -1,19 +1,23 @@
 package com.open.chitchat.controller;
 
+import android.content.Intent;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnKeyListener;
+import android.widget.Toast;
 
 import com.lidroid.xutils.HttpUtils;
 import com.lidroid.xutils.http.RequestParams;
 import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
 import com.open.chitchat.BusinessActivity;
+import com.open.chitchat.ChatActivity;
 import com.open.chitchat.listener.MyOnClickListener;
 import com.open.chitchat.model.API;
 import com.open.chitchat.model.ActivityManager;
 import com.open.chitchat.model.Data;
 import com.open.chitchat.model.FileHandlers;
 import com.open.chitchat.model.ResponseHandlers;
+import com.open.chitchat.model.Data.UserInformation.User;
 import com.open.chitchat.view.BusinessView;
 
 public class BusinessController {
@@ -66,6 +70,16 @@ public class BusinessController {
 					thisActivity.finish();
 				} else if (view.equals(thisView.titleImage)) {
 					thisView.changePopMenuView();
+				} else if (view.equals(thisView.chat)) {
+					Toast.makeText(thisActivity, "chat", Toast.LENGTH_SHORT).show();
+					Intent intent = new Intent(thisActivity, ChatActivity.class);
+					intent.putExtra("type", type);
+					intent.putExtra("key", key);
+					thisActivity.startActivity(intent);
+				} else if (view.equals(thisView.attention)) {
+					Toast.makeText(thisActivity, "attention", Toast.LENGTH_SHORT).show();
+					thisView.attention.setVisibility(View.GONE);
+					followAccount();
 				}
 			}
 		};
@@ -84,10 +98,23 @@ public class BusinessController {
 		bindEvent();
 	}
 
+	protected void followAccount() {
+		User currentUser = data.userInformation.currentUser;
+		HttpUtils httpUtils = new HttpUtils();
+		RequestParams params = new RequestParams();
+		params.addBodyParameter("phone", currentUser.phone);
+		params.addBodyParameter("accessKey", currentUser.accessKey);
+		params.addBodyParameter("target", key);
+
+		httpUtils.send(HttpMethod.POST, API.RELATION_FOLLOW, params, responseHandlers.followAccount);
+	}
+
 	private void bindEvent() {
 		thisView.backView.setOnClickListener(mOnClickListener);
 		thisView.titleImage.setOnClickListener(mOnClickListener);
 		thisView.mPopupWindowView.setOnKeyListener(mOnKeyListener);
+		thisView.chat.setOnClickListener(mOnClickListener);
+		thisView.attention.setOnClickListener(mOnClickListener);
 	}
 
 	public void onDestroy() {

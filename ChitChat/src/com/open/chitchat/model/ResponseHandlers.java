@@ -1,13 +1,13 @@
 package com.open.chitchat.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
 
+import android.content.Intent;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -18,6 +18,7 @@ import com.lidroid.xutils.http.RequestParams;
 import com.lidroid.xutils.http.ResponseInfo;
 import com.lidroid.xutils.http.callback.RequestCallBack;
 import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
+import com.open.chitchat.FindListActivity;
 import com.open.chitchat.fragment.FriendFragment;
 import com.open.chitchat.model.Data.Messages.Message;
 import com.open.chitchat.model.Data.Relationship;
@@ -281,6 +282,7 @@ public class ResponseHandlers {
 				params.addBodyParameter("target", "[\"" + phone + "\"]");
 				ResponseHandlers responseHandlers = getInstance();
 				httpUtils.send(HttpMethod.POST, API.ACCOUNT_GET, params, responseHandlers.account_get);
+				DataHandlers.getAttentions();
 			} else {
 				activityManager.mLoginActivity.loginUsePassWordFail(response.失败原因);
 			}
@@ -323,6 +325,8 @@ public class ResponseHandlers {
 							user.sex = account.sex;
 							user.age = account.age;
 							user.createTime = account.createTime;
+							user.longitude = account.longitude;
+							user.latitude = account.latitude;
 							user.lastLoginTime = account.lastLoginTime;
 							user.userBackground = account.userBackground;
 							data.userInformation.isModified = true;
@@ -370,6 +374,70 @@ public class ResponseHandlers {
 				}
 			}
 		};
+	};
+	public ResponseHandler<String> getFuzzyQuery = httpClient.new ResponseHandler<String>() {
+		class Response {
+			public String 提示信息;
+			public String 失败原因;
+			public ArrayList<String> accounts;
+			public HashMap<String, Friend> accountsMap;
+		}
+
+		@Override
+		public void onSuccess(ResponseInfo<String> responseInfo) {
+			Response response = gson.fromJson(responseInfo.result, Response.class);
+			if (response.提示信息.equals("查询成功")) {
+				// activityManager.mFindListActivity.
+				Intent intent = new Intent(activityManager.mMainActivity, FindListActivity.class);
+				intent.putExtra("type", "searchPeople");
+				data.tempData.friends = response.accounts;
+				data.tempData.friendsMap = response.accountsMap;
+				activityManager.mMainActivity.startActivity(intent);
+				Log.e(tag, "getFuzzyQuery：" + response.提示信息);
+			} else {
+				Log.e(tag, "getFuzzyQuery：" + response.失败原因);
+			}
+		}
+	};
+	public ResponseHandler<String> followAccount = httpClient.new ResponseHandler<String>() {
+		class Response {
+			public String 提示信息;
+			public String 失败原因;
+		}
+
+		@Override
+		public void onSuccess(ResponseInfo<String> responseInfo) {
+			Response response = gson.fromJson(responseInfo.result, Response.class);
+			if (response.失败原因 == null) {
+				DataHandlers.getAttentions();
+				Log.e(tag, "followAccount：" + response.提示信息);
+			} else {
+				Log.e(tag, "followAccount：" + response.失败原因);
+			}
+		}
+	};
+	public ResponseHandler<String> getFollow = httpClient.new ResponseHandler<String>() {
+		class Response {
+			public String 提示信息;
+			public String 失败原因;
+			public List<String> friends;
+			public Map<String, Friend> friendsMap;
+		}
+
+		@Override
+		public void onSuccess(ResponseInfo<String> responseInfo) {
+			Response response = gson.fromJson(responseInfo.result, Response.class);
+			if (response.提示信息.equals("获取关注列表成功")) {
+				parser.check();
+				data.relationship.attentions = response.friends;
+				data.relationship.friendsMap.putAll(response.friendsMap);
+				data.relationship.isModified = true;
+				((FriendFragment) activityManager.mMainActivity.friendFragment).showGroupsView();
+				Log.e(tag, "getFollow：" + response.提示信息);
+			} else {
+				Log.e(tag, "getFollow：" + response.失败原因);
+			}
+		}
 	};
 	public ResponseHandler<String> getIntimateFriends = httpClient.new ResponseHandler<String>() {
 		class Response {

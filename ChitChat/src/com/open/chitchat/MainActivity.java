@@ -30,6 +30,7 @@ public class MainActivity extends Activity {
 
 	public OnTagClickListener mOnTagClickListener;
 
+	// qxs:Do not recommend mandatory data type conversion
 	public Fragment chatFragment, friendFragment, findFragment;
 
 	public FragmentManager mFragmentManager;
