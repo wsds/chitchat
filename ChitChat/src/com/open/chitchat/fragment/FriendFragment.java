@@ -192,6 +192,9 @@ public class FriendFragment extends Fragment {
 	}
 
 	public void showGroupsView() {
+		if (friendsCount == null) {
+			return;
+		}
 		friendsCount.setText(String.valueOf(data.relationship.friends.size()));
 		fansCount.setText(String.valueOf(data.relationship.fans.size()));
 		attentionCount.setText(String.valueOf(data.relationship.attentions.size()));

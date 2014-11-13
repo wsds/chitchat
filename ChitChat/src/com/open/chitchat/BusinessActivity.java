@@ -29,7 +29,8 @@ public class BusinessActivity extends Activity {
 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		return thisController.onKeyDown(keyCode, event);
+
+		return thisController.onKeyDown(keyCode, event) ? true : super.onKeyDown(keyCode, event);
 	}
 
 	@Override

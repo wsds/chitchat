@@ -5,23 +5,20 @@ import android.graphics.drawable.BitmapDrawable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.RelativeLayout.LayoutParams;
+import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
-import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer;
 import com.open.chitchat.BusinessActivity;
 import com.open.chitchat.R;
 import com.open.chitchat.controller.BusinessController;
 import com.open.chitchat.controller.BusinessController.Status;
-import com.open.chitchat.model.Data;
 import com.open.chitchat.model.Data.Relationship.Friend;
 import com.open.chitchat.model.Data.Relationship.Group;
 import com.open.chitchat.model.Data.UserInformation.User;
@@ -189,8 +186,11 @@ public class BusinessView {
 			imageTwo.setImageResource(R.drawable.pop_send_card);
 			imageThree.setImageResource(R.drawable.pop_block);
 			imageFour.setImageResource(R.drawable.pop_report);
-
-			String groupTitle = thisActivity.getString(R.string.belongGroup) + "(" + friend.groups.size() + ")";
+			int count = 0;
+			if (friend.groups != null) {
+				count = friend.groups.size();
+			}
+			String groupTitle = thisActivity.getString(R.string.belongGroup) + "(" + count + ")";
 			SpannableStringBuilder style = new SpannableStringBuilder(groupTitle);
 			style.setSpan(new ForegroundColorSpan(Color.RED), groupTitle.indexOf("(") + 1, groupTitle.indexOf(")"), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 			myGroupTitle.setText(style);

@@ -18,6 +18,18 @@ public class DataHandlers {
 	public static Parser parser = Parser.getInstance();
 	public static ResponseHandlers responseHandlers = ResponseHandlers.getInstance();
 
+	public static void getFans() {
+		data = parser.check();
+		RequestParams params = new RequestParams();
+		User user = data.userInformation.currentUser;
+		params.addBodyParameter("phone", user.phone);
+		params.addBodyParameter("accessKey", user.accessKey);
+
+		HttpUtils http = new HttpUtils();
+
+		http.send(HttpMethod.POST, API.RELATION_GETFANS, params, responseHandlers.getFans);
+	}
+
 	public static void getAttentions() {
 		data = parser.check();
 		RequestParams params = new RequestParams();

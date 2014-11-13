@@ -283,6 +283,8 @@ public class ResponseHandlers {
 				ResponseHandlers responseHandlers = getInstance();
 				httpUtils.send(HttpMethod.POST, API.ACCOUNT_GET, params, responseHandlers.account_get);
 				DataHandlers.getAttentions();
+				DataHandlers.getFans();
+				DataHandlers.getIntimateFriends();
 			} else {
 				activityManager.mLoginActivity.loginUsePassWordFail(response.失败原因);
 			}
@@ -439,17 +441,49 @@ public class ResponseHandlers {
 			}
 		}
 	};
-	public ResponseHandler<String> getIntimateFriends = httpClient.new ResponseHandler<String>() {
+	public ResponseHandler<String> getFans = httpClient.new ResponseHandler<String>() {
 		class Response {
 			public String 提示信息;
 			public String 失败原因;
-			public Relationship relationship;
-
+			public List<String> friends;
+			public Map<String, Friend> friendsMap;
 		}
 
 		@Override
 		public void onSuccess(ResponseInfo<String> responseInfo) {
 			Response response = gson.fromJson(responseInfo.result, Response.class);
+			if (response.提示信息.equals("获取粉丝列表成功")) {
+				parser.check();
+				data.relationship.fans = response.friends;
+				data.relationship.friendsMap.putAll(response.friendsMap);
+				data.relationship.isModified = true;
+				((FriendFragment) activityManager.mMainActivity.friendFragment).showGroupsView();
+				Log.e(tag, "getFans1：" + response.提示信息);
+			} else {
+				Log.e(tag, "getFans2：" + response.失败原因);
+			}
+		}
+	};
+	public ResponseHandler<String> getIntimateFriends = httpClient.new ResponseHandler<String>() {
+		class Response {
+			public String 提示信息;
+			public String 失败原因;
+			public Relationship relationship;
+		}
+
+		@Override
+		public void onSuccess(ResponseInfo<String> responseInfo) {
+			Response response = gson.fromJson(responseInfo.result, Response.class);
+			if (response.提示信息.equals("获取密友圈成功")) {
+				parser.check();
+				data.relationship.friends = response.relationship.friends;
+				data.relationship.friendsMap.putAll(response.relationship.friendsMap);
+				data.relationship.isModified = true;
+				((FriendFragment) activityManager.mMainActivity.friendFragment).showGroupsView();
+				Log.e(tag, "getIntimateFriends：" + response.提示信息);
+			} else {
+				Log.e(tag, "getIntimateFriends：" + response.失败原因);
+			}
 		}
 	};
 	public ResponseHandler<String> getGroupsAndMembersCallBack = httpClient.new ResponseHandler<String>() {
@@ -551,6 +585,7 @@ public class ResponseHandlers {
 				}
 			} else {
 				activityManager.mBusinessActivity.finish();
+				Log.e(tag, response.失败原因);
 			}
 		};
 	};
