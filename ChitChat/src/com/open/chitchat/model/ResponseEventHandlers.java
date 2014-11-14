@@ -26,7 +26,7 @@ public class ResponseEventHandlers {
 	public String tag = "ResponseEventHandlers";
 	public MyLog log = new MyLog(tag, true);
 
-//	public ViewManage viewManage = ViewManage.getInstance();
+	// public ViewManage viewManage = ViewManage.getInstance();
 
 	public static ResponseEventHandlers responseEventHandlers = ResponseEventHandlers.getInstance();
 
@@ -89,12 +89,6 @@ public class ResponseEventHandlers {
 				}
 				if ("account_dataupdate".equals(contentType)) {
 					handleAccountDataupdateEvent(eventMessage);
-				} else if ("relation_newfriend".equals(contentType)) {
-					handleRelationNewfriendEvent(eventMessage);
-				} else if ("relation_addfriend".equals(contentType)) {
-					handleRelationAddfriendEvent(eventMessage);
-				} else if ("relation_friendaccept".equals(contentType)) {
-					handleRelationFriendacceptEvent(eventMessage);
 				} else if ("relation_deletefriend".equals(contentType)) {
 					handleRelationDeletefriendEvent(eventMessage);
 				} else if ("relation_blacklist".equals(contentType)) {
@@ -111,6 +105,20 @@ public class ResponseEventHandlers {
 					handleGroupAddMeEvent(eventMessage);
 				} else if ("group_removeme".equals(contentType)) {
 					handleGroupRemoveMeEvent(eventMessage);
+				}
+
+				else if ("relation_updatefollow".equals(contentType)) {
+					DataHandlers.getAttentions();
+					DataHandlers.getIntimateFriends();
+				} else if ("relation_updatefans".equals(contentType)) {
+					DataHandlers.getFans();
+					DataHandlers.getIntimateFriends();
+				} else if ("relation_friendaccept".equals(contentType)) {
+					handleRelationFriendacceptEvent(eventMessage);
+				} else if ("relation_newfriend".equals(contentType)) {
+					handleRelationNewfriendEvent(eventMessage);
+				} else if ("relation_addfriend".equals(contentType)) {
+					handleRelationAddfriendEvent(eventMessage);
 				}
 				data.event.isModified = true;
 			}
@@ -133,8 +141,8 @@ public class ResponseEventHandlers {
 		data.event.groupNotReadMessage = true;
 		String eventKey = "event_group";
 		checkEventIsMessageOrder(eventKey);
-//		viewManage.postNotifyView("DynamicListActivity");
-//		viewManage.postNotifyView("MessagesSubView");
+		// viewManage.postNotifyView("DynamicListActivity");
+		// viewManage.postNotifyView("MessagesSubView");
 		DataHandlers.getUserCurrentAllGroup();
 	}
 
@@ -146,8 +154,8 @@ public class ResponseEventHandlers {
 		data.event.groupNotReadMessage = true;
 		String eventKey = "event_group";
 		checkEventIsMessageOrder(eventKey);
-//		viewManage.postNotifyView("DynamicListActivity");
-//		viewManage.postNotifyView("MessagesSubView");
+		// viewManage.postNotifyView("DynamicListActivity");
+		// viewManage.postNotifyView("MessagesSubView");
 		DataHandlers.getUserCurrentGroupMembers(message.gid, "create");
 	}
 
@@ -159,8 +167,8 @@ public class ResponseEventHandlers {
 		data.event.groupNotReadMessage = true;
 		String eventKey = "event_group";
 		checkEventIsMessageOrder(eventKey);
-//		viewManage.postNotifyView("DynamicListActivity");
-//		viewManage.postNotifyView("MessagesSubView");
+		// viewManage.postNotifyView("DynamicListActivity");
+		// viewManage.postNotifyView("MessagesSubView");
 		DataHandlers.getUserCurrentGroupMembers(message.gid, "create");
 	}
 
@@ -172,8 +180,8 @@ public class ResponseEventHandlers {
 		data.event.groupNotReadMessage = true;
 		String eventKey = "event_group";
 		checkEventIsMessageOrder(eventKey);
-//		viewManage.postNotifyView("DynamicListActivity");
-//		viewManage.postNotifyView("MessagesSubView");
+		// viewManage.postNotifyView("DynamicListActivity");
+		// viewManage.postNotifyView("MessagesSubView");
 		DataHandlers.getUserCurrentGroupInfomation(message.gid);
 	}
 
@@ -185,8 +193,8 @@ public class ResponseEventHandlers {
 		data.event.groupNotReadMessage = true;
 		String eventKey = "event_group";
 		checkEventIsMessageOrder(eventKey);
-//		viewManage.postNotifyView("DynamicListActivity");
-//		viewManage.postNotifyView("MessagesSubView");
+		// viewManage.postNotifyView("DynamicListActivity");
+		// viewManage.postNotifyView("MessagesSubView");
 		DataHandlers.getUserCurrentGroupMembers(message.gid, "removemembers");
 	}
 
@@ -198,8 +206,8 @@ public class ResponseEventHandlers {
 		data.event.groupNotReadMessage = true;
 		String eventKey = "event_group";
 		checkEventIsMessageOrder(eventKey);
-//		viewManage.postNotifyView("DynamicListActivity");
-//		viewManage.postNotifyView("MessagesSubView");
+		// viewManage.postNotifyView("DynamicListActivity");
+		// viewManage.postNotifyView("MessagesSubView");
 		DataHandlers.getUserCurrentGroupMembers(message.gid, "addmembers");
 	}
 
@@ -237,9 +245,11 @@ public class ResponseEventHandlers {
 		data.event.userNotReadMessage = true;
 		String eventKey = "event_user";
 		checkEventIsMessageOrder(eventKey);
-//		viewManage.postNotifyView("DynamicListActivity");
-//		viewManage.postNotifyView("MessagesSubView");
+		// viewManage.postNotifyView("DynamicListActivity");
+		// viewManage.postNotifyView("MessagesSubView");
 		DataHandlers.getIntimateFriends();
+		DataHandlers.getAttentions();
+		DataHandlers.getFans();
 		// data.event.userEventsMap.put(message.gid, message);
 	}
 
@@ -271,8 +281,9 @@ public class ResponseEventHandlers {
 		data.event.userNotReadMessage = true;
 		String eventKey = "event_user";
 		checkEventIsMessageOrder(eventKey);
-//		viewManage.postNotifyView("DynamicListActivity");
-//		viewManage.postNotifyView("MessagesSubView");
+		// viewManage.postNotifyView("DynamicListActivity");
+		// viewManage.postNotifyView("MessagesSubView");
+		DataHandlers.getFans();
 	}
 
 	// OK
@@ -284,7 +295,7 @@ public class ResponseEventHandlers {
 				break;
 			}
 			String key = userEvents.get(i);
-			if(key==null){
+			if (key == null) {
 				continue;
 			}
 			EventMessage message0 = data.event.userEventsMap.get(key);
@@ -305,8 +316,9 @@ public class ResponseEventHandlers {
 		data.event.userNotReadMessage = true;
 		String eventKey = "event_user";
 		checkEventIsMessageOrder(eventKey);
-//		viewManage.postNotifyView("DynamicListActivity");
-//		viewManage.postNotifyView("MessagesSubView");
+		// viewManage.postNotifyView("DynamicListActivity");
+		// viewManage.postNotifyView("MessagesSubView");
+		DataHandlers.getAttentions();
 	}
 
 	// OK
@@ -318,8 +330,8 @@ public class ResponseEventHandlers {
 		data.event.userNotReadMessage = true;
 		String eventKey = "event_user";
 		checkEventIsMessageOrder(eventKey);
-//		viewManage.postNotifyView("DynamicListActivity");
-//		viewManage.postNotifyView("MessagesSubView");
+		// viewManage.postNotifyView("DynamicListActivity");
+		// viewManage.postNotifyView("MessagesSubView");
 		DataHandlers.getUserInfomation();
 	}
 
@@ -444,22 +456,22 @@ public class ResponseEventHandlers {
 			}
 		}
 		data.messages.isModified = true;
-//		if (viewManage.chatView != null) {
-//			String key = viewManage.chatView.thisController.key;
-//			if (key.equals(message.phone) || key.equals(message.gid)) {
-//				viewManage.chatView.thisController.handler.post(new Runnable() {
-//
-//					@Override
-//					public void run() {
-//						viewManage.chatView.mChatAdapter.notifyDataSetChanged();
-//					}
-//				});
-//			} else {
-//				modifyMessagesSubView(message);
-//			}
-//		} else {
-//			modifyMessagesSubView(message);
-//		}
+		// if (viewManage.chatView != null) {
+		// String key = viewManage.chatView.thisController.key;
+		// if (key.equals(message.phone) || key.equals(message.gid)) {
+		// viewManage.chatView.thisController.handler.post(new Runnable() {
+		//
+		// @Override
+		// public void run() {
+		// viewManage.chatView.mChatAdapter.notifyDataSetChanged();
+		// }
+		// });
+		// } else {
+		// modifyMessagesSubView(message);
+		// }
+		// } else {
+		// modifyMessagesSubView(message);
+		// }
 	}
 
 	public void modifyMessagesSubView(Message message) {
@@ -468,6 +480,6 @@ public class ResponseEventHandlers {
 		} else if ("group".equals(message.sendType)) {
 			data.relationship.groupsMap.get(message.gid).notReadMessagesCount++;
 		}
-//		viewManage.mainView.messagesSubView.thisController.addMessageToSubView(message);
+		// viewManage.mainView.messagesSubView.thisController.addMessageToSubView(message);
 	}
 }

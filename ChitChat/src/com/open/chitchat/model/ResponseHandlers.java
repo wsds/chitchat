@@ -410,7 +410,11 @@ public class ResponseHandlers {
 		@Override
 		public void onSuccess(ResponseInfo<String> responseInfo) {
 			Response response = gson.fromJson(responseInfo.result, Response.class);
-			if (response.失败原因 == null) {
+			if (response.提示信息.equals("添加好友成功")) {
+				DataHandlers.getAttentions();
+				DataHandlers.getIntimateFriends();
+				Log.e(tag, "followAccount：" + response.提示信息);
+			} else if (response.提示信息.equals("发送请求成功")) {
 				DataHandlers.getAttentions();
 				Log.e(tag, "followAccount：" + response.提示信息);
 			} else {
@@ -556,7 +560,7 @@ public class ResponseHandlers {
 				} else {
 					data.relationship.friendsMap.putAll(response.relationship.friendsMap);
 				}
-				if(((FriendFragment) activityManager.mMainActivity.friendFragment).mJoinedGroupAdapter!=null){
+				if (((FriendFragment) activityManager.mMainActivity.friendFragment).mJoinedGroupAdapter != null) {
 					((FriendFragment) activityManager.mMainActivity.friendFragment).mJoinedGroupAdapter.notifyDataSetChanged();
 				}
 			} else {
