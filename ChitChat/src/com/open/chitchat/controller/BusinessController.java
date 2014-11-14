@@ -90,6 +90,12 @@ public class BusinessController {
 					Toast.makeText(thisActivity, "attention", Toast.LENGTH_SHORT).show();
 					thisView.attention.setVisibility(View.GONE);
 					followAccount();
+				} else if (view.equals(thisView.popLayoutOne)) {
+					if (status.equals(Status.FANS) || status.equals(Status.TEMPFRIEND)) {
+						followAccount();
+					} else if (status.equals(Status.ATTENTIONS) || status.equals(Status.FRIEND)) {
+						canclefollowAccount();
+					}
 				}
 			}
 		};
@@ -131,17 +137,32 @@ public class BusinessController {
 		httpUtils.send(HttpMethod.POST, API.RELATION_FOLLOW, params, responseHandlers.followAccount);
 	}
 
+	public void canclefollowAccount() {
+		User currentUser = data.userInformation.currentUser;
+		HttpUtils httpUtils = new HttpUtils();
+		RequestParams params = new RequestParams();
+		params.addBodyParameter("phone", currentUser.phone);
+		params.addBodyParameter("accessKey", currentUser.accessKey);
+		params.addBodyParameter("target", key);
+
+		httpUtils.send(HttpMethod.POST, API.RELATION_CANCLEFOLLOW, params, responseHandlers.cancleFollowAccount);
+	}
+
 	private void bindEvent() {
 		thisView.backView.setOnClickListener(mOnClickListener);
 		thisView.titleImage.setOnClickListener(mOnClickListener);
 		thisView.mPopupWindowView.setOnKeyListener(mOnKeyListener);
 		thisView.chat.setOnClickListener(mOnClickListener);
 		thisView.attention.setOnClickListener(mOnClickListener);
+		thisView.popLayoutOne.setOnClickListener(mOnClickListener);
 	}
 
 	public void onDestroy() {
 		mActivityManager.mBusinessActivity = null;
+	}
 
+	public void reflash() {
+		checkCardTypeAndRelation(type, key);
 	}
 
 	public void checkCardTypeAndRelation(String type, String key) {

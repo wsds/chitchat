@@ -251,6 +251,7 @@ public class BusinessView {
 			detailsFourlayout.setVisibility(View.GONE);
 			groupLayout.setVisibility(View.GONE);
 			memberLayout.setVisibility(View.GONE);
+			attention.setVisibility(View.GONE);
 		} else if (thisController.status.equals(Status.FANS) || thisController.status.equals(Status.TEMPFRIEND)) {
 			Friend friend = thisController.data.relationship.friendsMap.get(thisController.key);
 			User user = thisController.data.userInformation.currentUser;

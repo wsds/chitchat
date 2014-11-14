@@ -422,6 +422,24 @@ public class ResponseHandlers {
 			}
 		}
 	};
+	public ResponseHandler<String> cancleFollowAccount = httpClient.new ResponseHandler<String>() {
+		class Response {
+			public String 提示信息;
+			public String 失败原因;
+		}
+
+		@Override
+		public void onSuccess(ResponseInfo<String> responseInfo) {
+			Response response = gson.fromJson(responseInfo.result, Response.class);
+			if (response.提示信息.equals("取消关注成功")) {
+				DataHandlers.getAttentions();
+				DataHandlers.getIntimateFriends();
+				Log.e(tag, "cancleFollowAccount：" + response.提示信息);
+			} else {
+				Log.e(tag, "cancleFollowAccount：" + response.失败原因);
+			}
+		}
+	};
 	public ResponseHandler<String> getFollow = httpClient.new ResponseHandler<String>() {
 		class Response {
 			public String 提示信息;
@@ -439,6 +457,9 @@ public class ResponseHandlers {
 				data.relationship.friendsMap.putAll(response.friendsMap);
 				data.relationship.isModified = true;
 				((FriendFragment) activityManager.mMainActivity.friendFragment).showGroupsView();
+				if (activityManager.mBusinessActivity != null) {
+					activityManager.mBusinessActivity.thisController.reflash();
+				}
 				Log.e(tag, "getFollow：" + response.提示信息);
 			} else {
 				Log.e(tag, "getFollow：" + response.失败原因);
