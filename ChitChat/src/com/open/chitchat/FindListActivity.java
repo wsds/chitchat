@@ -6,6 +6,22 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.graphics.Color;
+import android.location.Location;
+import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.ForegroundColorSpan;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
+
 import com.amap.api.cloud.model.AMapCloudException;
 import com.amap.api.cloud.model.CloudItem;
 import com.amap.api.cloud.model.CloudItemDetail;
@@ -25,32 +41,17 @@ import com.amap.api.maps2d.model.LatLng;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer;
 import com.open.chitchat.listener.MyOnClickListener;
+import com.open.chitchat.model.ActivityManager;
 import com.open.chitchat.model.Constant;
 import com.open.chitchat.model.Data;
-import com.open.chitchat.model.FileHandlers;
 import com.open.chitchat.model.Data.Relationship.Friend;
 import com.open.chitchat.model.Data.UserInformation.User;
+import com.open.chitchat.model.FileHandlers;
 import com.open.chitchat.utils.BaseDataUtils;
 import com.open.chitchat.utils.DateUtil;
 import com.open.chitchat.utils.DistanceUtils;
 import com.open.chitchat.view.MyListView;
 import com.open.chitchat.view.MyListView.MyListViewListener;
-
-import android.app.Activity;
-import android.content.Intent;
-import android.graphics.Color;
-import android.location.Location;
-import android.os.Bundle;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.style.ForegroundColorSpan;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 public class FindListActivity extends Activity {
 
@@ -90,6 +91,8 @@ public class FindListActivity extends Activity {
 	public String mTableId;
 	private ArrayList<Map<String, Object>> mInfomations;
 
+	private ActivityManager activityManager = ActivityManager.getInstance();
+
 	private enum Status {
 		localData, serverData, LbsData
 	}
@@ -99,12 +102,14 @@ public class FindListActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		activityManager.mFindListActivity = this;
 		setContentView(R.layout.activity_find_list);
 		mInflater = getLayoutInflater();
 		type = getIntent().getStringExtra("type");
+		initListener();
 		initViews();
 		initData();
-		initListener();
+		bindEvent();
 		search();
 	}
 
@@ -133,7 +138,6 @@ public class FindListActivity extends Activity {
 					finish();
 				}
 			}
-
 		};
 		myListViewListener = new MyListViewListener() {
 
@@ -213,22 +217,18 @@ public class FindListActivity extends Activity {
 
 			@Override
 			public void onStatusChanged(String provider, int status, Bundle extras) {
-
 			}
 
 			@Override
 			public void onProviderEnabled(String provider) {
-
 			}
 
 			@Override
 			public void onProviderDisabled(String provider) {
-
 			}
 
 			@Override
 			public void onLocationChanged(Location location) {
-
 			}
 
 			@Override
@@ -246,7 +246,6 @@ public class FindListActivity extends Activity {
 				}
 			}
 		};
-		bindEvent();
 	}
 
 	private void bindEvent() {
@@ -256,6 +255,9 @@ public class FindListActivity extends Activity {
 			mCloudSearch.setOnCloudSearchListener(mCloudSearchListener);
 		}
 	}
+
+	public ArrayList<String> accounts;
+	public HashMap<String, Friend> accountsMap;
 
 	private void initData() {
 		user = data.userInformation.currentUser;
@@ -269,7 +271,10 @@ public class FindListActivity extends Activity {
 		} else if (mStatus == Status.localData) {
 
 		} else if (mStatus == Status.serverData) {
-
+			accounts = data.tempData.friends;
+			data.tempData.friends = null;
+			accountsMap = data.tempData.friendsMap;
+			data.tempData.friendsMap = null;
 		}
 		mAdapter = new MyListAdapter();
 		list.setAdapter(mAdapter);
@@ -383,6 +388,8 @@ public class FindListActivity extends Activity {
 				count = friendList.size() < listCount ? friendList.size() : listCount;
 			} else if (mInfomations != null) {
 				count = mInfomations.size() < listCount ? mInfomations.size() : listCount;
+			} else if (accounts != null) {
+				count = accounts.size() < listCount ? accounts.size() : listCount;
 			}
 			return count;
 		}
@@ -401,7 +408,7 @@ public class FindListActivity extends Activity {
 		public View getView(int position, View convertView, ViewGroup parent) {
 			MyListHolder holder;
 			String name = "", alias = "", head = "", sex = "", mainBusiness = "", age = "", time = "";
-			int distance = 0;
+			float distance = 0;
 			if (convertView == null) {
 				holder = new MyListHolder();
 				convertView = mInflater.inflate(R.layout.find_list_item, null);
@@ -429,8 +436,9 @@ public class FindListActivity extends Activity {
 				mainBusiness = friend.mainBusiness;
 				age = String.valueOf(friend.age);
 				time = friend.lastLoginTime;
-				distance = Integer.valueOf(DistanceUtils.getDistance(user.longitude, user.latitude, friend.longitude, friend.latitude));
-
+				distance = Float.valueOf(DistanceUtils.getDistance(user.longitude.equals("") ? "0" : user.longitude, user.latitude.equals("") ? "0" : user.latitude, friend.longitude, friend.latitude));
+				convertView.setTag(R.id.tag_first, friend.phone);
+				convertView.setTag(R.id.tag_second, "point");
 			} else if (mInfomations != null) {
 				Map<String, Object> infomation = infomations.get(position);
 
@@ -456,6 +464,19 @@ public class FindListActivity extends Activity {
 					convertView.setTag(R.id.tag_first, (String) infomation.get("phone"));
 					convertView.setTag(R.id.tag_second, "point");
 				}
+			} else if (accounts != null) {
+				Friend friend = accountsMap.get(accounts.get(position));
+				holder.chat.setVisibility(View.GONE);
+				holder.sex.setVisibility(View.VISIBLE);
+				name = friend.nickName;
+				head = friend.head;
+				sex = friend.sex;
+				mainBusiness = friend.mainBusiness;
+				age = friend.age + "";
+				time = friend.lastLoginTime;
+				distance = friend.distance;
+				convertView.setTag(R.id.tag_first, friend.phone);
+				convertView.setTag(R.id.tag_second, "point");
 			}
 			fileHandlers.getHeadImage(head, holder.head, headOptions);
 			holder.name.setText(BaseDataUtils.generateUserName(name, alias));

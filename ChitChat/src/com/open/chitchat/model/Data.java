@@ -48,6 +48,9 @@ public class Data {
 		public Friend tempFriend;
 		public Group tempGroup;
 
+		public ArrayList<String> friends;
+		public HashMap<String, Friend> friendsMap;
+
 		public class ImageBean {
 
 			public String parentName;

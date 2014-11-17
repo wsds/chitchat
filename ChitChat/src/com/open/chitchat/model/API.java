@@ -148,6 +148,27 @@ public class API {
 	 */
 	public static String RELATION_ADDFRIENDAGREE = API_DOMAIN + "api2/relation/addfriendagree";
 
+	/**
+	 * http://www.we-links.com/api2/relation/fuzzyquery
+	 */
+	public static String RELATION_FUZZYQUERY = API_DOMAIN + "api2/relation/fuzzyquery";
+	/**
+	 * http://www.we-links.com/api2/relation/follow
+	 */
+	public static String RELATION_FOLLOW = API_DOMAIN + "api2/relation/follow";
+	/**
+	 * http://www.we-links.com/api2/relation/canclefollow
+	 */
+	public static String RELATION_CANCLEFOLLOW = API_DOMAIN + "api2/relation/canclefollow";
+	/**
+	 * http://www.we-links.com/api2/relation/getfollow
+	 */
+	public static String RELATION_GETFOLLOW = API_DOMAIN + "api2/relation/getfollow";
+	/**
+	 * http://www.we-links.com/api2/relation/getfans
+	 */
+	public static String RELATION_GETFANS = API_DOMAIN + "api2/relation/getfans";
+
 	// circle
 	/**
 	 * http://www.we-links.com/api2/circle/modify

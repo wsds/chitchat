@@ -30,6 +30,7 @@ public class MainActivity extends Activity {
 
 	public OnTagClickListener mOnTagClickListener;
 
+	// qxs:Do not recommend mandatory data type conversion
 	public Fragment chatFragment, friendFragment, findFragment;
 
 	public FragmentManager mFragmentManager;
@@ -61,8 +62,9 @@ public class MainActivity extends Activity {
 			} else if (findFragment.isVisible()) {
 				((FindFragment) findFragment).changePopMenuView();
 			}
+			return true;
 		}
-		return false;
+		return super.onKeyDown(keyCode, event);
 	}
 
 	private void initListener() {

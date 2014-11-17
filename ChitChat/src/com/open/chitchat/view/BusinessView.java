@@ -11,16 +11,14 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.RelativeLayout.LayoutParams;
+import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
-import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer;
 import com.open.chitchat.BusinessActivity;
 import com.open.chitchat.R;
 import com.open.chitchat.controller.BusinessController;
 import com.open.chitchat.controller.BusinessController.Status;
-import com.open.chitchat.model.Data;
 import com.open.chitchat.model.Data.Relationship.Friend;
 import com.open.chitchat.model.Data.Relationship.Group;
 import com.open.chitchat.model.Data.UserInformation.User;
@@ -188,12 +186,16 @@ public class BusinessView {
 			imageTwo.setImageResource(R.drawable.pop_send_card);
 			imageThree.setImageResource(R.drawable.pop_block);
 			imageFour.setImageResource(R.drawable.pop_report);
-
-			String groupTitle = thisActivity.getString(R.string.belongGroup) + "(" + friend.groups.size() + ")";
+			int count = 0;
+			if (friend.groups != null) {
+				count = friend.groups.size();
+			}
+			String groupTitle = thisActivity.getString(R.string.belongGroup) + "(" + count + ")";
 			SpannableStringBuilder style = new SpannableStringBuilder(groupTitle);
 			style.setSpan(new ForegroundColorSpan(Color.RED), groupTitle.indexOf("(") + 1, groupTitle.indexOf(")"), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 			myGroupTitle.setText(style);
 
+			chat.setTag(R.id.tag_class, "chat");
 			chatText.setText(thisActivity.getString(R.string.personalChat));
 			chatImage.setImageResource(R.drawable.icon_chat);
 
@@ -234,10 +236,14 @@ public class BusinessView {
 			imageThree.setImageResource(R.drawable.pop_block);
 			imageFour.setImageResource(R.drawable.pop_report);
 
+			chat.setTag(R.id.tag_class, "chat");
 			chatText.setText(thisActivity.getString(R.string.personalChat));
 			chatImage.setImageResource(R.drawable.icon_chat);
-
-			String groupTitle = thisActivity.getString(R.string.belongGroup) + "(" + friend.groups.size() + ")";
+			int count = 0;
+			if (friend.groups != null) {
+				count = friend.groups.size();
+			}
+			String groupTitle = thisActivity.getString(R.string.belongGroup) + "(" + count + ")";
 			SpannableStringBuilder style = new SpannableStringBuilder(groupTitle);
 			style.setSpan(new ForegroundColorSpan(Color.RED), groupTitle.indexOf("(") + 1, groupTitle.indexOf(")"), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 			myGroupTitle.setText(style);
@@ -245,6 +251,7 @@ public class BusinessView {
 			detailsFourlayout.setVisibility(View.GONE);
 			groupLayout.setVisibility(View.GONE);
 			memberLayout.setVisibility(View.GONE);
+			attention.setVisibility(View.GONE);
 		} else if (thisController.status.equals(Status.FANS) || thisController.status.equals(Status.TEMPFRIEND)) {
 			Friend friend = thisController.data.relationship.friendsMap.get(thisController.key);
 			User user = thisController.data.userInformation.currentUser;
@@ -284,6 +291,7 @@ public class BusinessView {
 			imageThree.setImageResource(R.drawable.pop_block);
 			imageFour.setImageResource(R.drawable.pop_report);
 
+			chat.setTag(R.id.tag_class, "chat");
 			chatText.setText(thisActivity.getString(R.string.personalChat));
 			chatImage.setImageResource(R.drawable.icon_chat);
 
@@ -364,6 +372,7 @@ public class BusinessView {
 			memberTitle.setText(style);
 
 			chat.setBackgroundResource(R.drawable.bg_round_azure);
+			chat.setTag(R.id.tag_class, "chat");
 			chatText.setText(thisActivity.getString(R.string.chat));
 			chatImage.setImageResource(R.drawable.btn_find_off);
 
@@ -401,6 +410,7 @@ public class BusinessView {
 			memberTitle.setText(style);
 
 			chat.setBackgroundResource(R.drawable.bg_round_azure);
+			chat.setTag(R.id.tag_class, "joinGroup");
 			chatText.setText(thisActivity.getString(R.string.join));
 			chatImage.setImageResource(R.drawable.chat_add_off);
 

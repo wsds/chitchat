@@ -7,7 +7,6 @@ import java.util.Set;
 
 import com.lidroid.xutils.HttpUtils;
 import com.lidroid.xutils.http.RequestParams;
-import com.lidroid.xutils.http.callback.RequestCallBack;
 import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
 import com.open.chitchat.model.Data.Messages.Message;
 import com.open.chitchat.model.Data.UserInformation.User;
@@ -18,6 +17,30 @@ public class DataHandlers {
 	public static Data data = Data.getInstance();
 	public static Parser parser = Parser.getInstance();
 	public static ResponseHandlers responseHandlers = ResponseHandlers.getInstance();
+
+	public static void getFans() {
+		data = parser.check();
+		RequestParams params = new RequestParams();
+		User user = data.userInformation.currentUser;
+		params.addBodyParameter("phone", user.phone);
+		params.addBodyParameter("accessKey", user.accessKey);
+
+		HttpUtils http = new HttpUtils();
+
+		http.send(HttpMethod.POST, API.RELATION_GETFANS, params, responseHandlers.getFans);
+	}
+
+	public static void getAttentions() {
+		data = parser.check();
+		RequestParams params = new RequestParams();
+		User user = data.userInformation.currentUser;
+		params.addBodyParameter("phone", user.phone);
+		params.addBodyParameter("accessKey", user.accessKey);
+
+		HttpUtils http = new HttpUtils();
+
+		http.send(HttpMethod.POST, API.RELATION_GETFOLLOW, params, responseHandlers.getFollow);
+	}
 
 	public static void getIntimateFriends() {
 		data = parser.check();
@@ -101,8 +124,7 @@ public class DataHandlers {
 		params.addBodyParameter("phone", data.userInformation.currentUser.phone);
 		params.addBodyParameter("accessKey", data.userInformation.currentUser.accessKey);
 
-		// httpUtils.send(HttpMethod.POST, API.GROUP_GETGROUPMEMBERS, params,
-		// responseHandlers.getGroupMembersCallBack);
+		httpUtils.send(HttpMethod.POST, API.GROUP_GETGROUPMEMBERS, params, responseHandlers.getGroupsAndMembersCallBack);
 	}
 
 	public static void clearInvalidGroupMessages() {

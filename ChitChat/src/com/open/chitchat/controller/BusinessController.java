@@ -1,19 +1,24 @@
 package com.open.chitchat.controller;
 
+import android.content.Intent;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnKeyListener;
+import android.widget.Toast;
 
 import com.lidroid.xutils.HttpUtils;
 import com.lidroid.xutils.http.RequestParams;
 import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
 import com.open.chitchat.BusinessActivity;
+import com.open.chitchat.ChatActivity;
+import com.open.chitchat.R;
 import com.open.chitchat.listener.MyOnClickListener;
 import com.open.chitchat.model.API;
 import com.open.chitchat.model.ActivityManager;
 import com.open.chitchat.model.Data;
 import com.open.chitchat.model.FileHandlers;
 import com.open.chitchat.model.ResponseHandlers;
+import com.open.chitchat.model.Data.UserInformation.User;
 import com.open.chitchat.view.BusinessView;
 
 public class BusinessController {
@@ -66,6 +71,31 @@ public class BusinessController {
 					thisActivity.finish();
 				} else if (view.equals(thisView.titleImage)) {
 					thisView.changePopMenuView();
+				} else if (view.equals(thisView.chat)) {
+					String tag_class = (String) view.getTag(R.id.tag_class);
+					if ("chat".equals(tag_class)) {
+						Toast.makeText(thisActivity, "chat", Toast.LENGTH_SHORT).show();
+						Intent intent = new Intent(thisActivity, ChatActivity.class);
+						intent.putExtra("type", type);
+						intent.putExtra("key", key);
+						thisActivity.startActivity(intent);
+					} else if ("joinGroup".equals(tag_class)) {
+						joinGroup();
+						view.setTag(R.id.tag_class, "chat");
+						thisView.chatText.setText("聊天");
+					} else {
+						Toast.makeText(thisActivity, tag_class, Toast.LENGTH_SHORT).show();
+					}
+				} else if (view.equals(thisView.attention)) {
+					Toast.makeText(thisActivity, "attention", Toast.LENGTH_SHORT).show();
+					thisView.attention.setVisibility(View.GONE);
+					followAccount();
+				} else if (view.equals(thisView.popLayoutOne)) {
+					if (status.equals(Status.FANS) || status.equals(Status.TEMPFRIEND)) {
+						followAccount();
+					} else if (status.equals(Status.ATTENTIONS) || status.equals(Status.FRIEND)) {
+						canclefollowAccount();
+					}
 				}
 			}
 		};
@@ -84,15 +114,55 @@ public class BusinessController {
 		bindEvent();
 	}
 
+	private void joinGroup() {
+		User currentUser = data.userInformation.currentUser;
+		HttpUtils httpUtils = new HttpUtils();
+		RequestParams params = new RequestParams();
+		params.addBodyParameter("phone", currentUser.phone);
+		params.addBodyParameter("accessKey", currentUser.accessKey);
+		params.addBodyParameter("gid", key);
+		params.addBodyParameter("members", "[\"" + currentUser.phone + "\"]");
+
+		httpUtils.send(HttpMethod.POST, API.GROUP_ADDMEMBERS, params, responseHandlers.addMemberCallBack);
+	}
+
+	protected void followAccount() {
+		User currentUser = data.userInformation.currentUser;
+		HttpUtils httpUtils = new HttpUtils();
+		RequestParams params = new RequestParams();
+		params.addBodyParameter("phone", currentUser.phone);
+		params.addBodyParameter("accessKey", currentUser.accessKey);
+		params.addBodyParameter("target", key);
+
+		httpUtils.send(HttpMethod.POST, API.RELATION_FOLLOW, params, responseHandlers.followAccount);
+	}
+
+	public void canclefollowAccount() {
+		User currentUser = data.userInformation.currentUser;
+		HttpUtils httpUtils = new HttpUtils();
+		RequestParams params = new RequestParams();
+		params.addBodyParameter("phone", currentUser.phone);
+		params.addBodyParameter("accessKey", currentUser.accessKey);
+		params.addBodyParameter("target", key);
+
+		httpUtils.send(HttpMethod.POST, API.RELATION_CANCLEFOLLOW, params, responseHandlers.cancleFollowAccount);
+	}
+
 	private void bindEvent() {
 		thisView.backView.setOnClickListener(mOnClickListener);
 		thisView.titleImage.setOnClickListener(mOnClickListener);
 		thisView.mPopupWindowView.setOnKeyListener(mOnKeyListener);
+		thisView.chat.setOnClickListener(mOnClickListener);
+		thisView.attention.setOnClickListener(mOnClickListener);
+		thisView.popLayoutOne.setOnClickListener(mOnClickListener);
 	}
 
 	public void onDestroy() {
 		mActivityManager.mBusinessActivity = null;
+	}
 
+	public void reflash() {
+		checkCardTypeAndRelation(type, key);
 	}
 
 	public void checkCardTypeAndRelation(String type, String key) {
