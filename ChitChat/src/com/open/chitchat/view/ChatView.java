@@ -230,6 +230,7 @@ public class ChatView {
 				holder.voice.setVisibility(View.VISIBLE);
 				holder.image.setVisibility(View.GONE);
 				holder.gif.setVisibility(View.GONE);
+				convertView.setTag(R.id.tag_second, message.content);
 			} else if (message.contentType.equals("image")) {
 				holder.character.setVisibility(View.GONE);
 				holder.voice.setVisibility(View.GONE);
@@ -243,6 +244,8 @@ public class ChatView {
 				holder.gif.setVisibility(View.VISIBLE);
 				thisController.fileHandlers.getGifImage(message.content, holder.gif);
 			}
+			convertView.setTag(R.id.tag_first, message.contentType);
+			convertView.setOnClickListener(thisController.mOnClickListener);
 			return convertView;
 		}
 

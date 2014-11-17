@@ -8,17 +8,20 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.SpannableString;
 import android.text.TextWatcher;
-import android.util.TypedValue;
-import android.view.KeyEvent;
+import android.view.GestureDetector;
+import android.view.GestureDetector.SimpleOnGestureListener;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
+import android.view.View.OnTouchListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 
@@ -28,8 +31,11 @@ import com.lidroid.xutils.http.RequestParams;
 import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
 import com.open.chitchat.ChatActivity;
 import com.open.chitchat.ImagesDirectoryActivity;
+import com.open.chitchat.listener.AudioListener;
 import com.open.chitchat.listener.OnUploadLoadingListener;
+import com.open.chitchat.R;
 import com.open.chitchat.model.API;
+import com.open.chitchat.model.AudioHandlers;
 import com.open.chitchat.model.Constant;
 import com.open.chitchat.model.Data;
 import com.open.chitchat.model.FileHandlers;
@@ -48,6 +54,7 @@ public class ChatController {
 	public Parser parser = Parser.getInstance();
 	public FileHandlers fileHandlers = FileHandlers.getInstance();
 	public UploadMultipartList uploadMultipartList = UploadMultipartList.getInstance();
+	public AudioHandlers audiohandlers = AudioHandlers.getInstance();
 	public InputMethodManagerUtils inputManager;
 	public Gson gson = new Gson();
 
@@ -56,11 +63,14 @@ public class ChatController {
 	public ChatActivity thisActivity;
 
 	public OnClickListener mOnClickListener;
+	public OnTouchListener mOnTouchListener;
 	public OnItemClickListener mItemClickListener;
 	public OnFaceSeletedListener mOnFaceSeletedListener;
 	public OnUploadLoadingListener uploadLoadingListener;
 	public OnFocusChangeListener mOnFocusChangeListener;
 	public TextWatcher mTextWatcher;
+	public GestureDetector voiceGestureDetector;
+	private AudioListener mAudioListener;
 
 	public String key = "151", type = "point";
 	public User user;
@@ -95,7 +105,12 @@ public class ChatController {
 		mOnClickListener = new OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				if (thisView.backView.equals(view)) {
+				if (view.getTag(R.id.tag_first) != null) {
+					String contentType = (String) view.getTag(R.id.tag_first);
+					if ("voice".equals(contentType)) {
+						audiohandlers.preparePlay((String) view.getTag(R.id.tag_second));
+					}
+				} else if (thisView.backView.equals(view)) {
 					thisActivity.finish();
 				} else if (thisView.titleImage.equals(view)) {
 					thisView.changeChatMenu();
@@ -122,6 +137,35 @@ public class ChatController {
 			}
 
 		};
+		voiceGestureDetector = new GestureDetector(thisActivity, new SimpleOnGestureListener() {
+			@Override
+			public boolean onDown(MotionEvent e) {
+				return true;
+			}
+
+		});
+		mOnTouchListener = new OnTouchListener() {
+
+			@SuppressLint("ClickableViewAccessibility")
+			@Override
+			public boolean onTouch(View view, MotionEvent event) {
+				if (thisView.voiceLayout.equals(view)) {
+					if (event.getAction() == MotionEvent.ACTION_DOWN) {
+						audiohandlers.startRecording();
+					} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
+
+					} else if (event.getAction() == MotionEvent.ACTION_UP) {
+						String filePath = audiohandlers.stopRecording();
+						if (!"".equals(filePath)) {
+							createVoiceMessage(filePath);
+						}
+					}
+					// voiceGestureDetector.onTouchEvent(event);
+				}
+				return false;
+			}
+		};
+
 		mItemClickListener = new OnItemClickListener() {
 
 			@Override
@@ -223,6 +267,31 @@ public class ChatController {
 				}
 			}
 		};
+		mAudioListener = new AudioListener() {
+
+			@Override
+			public void onRecording(int volume) {
+				System.out.println(volume + "::::::::::::::::::::::");
+			}
+
+			@Override
+			public void onPlayFail() {
+				System.out.println("onPlayFail::::::::::::::::::::::");
+
+			}
+
+			@Override
+			public void onPlayComplete() {
+				System.out.println("onPlayComplete::::::::::::::::::::::");
+
+			}
+
+			@Override
+			public void onPrepared() {
+				System.out.println("onPrepared=============================");
+				playVoice();
+			}
+		};
 		bindEvent();
 	}
 
@@ -239,11 +308,15 @@ public class ChatController {
 		thisView.location.setOnClickListener(mOnClickListener);
 		thisView.chatInput.setOnClickListener(mOnClickListener);
 
+		thisView.voiceLayout.setOnTouchListener(mOnTouchListener);
+
 		thisView.faceLayout.setOnFaceSeletedListener(mOnFaceSeletedListener);
 
 		thisView.chatInput.addTextChangedListener(mTextWatcher);
 		thisView.chatInput.setOnFocusChangeListener(mOnFocusChangeListener);
 		thisView.chatMenu.setOnItemClickListener(mItemClickListener);
+
+		audiohandlers.setAudioListener(mAudioListener);
 	}
 
 	private void createTextMessage() {
@@ -413,6 +486,14 @@ public class ChatController {
 		return multipart;
 	}
 
+	private void playVoice() {
+		if (audiohandlers.isPlaying()) {
+			audiohandlers.stopPlay();
+		} else {
+			audiohandlers.startPlay();
+		}
+	}
+
 	public void onActivityResult(int requestCode, int resultCode, Intent data2) {
 		if (requestCode == Constant.REQUESTCODE_ABLUM && resultCode == Activity.RESULT_OK) {
 			ArrayList<String> selectedImageList = data.tempData.selectedImageList;
@@ -429,7 +510,7 @@ public class ChatController {
 
 	public void onDestroy() {
 		thisActivity.mActivityManager.mChatActivity = null;
-
+		audiohandlers.releasePlyer();
 	}
 
 	public void onResume() {
