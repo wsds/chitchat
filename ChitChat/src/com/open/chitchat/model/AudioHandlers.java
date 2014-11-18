@@ -72,6 +72,13 @@ public class AudioHandlers {
 		return raw.getAbsolutePath();
 	}
 
+	public void cancelRecording() {
+		mAudioRecord.stop();
+		isRecording = false;
+		this.closeRecord();
+		raw.delete();
+	}
+
 	private void closeRecord() {
 		if (mAudioRecord != null)
 			mAudioRecord.release();
@@ -89,8 +96,11 @@ public class AudioHandlers {
 				fileHandlers.downloadVoiceFile(file, fileName);
 			}
 		} else {
+			isReady = true;
+			if (isPlaying) {
+				stopPlay();
+			}
 			if (mAudioListener != null) {
-				isReady = true;
 				mAudioListener.onPrepared();
 			}
 		}
@@ -98,12 +108,14 @@ public class AudioHandlers {
 
 	public void startPlay() {
 		if (isReady) {
+			isPlaying = true;
 			mPlayOffset = 0;
 			startThread();
 		}
 	}
 
 	public void stopPlay() {
+		isPlaying = false;
 		stopThread();
 	}
 
@@ -206,8 +218,7 @@ public class AudioHandlers {
 		@Override
 		public void run() {
 			mAudioTrack.play();
-			isPlaying = true;
-			while (true) {
+			while (isPlaying) {
 				try {
 					int size = mAudioTrack.write(mData, mPlayOffset, mPrimePlaySize);
 					mPlayOffset += size;
@@ -231,6 +242,7 @@ public class AudioHandlers {
 
 		@Override
 		public void interrupt() {
+			mAudioTrack.stop();
 			isPlaying = false;
 			super.interrupt();
 		}
@@ -250,7 +262,7 @@ public class AudioHandlers {
 						volume += mBuffer[i] * mBuffer[i];
 					}
 					if (mAudioListener != null) {
-						mAudioListener.onRecording((int) Math.abs(volume / (float) readSize) / 1000 >> 1);
+						mAudioListener.onRecording((int) Math.abs(volume / (float) readSize) / 10000 >> 1);
 					}
 					// for (int i = 0; i < mBuffer.length; i++) {
 					//

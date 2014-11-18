@@ -233,4 +233,38 @@
         </LinearLayout>
     </RelativeLayout>
 
+    <LinearLayout
+        android:id="@+id/voicePop"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_centerInParent="true"
+        android:background="@drawable/bg_round_black"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="10dp"
+        android:visibility="gone" >
+
+        <ImageView
+            android:id="@+id/voicePopImage"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@drawable/image_chat_voice_talk" />
+
+        <TextView
+            android:id="@+id/voicePopTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/seconds"
+            android:textColor="@color/black"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/voicePopPrompt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/slideFingers"
+            android:textColor="@color/black"
+            android:textSize="18sp" />
+    </LinearLayout>
+
 </RelativeLayout>

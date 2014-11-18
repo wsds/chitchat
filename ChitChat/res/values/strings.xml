@@ -149,5 +149,8 @@
     <string name="chat">聊天</string>
     <string name="join">加入</string>
     <string name="stranger">陌生人</string>
+    <string name="seconds">秒</string>
+    <string name="slideFingers">手指上滑，可取消发送</string>
+    <string name="loosenFingers">松开手指，取消发送</string>
 
 </resources>

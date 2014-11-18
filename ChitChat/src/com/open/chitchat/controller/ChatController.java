@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -77,6 +79,12 @@ public class ChatController {
 
 	public Map<String, Message> messageMap;
 
+	public VoiceTimerTask timerTask;
+	public Timer timer;
+	public long voiceTime = 0;
+
+	public boolean sendRecording = true;
+
 	public ChatController(ChatActivity activity) {
 		thisController = this;
 		thisActivity = activity;
@@ -108,7 +116,7 @@ public class ChatController {
 				if (view.getTag(R.id.tag_first) != null) {
 					String contentType = (String) view.getTag(R.id.tag_first);
 					if ("voice".equals(contentType)) {
-						audiohandlers.preparePlay((String) view.getTag(R.id.tag_second));
+						thisView.changeVoice(view);
 					}
 				} else if (thisView.backView.equals(view)) {
 					thisActivity.finish();
@@ -151,16 +159,39 @@ public class ChatController {
 			public boolean onTouch(View view, MotionEvent event) {
 				if (thisView.voiceLayout.equals(view)) {
 					if (event.getAction() == MotionEvent.ACTION_DOWN) {
+						if (timer == null) {
+							timer = new Timer();
+							timerTask = new VoiceTimerTask();
+							voiceTime = System.currentTimeMillis();
+							timer.schedule(timerTask, 0, 1000);
+						}
+						sendRecording = true;
 						audiohandlers.startRecording();
+						thisView.voicePopTime.setText(thisActivity.getText(R.string.seconds));
+						thisView.voicePop.setVisibility(View.VISIBLE);
 					} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
+						float x = event.getRawX(), y = event.getRawY(), x1 = thisView.voicePop.getX(), y1 = thisView.voicePop.getY(), x2 = x1 + thisView.voicePop.getWidth(), y2 = y1 + thisView.voicePop.getHeight();
+						if (x > x1 && x < x2 && y < y2 && y > y1) {
+							if (sendRecording) {
+								sendRecording = false;
+								thisView.changeVoice(sendRecording);
+							}
+						} else {
+							if (!sendRecording) {
+								sendRecording = true;
+								thisView.changeVoice(sendRecording);
+							}
+						}
 
 					} else if (event.getAction() == MotionEvent.ACTION_UP) {
-						String filePath = audiohandlers.stopRecording();
-						if (!"".equals(filePath)) {
-							createVoiceMessage(filePath);
+						long time = System.currentTimeMillis();
+						if (time - voiceTime < 60 * 1000) {
+							if (time - voiceTime < 1000) {
+								sendRecording = false;
+							}
+							completeVoiceRecording(sendRecording);
 						}
 					}
-					// voiceGestureDetector.onTouchEvent(event);
 				}
 				return false;
 			}
@@ -271,25 +302,42 @@ public class ChatController {
 
 			@Override
 			public void onRecording(int volume) {
-				System.out.println(volume + "::::::::::::::::::::::");
+				if (sendRecording) {
+					if (volume == 0) {
+						thisView.changeVoice(R.drawable.image_chat_voice_talk);
+					} else if (volume > 0 && volume <= 10) {
+						thisView.changeVoice(R.drawable.image_chat_voice_talk_1);
+					} else if (volume > 10 && volume <= 20) {
+						thisView.changeVoice(R.drawable.image_chat_voice_talk_2);
+					} else if (volume > 20 && volume <= 30) {
+						thisView.changeVoice(R.drawable.image_chat_voice_talk_3);
+					} else {
+						thisView.changeVoice(R.drawable.image_chat_voice_talk_4);
+					}
+
+				}
 			}
 
 			@Override
 			public void onPlayFail() {
-				System.out.println("onPlayFail::::::::::::::::::::::");
-
+				android.os.Message msg = new android.os.Message();
+				msg.what = Constant.HANDLER_CHAT_STOPPLAY;
+				thisView.handler.sendMessage(msg);
 			}
 
 			@Override
 			public void onPlayComplete() {
-				System.out.println("onPlayComplete::::::::::::::::::::::");
-
+				android.os.Message msg = new android.os.Message();
+				msg.what = Constant.HANDLER_CHAT_STOPPLAY;
+				thisView.handler.sendMessage(msg);
 			}
 
 			@Override
 			public void onPrepared() {
-				System.out.println("onPrepared=============================");
-				playVoice();
+				android.os.Message msg = new android.os.Message();
+				msg.what = Constant.HANDLER_CHAT_STARTPLAY;
+				thisView.handler.sendMessage(msg);
+				audiohandlers.startPlay();
 			}
 		};
 		bindEvent();
@@ -317,6 +365,24 @@ public class ChatController {
 		thisView.chatMenu.setOnItemClickListener(mItemClickListener);
 
 		audiohandlers.setAudioListener(mAudioListener);
+	}
+
+	private void completeVoiceRecording(boolean weather) {
+		android.os.Message msg = new android.os.Message();
+		msg.what = Constant.HANDLER_CHAT_HIDEVOICEPOP;
+		thisView.handler.sendMessage(msg);
+		timer.cancel();
+		timer.purge();
+		voiceTime = 0;
+		timer = null;
+		if (weather) {
+			String filePath = audiohandlers.stopRecording();
+			if (!"".equals(filePath)) {
+				createVoiceMessage(filePath);
+			}
+		} else {
+			audiohandlers.cancelRecording();
+		}
 	}
 
 	private void createTextMessage() {
@@ -486,14 +552,6 @@ public class ChatController {
 		return multipart;
 	}
 
-	private void playVoice() {
-		if (audiohandlers.isPlaying()) {
-			audiohandlers.stopPlay();
-		} else {
-			audiohandlers.startPlay();
-		}
-	}
-
 	public void onActivityResult(int requestCode, int resultCode, Intent data2) {
 		if (requestCode == Constant.REQUESTCODE_ABLUM && resultCode == Activity.RESULT_OK) {
 			ArrayList<String> selectedImageList = data.tempData.selectedImageList;
@@ -515,5 +573,18 @@ public class ChatController {
 
 	public void onResume() {
 
+	}
+
+	private class VoiceTimerTask extends TimerTask {
+
+		@Override
+		public void run() {
+			long time = System.currentTimeMillis();
+			if (time - voiceTime > 60 * 1000) {
+				completeVoiceRecording(true);
+			} else {
+				thisView.changeVoice();
+			}
+		}
 	}
 }

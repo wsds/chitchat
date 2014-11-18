@@ -27,10 +27,6 @@ import com.open.chitchat.controller.ChatController;
 import com.open.chitchat.model.Constant;
 import com.open.chitchat.model.Data;
 import com.open.chitchat.model.Data.Messages.Message;
-import com.open.chitchat.model.Data.Relationship.Friend;
-import com.open.chitchat.model.Data.Relationship.Group;
-import com.open.chitchat.model.FileHandlers;
-import com.open.chitchat.model.Parser;
 import com.open.chitchat.utils.BaseDataUtils;
 
 public class ChatView {
@@ -39,11 +35,11 @@ public class ChatView {
 	public ChatController thisController;
 	public ChatActivity thisActivity;
 
-	public View backView, chatMenuLayout, textLayout, voiceLayout, chatAddLayout, takePhoto, ablum, location;
+	public View currentView, backView, chatMenuLayout, textLayout, voiceLayout, chatAddLayout, takePhoto, ablum, location, voicePop;
 	public RelativeLayout rightContainer;
-	public TextView titleText, chatSend;
+	public TextView titleText, chatSend, voicePopTime, voicePopPrompt;
 	public ListView chatContent;
-	public ImageView chatAdd, chatSmily, chatRecord, titleImage, chatMenuBackground;
+	public ImageView chatAdd, chatSmily, chatRecord, titleImage, chatMenuBackground, voicePopImage;
 	public EditText chatInput;
 	public GridView chatMenu;
 	public ChatFaceView faceLayout;
@@ -73,14 +69,18 @@ public class ChatView {
 		takePhoto = thisActivity.findViewById(R.id.takePhoto);
 		ablum = thisActivity.findViewById(R.id.ablum);
 		location = thisActivity.findViewById(R.id.location);
+		voicePop = thisActivity.findViewById(R.id.voicePop);
 		rightContainer = (RelativeLayout) thisActivity.findViewById(R.id.rightContainer);
 		titleText = (TextView) thisActivity.findViewById(R.id.titleText);
 		chatSend = (TextView) thisActivity.findViewById(R.id.chatSend);
+		voicePopTime = (TextView) thisActivity.findViewById(R.id.voicePopTime);
+		voicePopPrompt = (TextView) thisActivity.findViewById(R.id.voicePopPrompt);
 		chatContent = (ListView) thisActivity.findViewById(R.id.chatContent);
 		chatAdd = (ImageView) thisActivity.findViewById(R.id.chatAdd);
 		chatSmily = (ImageView) thisActivity.findViewById(R.id.chatSmily);
 		chatRecord = (ImageView) thisActivity.findViewById(R.id.chatRecord);
 		chatMenuBackground = (ImageView) thisActivity.findViewById(R.id.chatMenuBackground);
+		voicePopImage = (ImageView) thisActivity.findViewById(R.id.voicePopImage);
 		chatInput = (EditText) thisActivity.findViewById(R.id.chatInput);
 		chatMenu = (GridView) thisActivity.findViewById(R.id.chatMenu);
 		faceLayout = (ChatFaceView) thisActivity.findViewById(R.id.faceLayout);
@@ -110,6 +110,19 @@ public class ChatView {
 				switch (msg.what) {
 				case Constant.HANDLER_CHAT_NOTIFY:
 					mChatAdapter.notifyDataSetChanged();
+					break;
+				case Constant.HANDLER_CHAT_HIDEVOICEPOP:
+					thisView.voicePop.setVisibility(View.GONE);
+					break;
+				case Constant.HANDLER_CHAT_STARTPLAY:
+					if (thisView.currentView != null) {
+						((ImageView) thisView.currentView.findViewById(R.id.voiceIcon)).setImageResource(R.drawable.icon_play_on);
+					}
+					break;
+				case Constant.HANDLER_CHAT_STOPPLAY:
+					if (thisView.currentView != null) {
+						((ImageView) thisView.currentView.findViewById(R.id.voiceIcon)).setImageResource(R.drawable.icon_play_off);
+					}
 					break;
 				}
 				super.handleMessage(msg);
@@ -161,6 +174,21 @@ public class ChatView {
 			return position;
 		}
 
+		// @Override
+		// public int getItemViewType(int position) {
+		// Message message = messages.get(position);
+		// if (message.type == Constant.MESSAGE_TYPE_SEND) {
+		// return Constant.MESSAGE_TYPE_SEND;
+		// } else {
+		// return Constant.MESSAGE_TYPE_RECEIVE;
+		// }
+		// }
+		//
+		// @Override
+		// public int getViewTypeCount() {
+		// return super.getViewTypeCount();
+		// }
+
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			ChatHolder holder = new ChatHolder();
@@ -203,7 +231,7 @@ public class ChatView {
 
 			holder.chatLayout = convertView.findViewById(R.id.chatLayout);
 			holder.voice = convertView.findViewById(R.id.voice);
-			holder.voice_icon = (ImageView) convertView.findViewById(R.id.voice_icon);
+			holder.voiceIcon = (ImageView) convertView.findViewById(R.id.voiceIcon);
 			holder.image = (ImageView) convertView.findViewById(R.id.image);
 			holder.head = (ImageView) convertView.findViewById(R.id.head);
 			holder.time = (TextView) convertView.findViewById(R.id.time);
@@ -251,7 +279,7 @@ public class ChatView {
 
 		class ChatHolder {
 			View voice, chatLayout;
-			ImageView voice_icon, image, head;
+			ImageView voiceIcon, image, head;
 			TextView time, character, voicetime;
 			GifImageView gif;
 		}
@@ -320,6 +348,60 @@ public class ChatView {
 			return convertView;
 		}
 
+	}
+
+	public void changeVoice() {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				String time = thisView.voicePopTime.getText().toString(), seconds = thisActivity.getText(R.string.seconds).toString();
+				if (seconds.equals(time)) {
+					thisView.voicePopTime.setText("0" + seconds);
+				} else {
+					thisView.voicePopTime.setText((Integer.valueOf(time.substring(0, time.lastIndexOf(seconds))) + 1) + seconds);
+				}
+
+			}
+		});
+	}
+
+	public void changeVoice(View view) {
+		if (this.currentView != null && this.currentView.equals(view)) {
+			if (thisController.audiohandlers.isPlaying()) {
+				((ImageView) thisView.currentView.findViewById(R.id.voiceIcon)).setImageResource(R.drawable.icon_play_off);
+				thisController.audiohandlers.stopPlay();
+			} else {
+				((ImageView) thisView.currentView.findViewById(R.id.voiceIcon)).setImageResource(R.drawable.icon_play_on);
+				thisController.audiohandlers.preparePlay((String) view.getTag(R.id.tag_second));
+			}
+		} else {
+			if (thisController.audiohandlers.isPlaying()) {
+				thisController.audiohandlers.stopPlay();
+				((ImageView) thisView.currentView.findViewById(R.id.voiceIcon)).setImageResource(R.drawable.icon_play_off);
+			}
+			this.currentView = view;
+			((ImageView) thisView.currentView.findViewById(R.id.voiceIcon)).setImageResource(R.drawable.icon_play_on);
+			thisController.audiohandlers.preparePlay((String) view.getTag(R.id.tag_second));
+		}
+	}
+
+	public void changeVoice(final int resourceId) {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				thisView.voicePopImage.setImageResource(resourceId);
+
+			}
+		});
+	}
+
+	public void changeVoice(boolean weather) {
+		if (weather) {
+			this.voicePopPrompt.setText(thisActivity.getString(R.string.slideFingers));
+		} else {
+			this.voicePopImage.setImageResource(R.drawable.image_chat_voice_cancel);
+			this.voicePopPrompt.setText(thisActivity.getString(R.string.loosenFingers));
+		}
 	}
 
 	public void changeChatMenu() {

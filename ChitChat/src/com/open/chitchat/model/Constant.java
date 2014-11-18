@@ -27,6 +27,9 @@ public class Constant {
 	public static final int MESSAGE_TYPE_RECEIVE = 0x02;
 	// handler
 	public static final int HANDLER_CHAT_NOTIFY = 0x11;
+	public static final int HANDLER_CHAT_HIDEVOICEPOP = 0x12;
+	public static final int HANDLER_CHAT_STARTPLAY = 0x13;
+	public static final int HANDLER_CHAT_STOPPLAY = 0x14;
 
 	// requestCode
 	public static final int REQUESTCODE_ABLUM = 0x21;
