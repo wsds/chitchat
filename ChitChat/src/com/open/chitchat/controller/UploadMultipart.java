@@ -36,7 +36,6 @@ import org.xmlpull.v1.XmlSerializer;
 
 import android.view.View;
 
-import com.aliyun.android.oss.Base64;
 import com.google.gson.Gson;
 import com.lidroid.xutils.HttpUtils;
 import com.lidroid.xutils.exception.HttpException;
@@ -49,6 +48,7 @@ import com.open.chitchat.listener.OnUploadLoadingListener;
 import com.open.chitchat.model.API;
 import com.open.chitchat.model.Data;
 import com.open.chitchat.model.Data.UserInformation.User;
+import com.open.chitchat.utils.Base64;
 import com.open.chitchat.utils.SHA1;
 import com.open.chitchat.utils.StreamParser;
 import com.open.lib.HttpClient;
