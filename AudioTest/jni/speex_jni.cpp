@@ -22,7 +22,7 @@ JNIEXPORT jint JNICALL Java_com_android_gl2jni_Speex_open(JNIEnv *env,
 	int tmp;
 
 	if (codec_open++ != 0)
-		return (jint) 0;
+	return (jint) 0;
 
 	speex_bits_init(&ebits);
 	speex_bits_init(&dbits);
@@ -48,7 +48,7 @@ JNIEXPORT jint Java_com_android_gl2jni_Speex_encode(JNIEnv *env,
 	int i, tot_bytes = 0;
 
 	if (!codec_open)
-		return 0;
+	return 0;
 
 	speex_bits_reset(&ebits);
 
@@ -76,7 +76,7 @@ JNIEXPORT jint JNICALL Java_com_android_gl2jni_Speex_decode(JNIEnv *env,
 	jsize encoded_length = size;
 
 	if (!codec_open)
-		return 0;
+	return 0;
 
 	env->GetByteArrayRegion(encoded, 0, encoded_length, buffer);
 	speex_bits_read_from(&dbits, (char *) buffer, encoded_length);
@@ -91,7 +91,7 @@ JNIEXPORT jint JNICALL Java_com_android_gl2jni_Speex_getFrameSize(
 		JNIEnv *env, jobject obj) {
 
 	if (!codec_open)
-		return 0;
+	return 0;
 	return (jint) enc_frame_size;
 
 }
@@ -101,7 +101,7 @@ JNIEXPORT void JNICALL Java_com_android_gl2jni_Speex_close(JNIEnv *env,
 		jobject obj) {
 
 	if (--codec_open != 0)
-		return;
+	return;
 
 	speex_bits_destroy(&ebits);
 	speex_bits_destroy(&dbits);

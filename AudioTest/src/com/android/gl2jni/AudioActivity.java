@@ -38,7 +38,7 @@ public class AudioActivity extends Activity implements OnClickListener {
 			@Override
 			public void onPrepared() {
 				Log.e(tag, "onPrepared");
-				audioHandlers.startPlay();
+				// audioHandlers.startPlay(fileName);
 			}
 
 			@Override
@@ -65,7 +65,8 @@ public class AudioActivity extends Activity implements OnClickListener {
 			Log.e(tag, fileName);
 		} else if (view == button4) {
 			if (!"".equals(fileName)) {
-				audioHandlers.preparePlay(fileName);
+				audioHandlers.startPlay(fileName);
+				// audioHandlers.preparePlay(fileName);
 			} else {
 				Log.e(tag, "RecordFail");
 			}
