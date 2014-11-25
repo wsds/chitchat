@@ -10,22 +10,25 @@ static int codec_open = 0;
 static int dec_frame_size;
 static int enc_frame_size;
 
-static SpeexBits ebits, dbits;
+static SpeexBits * ebits;
+static SpeexBits * dbits;
 void *enc_state;
 void *dec_state;
 
 static JavaVM *gJavaVM;
 //com.android.gl2jni
 extern "C"
-JNIEXPORT jint JNICALL Java_com_android_gl2jni_Speex_open(JNIEnv *env,
-		jobject obj, jint compression) {
+JNIEXPORT jint JNICALL Java_com_android_gl2jni_Speex_open(JNIEnv *env, jobject obj, jint compression) {
 	int tmp;
 
 	if (codec_open++ != 0)
 	return (jint) 0;
 
-	speex_bits_init(&ebits);
-	speex_bits_init(&dbits);
+	ebits= new SpeexBits();
+	dbits= new SpeexBits();
+
+	speex_bits_init(ebits);
+	speex_bits_init(dbits);
 
 	enc_state = speex_encoder_init(&speex_nb_mode);
 	dec_state = speex_decoder_init(&speex_nb_mode);
@@ -50,18 +53,41 @@ JNIEXPORT jint Java_com_android_gl2jni_Speex_encode(JNIEnv *env,
 	if (!codec_open)
 	return 0;
 
-	speex_bits_reset(&ebits);
+	speex_bits_reset(ebits);
 
 	for (i = 0; i < nsamples; i++) {
 		env->GetShortArrayRegion(lin, offset + i * enc_frame_size,
 				enc_frame_size, buffer);
-		speex_encode_int(enc_state, buffer, &ebits);
+		speex_encode_int(enc_state, buffer, ebits);
 	}
 	//env->GetShortArrayRegion(lin, offset, enc_frame_size, buffer);
 	//speex_encode_int(enc_state, buffer, &ebits);
 
-	tot_bytes = speex_bits_write(&ebits, (char *) output_buffer,
+	tot_bytes = speex_bits_write(ebits, (char *) output_buffer,
 			enc_frame_size);
+	env->SetByteArrayRegion(encoded, 0, tot_bytes, output_buffer);
+
+	return (jint) tot_bytes;
+}
+
+extern "C"
+JNIEXPORT jint Java_com_android_gl2jni_Speex_encode1(JNIEnv *env, jobject obj, jshortArray lin, jint offset, jbyteArray encoded, jint size) {
+
+	jshort buffer[enc_frame_size];
+	jbyte output_buffer[enc_frame_size];
+	int i, tot_bytes = 0;
+
+	if (!codec_open)
+	return 0;
+
+	speex_bits_reset(ebits);
+
+	env->GetShortArrayRegion(lin, offset, enc_frame_size, buffer);
+	speex_encode_int(enc_state, buffer, ebits);
+	//env->GetShortArrayRegion(lin, offset, enc_frame_size, buffer);
+	//speex_encode_int(enc_state, buffer, &ebits);
+
+	tot_bytes = speex_bits_write(ebits, (char *) output_buffer, enc_frame_size);
 	env->SetByteArrayRegion(encoded, 0, tot_bytes, output_buffer);
 
 	return (jint) tot_bytes;
@@ -79,20 +105,30 @@ JNIEXPORT jint JNICALL Java_com_android_gl2jni_Speex_decode(JNIEnv *env,
 	return 0;
 
 	env->GetByteArrayRegion(encoded, 0, encoded_length, buffer);
-	speex_bits_read_from(&dbits, (char *) buffer, encoded_length);
-	speex_decode_int(dec_state, &dbits, output_buffer);
+	speex_bits_read_from(dbits, (char *) buffer, encoded_length);
+	speex_decode_int(dec_state, dbits, output_buffer);
 	env->SetShortArrayRegion(lin, 0, dec_frame_size, output_buffer);
 
 	return (jint) dec_frame_size;
 }
 
 extern "C"
-JNIEXPORT jint JNICALL Java_com_android_gl2jni_Speex_getFrameSize(
+JNIEXPORT jint JNICALL Java_com_android_gl2jni_Speex_getEncodeFrameSize(
 		JNIEnv *env, jobject obj) {
 
 	if (!codec_open)
 	return 0;
 	return (jint) enc_frame_size;
+
+}
+
+extern "C"
+JNIEXPORT jint JNICALL Java_com_android_gl2jni_Speex_getDecodeFrameSize(
+		JNIEnv *env, jobject obj) {
+
+	if (!codec_open)
+	return 0;
+	return (jint) dec_frame_size;
 
 }
 
@@ -103,8 +139,8 @@ JNIEXPORT void JNICALL Java_com_android_gl2jni_Speex_close(JNIEnv *env,
 	if (--codec_open != 0)
 	return;
 
-	speex_bits_destroy(&ebits);
-	speex_bits_destroy(&dbits);
+	speex_bits_destroy(ebits);
+	speex_bits_destroy(dbits);
 	speex_decoder_destroy(dec_state);
 	speex_encoder_destroy(enc_state);
 }
