@@ -1,7 +1,10 @@
 package com.android.gl2jni;
 
+import java.io.File;
+
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -57,7 +60,8 @@ public class AudioActivity extends Activity implements OnClickListener {
 	@Override
 	public void onClick(View view) {
 		if (view == button1) {
-			Log.e(tag, speex.getFrameSize() + "");
+			File file = new File(Environment.getExternalStorageDirectory(), "audioTest/test.aac");
+			audioHandlers.startPlay(file.getAbsolutePath());
 		} else if (view == button2) {
 			audioHandlers.startRecording();
 		} else if (view == button3) {
@@ -66,6 +70,7 @@ public class AudioActivity extends Activity implements OnClickListener {
 		} else if (view == button4) {
 			if (!"".equals(fileName)) {
 				audioHandlers.startPlay(fileName);
+				Log.e(tag, fileName);
 				// audioHandlers.preparePlay(fileName);
 			} else {
 				Log.e(tag, "RecordFail");

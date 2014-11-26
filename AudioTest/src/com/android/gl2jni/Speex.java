@@ -26,11 +26,17 @@ public class Speex {
 
 	public native int open(int compression);
 
-	public native int getFrameSize();
+	public native int getEncodeFrameSize();
+
+	public native int getDecodeFrameSize();
 
 	public native int decode(byte encoded[], short lin[], int size);
 
 	public native int encode(short lin[], int offset, byte encoded[], int size);
+	public native int encode1(short lin[], int offset, byte encoded[], int size);
+
+	public native int pushEncodeData(short encodeData[], int size);
+	public native int encodeFrame(byte encodedFrameData[]);
 
 	public native void close();
 }
