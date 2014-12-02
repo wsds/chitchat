@@ -27,3 +27,5 @@ proguard/
 project.properties
 .settings
 .settings
+/HttpTest/obj/local/armeabi
+/HttpTest/obj/local/armeabi-v7a
