@@ -186,7 +186,7 @@ public class MultipartUploader {
 		return new String(Base64.encode(rawHmac));
 	}
 
-	public int PartSize = 256000;
+	public int PartSize = 256*1024;
 
 	public void uploadParts(MyFile myFile) {
 		myFile.partCount = (int) Math.ceil((double) myFile.length / (double) PartSize);
