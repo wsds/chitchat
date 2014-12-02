@@ -188,7 +188,7 @@ void sendPackeges(int sockd, const char *buffer) {
 	if (packegesNum <= 0 || sentLength >= dataLength) {
 		return;
 	}
-
+	buffer = buffer + sentLength;
 	Log((const char*) "sendPackeges");
 	for (int i = sentLength / PackegeSize; i < packegesNum - 1; i++) {
 
@@ -355,7 +355,6 @@ int recvPacket(int sockd) {
 		nBytesRecv = recv(sockd, packetPtr, MAXBUFLEN, 0);
 		Log((const char*) "received");
 		Log((const char*) packetPtr);
-
 	}
 
 	return 1;
