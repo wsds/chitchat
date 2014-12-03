@@ -25,6 +25,7 @@ public class MyHttpJNI {
 		load();
 		fileUploadRunnable = new FileUploadRunnable();
 		myFileUploadQueue = new MyLinkedListQueue<MyCallBack>();
+		myHttpPool = new HashMap<Integer, MyHttp>();
 	}
 
 	private void load() {
@@ -36,7 +37,7 @@ public class MyHttpJNI {
 
 	}
 
-	HashMap<Integer, MyHttp> MyHttpPool = new HashMap<Integer, MyHttp>();
+	HashMap<Integer, MyHttp> myHttpPool;
 	int globalID = 0;
 
 	public void send(MyHttp myHttp) {
@@ -48,7 +49,7 @@ public class MyHttpJNI {
 		byte ip[] = ipStr.getBytes();
 		nativeSend(ip, url, myHttp.method, header, myHttp.myFile.bytes, myHttp.start, myHttp.length, globalID);
 
-		MyHttpPool.put(globalID, myHttp);
+		myHttpPool.put(globalID, myHttp);
 		globalID++;
 	}
 
@@ -77,7 +78,7 @@ public class MyHttpJNI {
 
 						} else if (myCallBack.type == type.receiving) {
 							String result = new String(myCallBack.data);
-							MyHttp myHttp = MyHttpPool.get(myCallBack.id);
+							MyHttp myHttp = myHttpPool.get(myCallBack.id);
 							if (myHttp != null && result != null) {
 								myHttp.responseHandler.onSuccess(result);
 							}

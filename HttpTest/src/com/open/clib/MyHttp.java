@@ -12,8 +12,8 @@ public class MyHttp {
 
 	public static String tag = "MyHttp";
 	public MyLog log = new MyLog(tag, true);
-	MyHttpJNI myHttpJNI=MyHttpJNI.getInstance();
-	
+	MyHttpJNI myHttpJNI = MyHttpJNI.getInstance();
+
 	int method;
 	String url;
 	String header;

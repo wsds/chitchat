@@ -13,9 +13,12 @@ public class AudioActivity extends Activity implements OnClickListener {
 	String tag = "Speex";
 	MyHttp myHttp;
 
+	public static AudioActivity instance;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		instance = this;
 		setContentView(R.layout.audio_activity);
 		button1 = (Button) findViewById(R.id.button1);
 		button2 = (Button) findViewById(R.id.button2);
@@ -36,6 +39,5 @@ public class AudioActivity extends Activity implements OnClickListener {
 		} else if (view == button3) {
 		} else if (view == button4) {
 		}
-
 	}
 }
