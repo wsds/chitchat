@@ -31,7 +31,7 @@ public class AudioActivity extends Activity implements OnClickListener {
 	@Override
 	public void onClick(View view) {
 		if (view == button1) {
-			myHttp.myHttpJNI.test(("this is java!").getBytes());
+			myHttp.myHttpJNI.test(("this is java!").getBytes(), myHttp.myHttpJNI);
 		} else if (view == button2) {
 		} else if (view == button3) {
 		} else if (view == button4) {

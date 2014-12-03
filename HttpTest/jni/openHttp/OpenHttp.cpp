@@ -35,7 +35,7 @@ int OpenHttp::openSend(const char * ip, char * buffer) {
 	//TO DO reuse the httpEntity
 	if (httpEntity != NULL) {
 		this->httpEntitiesMap->set(httpEntity->socketFD, httpEntity);
-		Log((char*)"httpEntitiesMap->set@");
+		Log((char*) "httpEntitiesMap->set@");
 		Log(httpEntity->socketFD);
 		this->sendData(httpEntity);
 	}
@@ -78,18 +78,18 @@ HttpEntity * OpenHttp::intializeHttpEntity(const char * ip, char * buffer) {
 	if (-1 == bind(httpEntity->socketFD, (sockaddr *) httpEntity->localAddress, sizeof(sockaddr_in))) {
 		char target[15] = "";
 		Log(sizeof(httpEntity->localAddress));
-		Log((char*)"bind fail !");
+		Log((char*) "bind fail !");
 		return NULL;
 	}
-	Log((char*)"bind ok !");
+	Log((char*) "bind ok !");
 
 	int status = connect(httpEntity->socketFD, (sockaddr *) httpEntity->remoteAddress, sizeof(sockaddr_in));
 
 	if (status != 0) {
-		Log((char*)"Connect fail!");
+		Log((char*) "Connect fail!");
 		return NULL;
 	}
-	Log((char*)"Connected");
+	Log((char*) "Connected");
 
 	int flags = fcntl(httpEntity->socketFD, F_GETFL, 0);
 	flags |= O_NONBLOCK;
@@ -104,7 +104,7 @@ HttpEntity * OpenHttp::intializeHttpEntity(const char * ip, char * buffer) {
 }
 
 int OpenHttp::sendData(HttpEntity * httpEntity) {
-	Log((char*)"sendData");
+	Log((char*) "sendData");
 	httpEntity->dataLength = strlen(httpEntity->data);
 	httpEntity->sentLength = 0;
 
@@ -119,11 +119,15 @@ int OpenHttp::sendData(HttpEntity * httpEntity) {
 }
 
 void OpenHttp::sendPackeges(HttpEntity * httpEntity) {
+	Log((char*) "sendPackeges");
+	Log(httpEntity->packegesNum);
+	Log(httpEntity->sentLength);
+	Log(httpEntity->dataLength);
+	Log((char*) "@@@@@@@@@@@@@@@@@@@@@@@@@");
 	if (httpEntity->packegesNum <= 0 || httpEntity->sentLength >= httpEntity->dataLength) {
 		return;
 	}
 	char * buffer = httpEntity->data + httpEntity->sentLength;
-	Log((char*)"sendPackeges");
 	for (int i = httpEntity->sentLength / this->PackegeSize; i < httpEntity->packegesNum - 1; i++) {
 
 		int sentPackegeLength = this->sendPackege(httpEntity, buffer, this->PackegeSize);
@@ -143,12 +147,12 @@ void OpenHttp::sendPackeges(HttpEntity * httpEntity) {
 }
 
 int OpenHttp::sendPackege(HttpEntity * httpEntity, const void * buffer, int PackegeSize) {
-	Log((char*)"send one Packege");
+	Log((char*) "send one Packege");
 	int sentPackegeLength = send(httpEntity->socketFD, buffer, PackegeSize, 0);
 	if (sentPackegeLength == -1) {
 		if (errno == EAGAIN) {
 			httpEntity->isSocketBufferFull = true;
-			Log((char*)"缓冲区已满");
+			Log((char*) "缓冲区已满");
 
 		} else if (errno == ECONNRESET) {
 			// 对端重置,对方发送了RST
@@ -171,13 +175,13 @@ void OpenHttp::epollLooper(int epollFD) {
 
 	this->epoll_events = (epoll_event*) JSMalloc(this->MaxEvent * sizeof(epoll_event));
 	int numEvents = 0;
-	Log((char*)"epollLooper started ! ");
+	Log((char*) "epollLooper started ! ");
 	while (true) {
 		numEvents = epoll_wait(this->epollFD, this->epoll_events, this->MaxEvent, 1000);
-		Log((char*)"epollLooper events");
+		Log((char*) "epollLooper events");
 
 		for (int i = 0; i < numEvents; ++i) {
-			Log((char*)"resolve event");
+			Log((char*) "resolve event");
 			epoll_event * event = this->epoll_events + i;
 //			if (event->data.fd == listeningSocketFD) {
 ////				Log((char*)"resolve event  新建连接");
@@ -189,19 +193,22 @@ void OpenHttp::epollLooper(int epollFD) {
 ////				clientEvent->events = EPOLLIN | EPOLLET;
 ////				epoll_ctl(epollFD, EPOLL_CTL_ADD, connectingSocketFD, clientEvent);
 //			}
-//			if (event->events & EPOLLIN) //接收到数据，读socket
-//			{
-////				Log((char*)"resolve event  接收到数据");
-////				recvPacket(this->epoll_events[i].data.fd);
-//			}
+			if (event->events & EPOLLIN) //接收到数据，读socket
+			{
+//				Log((char*)"resolve event  接收到数据");
+//				recvPacket(this->epoll_events[i].data.fd);
+			}
 			if (event->events & EPOLLOUT) {
-				Log((char*)"resolve event 缓冲区可写@");
+				Log((char*) "resolve event 缓冲区可写@");
 				Log(event->data.fd);
+				Log(this->httpEntitiesMap->length);
 				HttpEntity * httpEntity = (HttpEntity *) this->httpEntitiesMap->get(event->data.fd);
-				Log((char*)"httpEntitiesMap->get@");
+				Log((char*) "httpEntitiesMap->get@");
 				Log(event->data.fd);
 				if (httpEntity != NULL) {
 					httpEntity->isSocketBufferFull = false;
+					Log((char*) "@@@@@@@@@@@###########################@");
+					Log(event->data.fd);
 					this->sendPackeges(httpEntity);
 				}
 			}

@@ -3,6 +3,7 @@
 
 #include "JSObject.h"
 #include "MemoryManagement.h"
+#include "../../lib/Log.h"
 
 #include "../JSNumber.h"
 
@@ -34,6 +35,8 @@ public:
 
 	bool is_initialized = false;
 
+	char * intNumber;
+	int nubmer;
 	//get O(1)
 	JSObject* get(char* key);
 	JSObject* get(int key);

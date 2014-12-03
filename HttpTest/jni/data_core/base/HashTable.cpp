@@ -4,7 +4,13 @@ JSObject* HashTable::get(char* key) {
 	return this->get(key, strlen(key));
 }
 JSObject* HashTable::get(int key) {
-	return this->get((char*) &key, 4);
+	memset(this->intNumber, 0, 5);
+//	this->nubmer=key;
+	for (int i = 0; i < 4; i++) {
+		*(this->intNumber + i) = *((char *) (&key) + i);
+	}
+	Log("【get】", this->intNumber);
+	return this->get(this->intNumber, 4);
 }
 
 JSObject* HashTable::get(char* key, int keyLength) {
@@ -14,6 +20,9 @@ JSObject* HashTable::get(char* key, int keyLength) {
 	if (elements[index] != NULL) {
 		HashEntry* brother = elements[index];
 		do {
+			Log("HashTable@@@@@@@@@@@@@@@@@@");
+			Log(brother->key);
+			Log(key);
 			if (strcmp(brother->key, key) == 0) {
 				return brother->value;
 			}
@@ -28,7 +37,15 @@ JSObject* HashTable::set(char* key, JSObject* value) {
 	return this->set(key, strlen(key), value);
 }
 JSObject* HashTable::set(int key, JSObject* value) {
-	return this->set((char*) &key, 4, value);
+	char * intNumberNew = (char*) JSMalloc(5);
+	memset(intNumberNew, 0, 5);
+//	this->nubmer = key;
+	for (int i = 0; i < 4; i++) {
+		*(intNumberNew + i) = *((char *) (&key) + i);
+	}
+	Log("【set】", intNumberNew);
+	Log(intNumberNew, this->nubmer);
+	return this->set(intNumberNew, 4, value);
 }
 
 JSObject* HashTable::set(char* key, int keyLength, JSObject* value) {
@@ -45,7 +62,7 @@ JSObject* HashTable::set(char* key, int keyLength, JSObject* value) {
 				//todo
 				JSObject* oldObject = brother->value;
 				brother->value = value;
-				return oldObject;				//replace entry
+				return oldObject; //replace entry
 			}
 			brother = brother->next;
 		} while (brother != NULL);
@@ -72,17 +89,20 @@ JSObject* HashTable::set(char* key, int keyLength, JSObject* value) {
 
 	this->length++;
 	if (this->length > this->threshold) {
-		this->resize();				//asynchronous//todo
+		this->resize(); //asynchronous//todo
 	}
 
-	return NULL;				//new entry
+	return NULL; //new entry
 }
 
 JSObject* HashTable::del(char* key) {
 	return this->del(key, strlen(key));
 }
 JSObject* HashTable::del(int key) {
-	return this->del((char*) &key, 4);
+	for (int i = 0; i < 4; i++) {
+		*(this->intNumber + i) = *(&key + i);
+	}
+	return this->del(this->intNumber, 4);
 }
 
 JSObject* HashTable::del(char* key, int keyLength) {
@@ -107,7 +127,7 @@ JSObject* HashTable::del(char* key, int keyLength) {
 }
 
 bool HashTable::resize() {
-	int old_index = 0;				//~~~~~~~~~~~~~~~Need Memory Management~~~~~~~~~~~~~~~~~
+	int old_index = 0; //~~~~~~~~~~~~~~~Need Memory Management~~~~~~~~~~~~~~~~~
 	int index = 0;
 	HashEntry* element = NULL;
 	HashEntry* old_element = NULL;
@@ -166,6 +186,7 @@ bool HashTable::initialize() {
 	int mem_size = this->max_size * sizeof(void*);
 
 	this->elements = (HashEntry**) JSMalloc(mem_size);
+	this->intNumber = (char*) JSMalloc(5);
 	//for (int i = 0; i < 50; i++){
 	//	this->elements[i] = NULL;
 	//}
@@ -189,6 +210,7 @@ static unsigned int dict_hash_function_seed = 5381;
  *    machines.
  */
 unsigned int dictGenHashFunction(const void *key, int len) {
+
 	/* 'm' and 'r' are mixing constants generated offline.
 	 They're not really 'magic', they just happen to work well.  */
 	unsigned int seed = dict_hash_function_seed;
@@ -232,6 +254,10 @@ unsigned int dictGenHashFunction(const void *key, int len) {
 	h *= m;
 	h ^= h >> 15;
 
+	Log("dictGenHashFunction@@@@@@@@@@@@@@@@@@1");
+	Log((char*) key, (int) h);
+	Log((char*) key, (int) (-h));
+	Log("dictGenHashFunction@@@@@@@@@@@@@@@@@@2");
 	return (unsigned int) h;
 }
 
@@ -299,7 +325,7 @@ void strclear(char *str) {
 }
 
 int parseNubmerToString(int number, char * target) {
-	char buf[15] = "";	//need memory optimize
+	char buf[15] = ""; //need memory optimize
 	int len = 0;
 	while (number != 0) {
 		buf[len++] = number % 10 + NUMBERCHARSTART;

@@ -29,6 +29,7 @@ int sendData(int sockd, const char *buffer);
 void sendPackeges(int sockd, const char *buffer);
 void test2();
 void test3();
+void test4(JNIEnv *env, jobject myHttpJNI, jbyteArray message);
 void epollLooper(int epollFD);
 
 int epollFD = 0;
@@ -59,13 +60,13 @@ JNIEXPORT jint Java_com_open_clib_MyHttpJNI_nativeSend(JNIEnv *env, jobject obj,
 
 	signed char * body_buffer = (signed char*) malloc(length * sizeof(char));
 	env->GetByteArrayRegion(body, start, length, body_buffer);
-	Log((char*)"hello");
+	Log((char*) "hello");
 
 	return (jint) 1;
 }
 
 extern "C"
-JNIEXPORT jint Java_com_open_clib_MyHttpJNI_test(JNIEnv *env, jobject obj, jbyteArray message) {
+JNIEXPORT jint Java_com_open_clib_MyHttpJNI_test(JNIEnv *env, jobject obj, jbyteArray message, jobject myHttpJNI) {
 
 	int length = env->GetArrayLength(message);
 	signed char * body_buffer = (signed char*) malloc(length + 1 * sizeof(char));
@@ -74,7 +75,7 @@ JNIEXPORT jint Java_com_open_clib_MyHttpJNI_test(JNIEnv *env, jobject obj, jbyte
 	Log((char*) body_buffer);
 
 //	test(body_buffer);
-	test3();
+	test4(env, myHttpJNI, message);
 	return (jint) 1;
 }
 
@@ -129,6 +130,16 @@ void test3() {
 
 	openHttp->initialize();
 	openHttp->openSend("192.168.1.7", buffer);
+}
+
+void test4(JNIEnv *env, jobject myHttpJNI, jbyteArray message) {
+	const signed char * buffer = (const signed char *) ("abcdefghij");
+	jclass TestProvider = env->FindClass("com/open/clib/MyHttpJNI");
+	jmethodID construction_id = env->GetMethodID(TestProvider, "callback", "(I[BI)V"); //(Ljava/lang/String;byte;Integer)V
+
+	jbyteArray body = env->NewByteArray(1000);
+	env->SetByteArrayRegion(body, 0, 11, buffer);
+	env->CallVoidMethod(myHttpJNI, construction_id, 1, body, 100);
 }
 
 void epollLooper(int epollFD) {
