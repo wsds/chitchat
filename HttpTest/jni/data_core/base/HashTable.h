@@ -1,7 +1,6 @@
 #ifndef HASHTABLE_H
 #define HASHTABLE_H
 
-
 #include "JSObject.h"
 #include "MemoryManagement.h"
 
@@ -11,8 +10,7 @@
 #define NULL 0
 #endif /* NULL */
 
-class HashEntry
-{
+class HashEntry {
 public:
 	char* key;
 	JSObject* value;
@@ -23,11 +21,10 @@ public:
 	HashEntry* next;
 };
 
-class HashTable
-{
+class HashTable {
 public:
 
-	HashEntry** elements;//~~~~~~~~~~~~~~~Memory Management~~~~~~~~~~~~~~~~~
+	HashEntry** elements; //~~~~~~~~~~~~~~~Memory Management~~~~~~~~~~~~~~~~~
 	//HashEntry* elements[50];//~~~~~~~~~~~~~~~Memory Management~~~~~~~~~~~~~~~~~//for debug
 
 	int length;
@@ -35,17 +32,22 @@ public:
 	int max_size;
 	int threshold;
 
-
 	bool is_initialized = false;
 
 	//get O(1)
 	JSObject* get(char* key);
+	JSObject* get(int key);
+	JSObject* get(char* key, int keyLength);
 
 	//set O(1)
 	JSObject* set(char* key, JSObject* value);
+	JSObject* set(int key, JSObject* value);
+	JSObject* set(char* key, int keyLength, JSObject* value);
 
 	//del O(1)
-	JSObject*  del(char* key);
+	JSObject* del(char* key);
+	JSObject* del(int key);
+	JSObject* del(char* key, int keyLength);
 
 	//resize O(n)
 	bool resize();
@@ -64,7 +66,6 @@ int strcopy(char *source, char *target);
 int strcopy(char *source, char *target, int length);
 int strappend(char *target, char *source);
 void strclear(char *str);
-
 
 static char NUMBERCHARSTART = '0';
 static char NUMBERCHAREND = '9';

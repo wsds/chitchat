@@ -6,7 +6,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
+#include "openHttp/OpenHttp.h"
 #include <fcntl.h>
 
 #include <sys/epoll.h>
@@ -28,6 +28,7 @@ void setEpoll(int sock);
 int sendData(int sockd, const char *buffer);
 void sendPackeges(int sockd, const char *buffer);
 void test2();
+void test3();
 void epollLooper(int epollFD);
 
 int epollFD = 0;
@@ -58,7 +59,7 @@ JNIEXPORT jint Java_com_open_clib_MyHttpJNI_nativeSend(JNIEnv *env, jobject obj,
 
 	signed char * body_buffer = (signed char*) malloc(length * sizeof(char));
 	env->GetByteArrayRegion(body, start, length, body_buffer);
-	Log("hello");
+	Log((char*)"hello");
 
 	return (jint) 1;
 }
@@ -70,10 +71,10 @@ JNIEXPORT jint Java_com_open_clib_MyHttpJNI_test(JNIEnv *env, jobject obj, jbyte
 	signed char * body_buffer = (signed char*) malloc(length + 1 * sizeof(char));
 	env->GetByteArrayRegion(message, 0, length, body_buffer);
 	body_buffer[length] = 0;
-	Log((const char*) body_buffer);
+	Log((char*) body_buffer);
 
 //	test(body_buffer);
-	test2();
+	test3();
 	return (jint) 1;
 }
 
@@ -91,12 +92,12 @@ void test(signed char * message) {
 	char target[15] = "";
 	parseNubmerToString((int) GetSocketPort(socket), target);
 //	parseNubmerToString(9555444, target);
-	Log((const char*) "Connected @ ");
-	Log((const char*) target);
+	Log((char*) "Connected @ ");
+	Log((char*) target);
 	recvPacket(socket);
 }
 
-void *epollLooperThread(void *arg) {
+void *epollLooperThread1(void *arg) {
 	epollLooper(epollFD);
 }
 void test2() {
@@ -111,25 +112,38 @@ void test2() {
 	setEpoll(sendingSocketFD);
 
 	pthread_t epollLooperPthread;
-	int ret = pthread_create(&epollLooperPthread, NULL, epollLooperThread, (void *) 1);
+	int ret = pthread_create(&epollLooperPthread, NULL, epollLooperThread1, (void *) 1);
 	sleep(1);
 	sendData(sendingSocketFD, buffer);
 
+}
+
+void test3() {
+	char * buffer = (char*) malloc(1024 * 3 * sizeof(char));
+	for (int i = 1; i < 1024 * 3 - 2; i++) {
+		*(buffer + i) = i / 100 + 1;
+	}
+	*(buffer + 1024 * 3 - 1) = 0;
+
+	OpenHttp *openHttp = OpenHttp::getInstance();
+
+	openHttp->initialize();
+	openHttp->openSend("192.168.1.7", buffer);
 }
 
 void epollLooper(int epollFD) {
 
 	struct epoll_event events[MAXEVENTS];
 	int numEvents = 0;
-	Log((const char*) "epollLooper started ! ");
+	Log((char*) "epollLooper started ! ");
 	while (true) {
 		numEvents = epoll_wait(epollFD, events, MAXEVENTS, 1000);
-		Log((const char*) "epollLooper events");
+		Log((char*) "epollLooper events");
 
 		for (int i = 0; i < numEvents; ++i) {
-			Log((const char*) "resolve event");
+			Log((char*) "resolve event");
 			if (events[i].data.fd == listeningSocketFD) {
-				Log((const char*) "resolve event  新建连接");
+				Log((char*) "resolve event  新建连接");
 				struct sockaddr clientAddress;
 				socklen_t clientaddrLen = (socklen_t) sizeof(clientAddress);
 				connectingSocketFD = accept(listeningSocketFD, &clientAddress, &(clientaddrLen));
@@ -140,16 +154,16 @@ void epollLooper(int epollFD) {
 			}
 			if (events[i].events & EPOLLIN) //接收到数据，读socket
 			{
-				Log((const char*) "resolve event  接收到数据");
+				Log((char*) "resolve event  接收到数据");
 				recvPacket(events[i].data.fd);
 			}
 			if (events[i].events & EPOLLOUT) {
-				Log((const char*) "resolve event EPOLLOUT");
+				Log((char*) "resolve event EPOLLOUT");
 
 				struct epoll_event event = events[i];
 				if (events[i].data.fd == sendingSocketFD) {
 					isSocketBufferFull = false;
-					Log((const char*) "缓冲区可写");
+					Log((char*) "缓冲区可写");
 					sendPackeges(sendingSocketFD, dataBuffer);
 					event.events = EPOLLIN | EPOLLET;
 //					epoll_ctl(epollFD, EPOLL_CTL_MOD, sendingSocketFD, &event);
@@ -159,16 +173,16 @@ void epollLooper(int epollFD) {
 
 			{
 				//其他的处理
-				Log((const char*) "事件@");
+				Log((char*) "事件@");
 				parseNubmerToString(events[i].events, target);
-				Log((const char*) target);
+				Log((char*) target);
 			}
 		}
 	}
 }
 
 int sendData(int sockd, const char *buffer) {
-	Log((const char*) "sendData");
+	Log((char*) "sendData");
 	dataBuffer = buffer;
 	dataLength = strlen(dataBuffer);
 	sentLength = 0;
@@ -189,7 +203,7 @@ void sendPackeges(int sockd, const char *buffer) {
 		return;
 	}
 	buffer = buffer + sentLength;
-	Log((const char*) "sendPackeges");
+	Log((char*) "sendPackeges");
 	for (int i = sentLength / PackegeSize; i < packegesNum - 1; i++) {
 
 		int sentPackegeLength = sendPackege(sockd, buffer, PackegeSize, 0);
@@ -209,14 +223,18 @@ void sendPackeges(int sockd, const char *buffer) {
 }
 
 int sendPackege(int sockd, const void * buffer, int PackegeSize, unsigned int mode) {
-	Log((const char*) "send ont Packege");
+	Log((char*) "send ont Packege");
 	int sentPackegeLength = send(sockd, buffer, PackegeSize, 0);
 	if (sentPackegeLength == -1) {
 		if (errno == EAGAIN) {
 			sentPackegeLength = PackegeSize;
 			isSocketBufferFull = true;
-			Log((const char*) "缓冲区已满");
+			Log((char*) "缓冲区已满");
 			sentPackegeLength = 0;
+		} else if (errno == ECONNRESET) {
+			// 对端重置,对方发送了RST
+		} else if (errno == EINTR) {
+			// 被信号中断
 		} else {
 			sentPackegeLength = 0;
 		}
@@ -229,7 +247,6 @@ static void make_sendipv4addr(struct sockaddr_in *addr, int remoteport) {
 	addr->sin_family = AF_INET;
 	addr->sin_port = htons(remoteport);
 }
-
 
 int setSend(const char *ipAddr) {
 	int sockd = 0;
@@ -246,27 +263,27 @@ int setSend(const char *ipAddr) {
 	setsockopt(sockd, SOL_SOCKET, SO_SNDBUF, &sendBuffSize, sizeof(sendBuffSize));
 
 	if (-1 == bind(sockd, (struct sockaddr *) &serveraddr, sizeof(serveraddr))) {
-		Log((const char*) "bind fail !\r\n");
+		Log((char*) "bind fail !\r\n");
 		return -1;
 	}
-	Log((const char*) "bind ok !\r\n");
+	Log((char*) "bind ok !\r\n");
 
 //	if (-1 == listen(sockd, 5)) {
-//		Log((const char*) "listen fail !\r\n");
+//		Log((char*) "listen fail !\r\n");
 //		return -1;
 //	}
-//	Log((const char*) "listen ok\r\n");
+//	Log((char*) "listen ok\r\n");
 
 	int status = connect(sockd, (struct sockaddr *) &addr, sizeof(addr));
 
 	if (status != 0) {
 
 		parseNubmerToString(errno, target);
-		Log((const char*) target);
-		Log((const char*) "Connect fail!\n");
+		Log((char*) target);
+		Log((char*) "Connect fail!\n");
 		return -1;
 	}
-	Log((const char*) "Connected\n");
+	Log((char*) "Connected\n");
 	setNonBlocking(sockd);
 	if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
 //non-blocking模式下无新connection请求，跳出while (1)
@@ -275,7 +292,7 @@ int setSend(const char *ipAddr) {
 }
 
 void setEpoll(int sock) {
-	epollFD = epoll_create(10);
+	epollFD = epoll_create(1024);
 	struct epoll_event event;
 
 	event.data.fd = (sock);
@@ -284,8 +301,8 @@ void setEpoll(int sock) {
 	epoll_ctl(epollFD, EPOLL_CTL_ADD, sock, &event);
 
 	parseNubmerToString(epollFD, target);
-	Log((const char*) "setEpoll@");
-	Log((const char*) target);
+	Log((char*) "setEpoll@");
+	Log((char*) target);
 
 }
 
@@ -316,7 +333,7 @@ static unsigned short GetSocketPort(int sd) {
 ////	strcpy(data, str);
 //	send(sockd, str, strlen(str), 0);
 //	parseNubmerToString(strlen(str), target);
-//	Log((const char*) target);
+//	Log((char*) target);
 //	return 1;
 //}
 
@@ -351,10 +368,10 @@ int recvPacket(int sockd) {
 	int nBytesRecv = 10;
 
 	while (nBytesRecv > 0) {
-		Log((const char*) "ready to recv");
+		Log((char*) "ready to recv");
 		nBytesRecv = recv(sockd, packetPtr, MAXBUFLEN, 0);
-		Log((const char*) "received");
-		Log((const char*) packetPtr);
+		Log((char*) "received");
+		Log((char*) packetPtr);
 	}
 
 	return 1;
