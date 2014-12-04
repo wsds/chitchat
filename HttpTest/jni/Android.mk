@@ -11,6 +11,7 @@ speex_jni.cpp \
 lib/log.cpp \
 data_core/base/HashTable.cpp \
 data_core/base/LIST.cpp \
+data_core/base/Queue.cpp \
 data_core/base/MemoryManagement.cpp \
 data_core/base/JSObject.cpp \
 openHttp/openHttp.cpp \

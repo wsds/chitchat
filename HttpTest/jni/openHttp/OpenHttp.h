@@ -22,6 +22,12 @@
 #define NULL 0
 #endif /* NULL */
 
+class Type {
+public:
+	int Queueing = 0, Connecting = 1, Connected = 2, Sending = 3, Sent = 4, Waiting = 4, receiving = 5, received = 6;
+	int Failed = 10;
+	int type = Queueing;
+};
 class HttpEntity: public JSObject {
 public:
 	const char * ip;
@@ -41,7 +47,7 @@ public:
 	int sentRuturnLength = 0;
 	const char *dataBuffer;
 	bool isSocketBufferFull = false;
-
+	Type * type = new Type();
 };
 
 void *epollLooperThread(void *arg);
@@ -65,6 +71,7 @@ public:
 	int isReUsedPort = 1;
 	int sendBuffSize = 1024;
 	int PackegeSize = 1024;
+	int MaxBufflen = 1024;
 
 	bool is_initialized = false;
 
@@ -73,9 +80,10 @@ public:
 
 	int openSend(const char * ip, char * buffer);
 	HttpEntity * intializeHttpEntity(const char * ip, char * buffer);
-	int sendData(HttpEntity * httpEntity);
+	int initializeSendData(HttpEntity * httpEntity);
 	void sendPackeges(HttpEntity * httpEntity);
 	int sendPackege(HttpEntity * httpEntity, const void * buffer, int PackegeSize);
+	void receivePackage(HttpEntity * httpEntity);
 
 	HashTable *httpEntitiesMap;
 	int MaxEvent = 100;
@@ -85,8 +93,6 @@ public:
 
 	void epollLooper(int epollFD);
 };
-
-
 
 #endif /* OPENHTTP_H */
 

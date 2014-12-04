@@ -3,6 +3,7 @@
 
 #include "lib/Log.h"
 #include "data_core/base/HashTable.h"
+#include "data_core/base/Queue.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -30,6 +31,7 @@ void sendPackeges(int sockd, const char *buffer);
 void test2();
 void test3();
 void test4(JNIEnv *env, jobject myHttpJNI, jbyteArray message);
+void test5();
 void epollLooper(int epollFD);
 
 int epollFD = 0;
@@ -75,7 +77,8 @@ JNIEXPORT jint Java_com_open_clib_MyHttpJNI_test(JNIEnv *env, jobject obj, jbyte
 	Log((char*) body_buffer);
 
 //	test(body_buffer);
-	test4(env, myHttpJNI, message);
+//	test4(env, myHttpJNI, message);
+	test5();
 	return (jint) 1;
 }
 
@@ -135,11 +138,29 @@ void test3() {
 void test4(JNIEnv *env, jobject myHttpJNI, jbyteArray message) {
 	const signed char * buffer = (const signed char *) ("abcdefghij");
 	jclass TestProvider = env->FindClass("com/open/clib/MyHttpJNI");
-	jmethodID construction_id = env->GetMethodID(TestProvider, "callback", "(I[BI)V"); //(Ljava/lang/String;byte;Integer)V
+	jmethodID construction_id = env->GetMethodID(TestProvider, "callback", "(I[BIF)V"); //(Ljava/lang/String;byte;Integer)V
 
 	jbyteArray body = env->NewByteArray(1000);
 	env->SetByteArrayRegion(body, 0, 11, buffer);
-	env->CallVoidMethod(myHttpJNI, construction_id, 1, body, 100);
+	env->CallVoidMethod(myHttpJNI, construction_id, 1, body, 100, 10.10);
+}
+void test5() {
+	Queue * queue = new Queue();
+	queue->initialize();
+	for (int i = 0; i < 20; i++) {
+		JSObject * jSObject = new JSObject();
+		jSObject->number = i + 110;
+//		Log((char *) ("queue offer, "), i);
+		queue->offer(jSObject);
+	}
+	for (int i = 0; i < 20; i++) {
+		JSObject * jSObject = queue->take();
+		if (jSObject == NULL) {
+			Log((char *) ("queue item, "), (char *) ("NULL"));
+			continue;
+		}
+		Log((char *) ("queue item, "), jSObject->number);
+	}
 }
 
 void epollLooper(int epollFD) {

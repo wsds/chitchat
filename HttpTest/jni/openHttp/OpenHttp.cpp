@@ -37,7 +37,8 @@ int OpenHttp::openSend(const char * ip, char * buffer) {
 		this->httpEntitiesMap->set(httpEntity->socketFD, httpEntity);
 		Log((char*) "httpEntitiesMap->set@");
 		Log(httpEntity->socketFD);
-		this->sendData(httpEntity);
+		this->initializeSendData(httpEntity);
+		httpEntity->type->type = httpEntity->type->Queueing;
 	}
 	return 1;
 }
@@ -83,27 +84,28 @@ HttpEntity * OpenHttp::intializeHttpEntity(const char * ip, char * buffer) {
 	}
 	Log((char*) "bind ok !");
 
+	int flags = fcntl(httpEntity->socketFD, F_GETFL, 0);
+	flags |= O_NONBLOCK;
+	fcntl(httpEntity->socketFD, F_SETFL, flags);
+
+	httpEntity->type->type = httpEntity->type->Connecting;
 	int status = connect(httpEntity->socketFD, (sockaddr *) httpEntity->remoteAddress, sizeof(sockaddr_in));
 
 	if (status != 0) {
 		Log((char*) "Connect fail!");
 		return NULL;
 	}
+	httpEntity->type->type = httpEntity->type->Connected;
 	Log((char*) "Connected");
-
-	int flags = fcntl(httpEntity->socketFD, F_GETFL, 0);
-	flags |= O_NONBLOCK;
-	fcntl(httpEntity->socketFD, F_SETFL, flags);
 
 	httpEntity->event = new epoll_event();
 	httpEntity->event->data.fd = (httpEntity->socketFD);
 	httpEntity->event->events = EPOLLIN | EPOLLOUT | EPOLLET;
-	epoll_ctl(this->epollFD, EPOLL_CTL_ADD, httpEntity->socketFD, httpEntity->event);
 
 	return httpEntity;
 }
 
-int OpenHttp::sendData(HttpEntity * httpEntity) {
+int OpenHttp::initializeSendData(HttpEntity * httpEntity) {
 	Log((char*) "sendData");
 	httpEntity->dataLength = strlen(httpEntity->data);
 	httpEntity->sentLength = 0;
@@ -114,7 +116,8 @@ int OpenHttp::sendData(HttpEntity * httpEntity) {
 		httpEntity->packegesNum = httpEntity->dataLength / this->PackegeSize + 1;
 	}
 
-	this->sendPackeges(httpEntity);
+	epoll_ctl(this->epollFD, EPOLL_CTL_ADD, httpEntity->socketFD, httpEntity->event);
+//	this->sendPackeges(httpEntity);
 	return 1;
 }
 
@@ -125,6 +128,9 @@ void OpenHttp::sendPackeges(HttpEntity * httpEntity) {
 	Log(httpEntity->dataLength);
 	Log((char*) "@@@@@@@@@@@@@@@@@@@@@@@@@");
 	if (httpEntity->packegesNum <= 0 || httpEntity->sentLength >= httpEntity->dataLength) {
+		if (httpEntity->sentLength >= httpEntity->dataLength) {
+			httpEntity->type->type = httpEntity->type->Waiting;
+		}
 		return;
 	}
 	char * buffer = httpEntity->data + httpEntity->sentLength;
@@ -138,11 +144,13 @@ void OpenHttp::sendPackeges(HttpEntity * httpEntity) {
 		httpEntity->sentLength += sentPackegeLength;
 		buffer = buffer + this->PackegeSize;
 	}
-
+	httpEntity->type->type = httpEntity->type->Sending;
 	if (httpEntity->lastPackegeSize != 0) {
 		httpEntity->sentLength += this->sendPackege(httpEntity, buffer, httpEntity->lastPackegeSize);
+		httpEntity->type->type = httpEntity->type->Sent;
 	} else {
 		httpEntity->sentLength += this->sendPackege(httpEntity, buffer, this->PackegeSize);
+		httpEntity->type->type = httpEntity->type->Sent;
 	}
 }
 
@@ -164,6 +172,21 @@ int OpenHttp::sendPackege(HttpEntity * httpEntity, const void * buffer, int Pack
 		sentPackegeLength = 0;
 	}
 	return sentPackegeLength;
+}
+void OpenHttp::receivePackage(HttpEntity * httpEntity) {
+//	char * packet = (char *) JSMalloc(this->MaxBufflen * sizeof(char));
+//	char * packetPtr = packet;
+//
+//	int nBytesNeed = this->MaxBufflen;
+//	int nBytesRecv = 1;
+//
+//	while (nBytesRecv > 0) {
+//		Log((char*) "ready to recv");
+//		nBytesRecv = recv(httpEntity->socketFD, packetPtr, this->MaxBufflen, 0);
+//		Log((char*) "received");
+//		Log((char*) packetPtr);
+//	}
+
 }
 
 void *epollLooperThread(void *arg) {
@@ -197,6 +220,12 @@ void OpenHttp::epollLooper(int epollFD) {
 			{
 //				Log((char*)"resolve event  接收到数据");
 //				recvPacket(this->epoll_events[i].data.fd);
+				HttpEntity * httpEntity = (HttpEntity *) this->httpEntitiesMap->get(event->data.fd);
+				if (httpEntity != NULL) {
+					httpEntity->type->type = httpEntity->type->receiving;
+					this->receivePackage(httpEntity);
+					httpEntity->type->type = httpEntity->type->received;
+				}
 			}
 			if (event->events & EPOLLOUT) {
 				Log((char*) "resolve event 缓冲区可写@");

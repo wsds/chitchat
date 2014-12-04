@@ -55,6 +55,7 @@ public class MyHttpJNI {
 
 	public class Type {
 		public int Queueing = 0, Connecting = 1, Connected = 2, Sending = 3, Sent = 4, Waiting = 4, receiving = 5, received = 6;
+		public int Failed = 10;
 		public int type = Queueing;
 	}
 
@@ -72,6 +73,7 @@ public class MyHttpJNI {
 						break;
 					} else {
 						// success
+						Log.e("Http", "type:" + myCallBack.type + "data:" + myCallBack.type + "data:" + myCallBack.type + "id:" + myCallBack.id + "param:" + myCallBack.param);
 						if (myCallBack.type == type.Connected) {
 
 						} else if (myCallBack.type == type.Sending) {
@@ -82,8 +84,10 @@ public class MyHttpJNI {
 							if (myHttp != null && result != null) {
 								myHttp.responseHandler.onSuccess(result);
 							}
+						} else if (myCallBack.type == type.Failed) {
+
 						}
-						Log.e("Http", myCallBack.type + "--" + new String(myCallBack.data));
+						// Log.e("Http", myCallBack.type + "--" + new String(myCallBack.data));
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -96,6 +100,7 @@ public class MyHttpJNI {
 		public int type;
 		public byte data[];
 		public int id;
+		public float param;
 	}
 
 	public MyLinkedListQueue<MyCallBack> myFileUploadQueue;
@@ -103,11 +108,12 @@ public class MyHttpJNI {
 	FileUploadRunnable fileUploadRunnable;
 	boolean callBackIsRunning = false;
 
-	public void callback(int type, byte data[], int id) {
+	public void callback(int type, byte data[], int id, float param) {
 		MyCallBack myCallBack = new MyCallBack();
 		myCallBack.type = type;
 		myCallBack.data = data;
 		myCallBack.id = id;
+		myCallBack.param = param;
 		myFileUploadQueue.offerE(myCallBack);
 		if (!callBackIsRunning) {
 			new Thread(fileUploadRunnable).start();
