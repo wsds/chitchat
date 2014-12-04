@@ -9,7 +9,6 @@ JSObject* HashTable::get(int key) {
 	for (int i = 0; i < 4; i++) {
 		*(this->intNumber + i) = *((char *) (&key) + i);
 	}
-	Log((char *)"【get】", this->intNumber);
 	return this->get(this->intNumber, 4);
 }
 
@@ -20,9 +19,6 @@ JSObject* HashTable::get(char* key, int keyLength) {
 	if (elements[index] != NULL) {
 		HashEntry* brother = elements[index];
 		do {
-			Log((char *)"HashTable@@@@@@@@@@@@@@@@@@");
-			Log(brother->key);
-			Log(key);
 			if (strcmp(brother->key, key) == 0) {
 				return brother->value;
 			}
@@ -43,8 +39,6 @@ JSObject* HashTable::set(int key, JSObject* value) {
 	for (int i = 0; i < 4; i++) {
 		*(intNumberNew + i) = *((char *) (&key) + i);
 	}
-	Log((char *)"【set】", intNumberNew);
-	Log(intNumberNew, this->nubmer);
 	return this->set(intNumberNew, 4, value);
 }
 
@@ -254,10 +248,6 @@ unsigned int dictGenHashFunction(const void *key, int len) {
 	h *= m;
 	h ^= h >> 15;
 
-	Log((char *)"dictGenHashFunction@@@@@@@@@@@@@@@@@@1");
-	Log((char*) key, (int) h);
-	Log((char*) key, (int) (-h));
-	Log((char *)"dictGenHashFunction@@@@@@@@@@@@@@@@@@2");
 	return (unsigned int) h;
 }
 

@@ -10,6 +10,8 @@
 #include "openHttp/OpenHttp.h"
 #include <fcntl.h>
 
+#include "data_core/base/JSObject.h"
+
 #include <sys/epoll.h>
 #include <pthread.h>
 
@@ -32,6 +34,9 @@ void test2();
 void test3();
 void test4(JNIEnv *env, jobject myHttpJNI, jbyteArray message);
 void test5();
+void test6();
+void resolveLine(char * start, int length, int lineNumber, HashTable * headMap);
+HashTable * parseResponseHead(char * buffer, int length);
 void epollLooper(int epollFD);
 
 int epollFD = 0;
@@ -51,18 +56,28 @@ bool isSocketBufferFull = false;
 
 char target[15] = "";
 
+char * HttpMark = (char *) ("HTTP");
+char * ContentLengthMark = (char *) ("Content-Length");
+char * HeadLengthMark = (char *) ("Head-Length");
+char * ETagMark = (char *) ("ETag");
+
 //#define  LOG_TAG    "OpenHttp"
 //#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
 extern "C"
-JNIEXPORT jint Java_com_open_clib_MyHttpJNI_nativeSend(JNIEnv *env, jobject obj, jbyteArray ip, jbyteArray url, jint method, jbyteArray header, jbyteArray body, jint start, jint length, jint id) {
+JNIEXPORT jint Java_com_open_clib_MyHttpJNI_nativeSend(JNIEnv *env, jobject obj, jbyteArray ip, jint port, jbyteArray url, jint method, jbyteArray header, jbyteArray body, jint start, jint length, jint id) {
 
-	char * ip_buffer;
 	char * url_buffer;
 	char * header_buffer;
 
 	signed char * body_buffer = (signed char*) malloc(length * sizeof(char));
 	env->GetByteArrayRegion(body, start, length, body_buffer);
+	signed char * ip_buffer = (signed char*) malloc(16 * sizeof(char));
+	env->GetByteArrayRegion(ip, 0, 15, ip_buffer);
 	Log((char*) "hello");
+
+	OpenHttp * openHttp = OpenHttp::getInstance();
+	openHttp->initialize();
+//	openHttp->openSend(ip_buffer, body_buffer);
 
 	return (jint) 1;
 }
@@ -78,27 +93,41 @@ JNIEXPORT jint Java_com_open_clib_MyHttpJNI_test(JNIEnv *env, jobject obj, jbyte
 
 //	test(body_buffer);
 //	test4(env, myHttpJNI, message);
-	test5();
+//	test(body_buffer);
+	test6();
 	return (jint) 1;
 }
 
 void test(signed char * message) {
-	char * buffer = (char*) malloc(1024 * 3 * sizeof(char));
-	for (int i = 1; i < 1024 * 3 - 2; i++) {
-		*(buffer + i) = i / 100 + 1;
+	char * title = (char *) ("GET /test2.html HTTP/1.1\r\nHost: 192.168.1.7\r\nConnection: keep-alive\r\nContent-Length: 0\r\n\r\n");
+//	Log(strlen(title));
+	int len = strlen(title);
+	char * buffer = (char*) JSMalloc((3500 + len) * sizeof(char));
+	for (int i = 0; i < 3500 + len; i++) {
+		if (i < len) {
+//			Log((char *) ("char"), i);
+			*(buffer + i) = *(title + i);
+		} else {
+//			Log((char *) ("charsss"), i);
+			*(buffer + i) = i / 100 + 1;
+		}
 	}
-	*(buffer + 1024 * 3 - 1) = 0;
-
-	int socket = setSend("192.168.1.7");
-//	sendPacket(socket,
-//			"GET /index.html HTTP/1.1\r\nHost: www.testhttp.com\r\n\r\n\r\n\r\n");
+//	*(buffer + (3500 + len - 1)) = 0;
+//	Log(buffer);
+//	Log(strlen(buffer));
+//	int socket = setSend("192.168.1.7");
+//	sendPacket(socket, "GET /index.html HTTP/1.1\r\nHost: www.testhttp.com\r\n\r\n\r\n\r\n");
 //	sendPacket(socket, buffer);
-	char target[15] = "";
-	parseNubmerToString((int) GetSocketPort(socket), target);
+//	char target[15] = "";
+//	parseNubmerToString((int) GetSocketPort(socket), target);
 //	parseNubmerToString(9555444, target);
-	Log((char*) "Connected @ ");
-	Log((char*) target);
-	recvPacket(socket);
+//	Log((char*) "Connected @ ");
+//	Log((char*) target);
+//	recvPacket(socket);
+
+	OpenHttp * openHttp = OpenHttp::getInstance();
+	openHttp->initialize();
+	openHttp->openSend((char *) ("192.168.1.7"), 80, title);
 }
 
 void *epollLooperThread1(void *arg) {
@@ -123,7 +152,7 @@ void test2() {
 }
 
 void test3() {
-	char * buffer = (char*) malloc(1024 * 3 * sizeof(char));
+	signed char * buffer = (signed char *) malloc(1024 * 3 * sizeof(char));
 	for (int i = 1; i < 1024 * 3 - 2; i++) {
 		*(buffer + i) = i / 100 + 1;
 	}
@@ -132,7 +161,7 @@ void test3() {
 	OpenHttp *openHttp = OpenHttp::getInstance();
 
 	openHttp->initialize();
-	openHttp->openSend("192.168.1.7", buffer);
+	openHttp->openSend((char *) ("192.168.1.7"), 8091, (char *) buffer);
 }
 
 void test4(JNIEnv *env, jobject myHttpJNI, jbyteArray message) {
@@ -160,6 +189,95 @@ void test5() {
 			continue;
 		}
 		Log((char *) ("queue item, "), jSObject->number);
+	}
+}
+void test6() {
+	char * buffer = (char *) ("HTTP/1.1 200 OK\r\nContent-Length: 4095\r\nETag: 54800b5f-fff\r\nConnection: keep-alive\r\n\r\nabcdefghhjk");
+	Log(strlen(buffer));
+	HashTable * headMap = parseResponseHead(buffer, strlen(buffer));
+	JSObject * jsObject;
+	jsObject = headMap->get(HttpMark);
+	Log((char *) ("HttpMark: "), jsObject->number);
+
+	jsObject = headMap->get(ContentLengthMark);
+	if (jsObject == NULL) {
+		Log((char *) ("ContentLengthMark @@@: "), (char *) ("NULL"));
+	} else {
+		Log((char *) ("ContentLengthMark @@@: "), jsObject->number);
+	}
+	jsObject = headMap->get(HeadLengthMark);
+	if (jsObject == NULL) {
+		Log((char *) ("HeadLengthMark @@@: "), (char *) ("NULL"));
+	} else {
+		char * lineKey = (char *) JSMalloc(50 * sizeof(char));
+		strcopy(buffer + jsObject->number, lineKey, strlen(buffer) - jsObject->number);
+		Log(HeadLengthMark, lineKey);
+	}
+	jsObject = headMap->get(ETagMark);
+	if (jsObject == NULL) {
+		Log((char *) ("ETagMark @@@: "), (char *) ("NULL"));
+	} else {
+		Log((char *) ("ETagMark @@@: "), ETagMark);
+	}
+
+}
+HashTable * parseResponseHead(char * buffer, int length) {
+	HashTable * headMap = new HashTable();
+	headMap->initialize();
+
+	char * lastLine = buffer;
+	char * point = buffer;
+	int lineNumber = 0;
+	for (int i = 0; i < length - 1; i++) {
+		point++;
+		if (*point == '\n') {
+			if (*(point - 1) == '\r') {
+				resolveLine(lastLine, point - lastLine, lineNumber, headMap);
+				if (point - lastLine == 1) {
+					JSObject * jsObject = new JSObject();
+					jsObject->number = i + 2;
+					headMap->set(HeadLengthMark, jsObject);
+					break;
+				}
+				lastLine = point + 1;
+			}
+		}
+	}
+	return headMap;
+}
+
+void resolveLine(char * start, int length, int lineNumber, HashTable * headMap) {
+	char * lineKey = (char *) JSMalloc(50 * sizeof(char));
+	char * lineValue = (char *) JSMalloc(50 * sizeof(char));
+	char * point = start;
+	bool isKeyValue = false;
+	for (int i = 0; i < length; i++) {
+		point++;
+		if (*point == 58) {
+			isKeyValue = true;
+			strcopy(start, lineKey, i + 1);
+			if (strcmp(lineKey, ContentLengthMark) == 0) {
+				strcopy(start + i + 1, lineValue, length - i - 1);
+				int content_Length = parseStringToNubmer(lineValue, length - i - 1);
+				JSObject * jsObject = new JSObject();
+				jsObject->number = content_Length;
+				headMap->set(ContentLengthMark, jsObject);
+			} else if (strcmp(lineKey, ETagMark) == 0) {
+				strcopy(start + i + 1, lineValue, length - i - 1);
+				int content_Length = parseStringToNubmer(lineValue, length - i - 1);
+				JSObject * jsObject = new JSObject();
+				jsObject->number = 2;
+				headMap->set(ETagMark, jsObject);
+			}
+		}
+	}
+	if (isKeyValue == false) {
+		strcopy(start, lineKey, 4);
+		if (strcmp(lineKey, HttpMark) == 0) {
+			JSObject * jsObject = new JSObject();
+			jsObject->number = 1;
+			headMap->set(HttpMark, jsObject);
+		}
 	}
 }
 

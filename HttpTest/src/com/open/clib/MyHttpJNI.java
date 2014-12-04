@@ -41,20 +41,20 @@ public class MyHttpJNI {
 	int globalID = 0;
 
 	public void send(MyHttp myHttp) {
-
-		byte url[] = myHttp.url.getBytes();
+		String url2 = "http://192.000";
+		byte url[] = url2.getBytes();
 		String headerStr = "GET /index.html HTTP/1.1\r\nHost: www.example.com";
 		byte header[] = headerStr.getBytes();
-		String ipStr = "192.168.0.11";
+		String ipStr = "192.168.1.7";
 		byte ip[] = ipStr.getBytes();
-		nativeSend(ip, url, myHttp.method, header, myHttp.myFile.bytes, myHttp.start, myHttp.length, globalID);
+		nativeSend(ip, 80, url, myHttp.method, header, myHttp.myFile.bytes, myHttp.start, myHttp.length, globalID);
 
 		myHttpPool.put(globalID, myHttp);
 		globalID++;
 	}
 
 	public class Type {
-		public int Queueing = 0, Connecting = 1, Connected = 2, Sending = 3, Sent = 4, Waiting = 4, receiving = 5, received = 6;
+		public int Queueing = 0, Started = 1, Connecting = 2, Connected = 3, Sending = 4, Sent = 5, Waiting = 5, receiving = 6, received = 7;
 		public int Failed = 10;
 		public int type = Queueing;
 	}
@@ -121,7 +121,7 @@ public class MyHttpJNI {
 		}
 	}
 
-	public native int nativeSend(byte ip[], byte url[], int method, byte header[], byte body[], int start, int length, int id);
+	public native int nativeSend(byte ip[], int port, byte url[], int method, byte header[], byte body[], int start, int length, int id);
 
 	public native int test(byte message[], MyHttpJNI thiz);
 

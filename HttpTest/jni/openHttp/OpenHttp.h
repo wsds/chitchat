@@ -5,6 +5,7 @@
 #include "../data_core/base/MemoryManagement.h"
 #include "../data_core/base/LIST.h"
 #include "../data_core/base/HashTable.h"
+#include "../data_core/base/Queue.h"
 #include "lib/Log.h"
 
 #include <sys/socket.h>
@@ -22,16 +23,17 @@
 #define NULL 0
 #endif /* NULL */
 
-class Type {
+class Status {
 public:
-	int Queueing = 0, Connecting = 1, Connected = 2, Sending = 3, Sent = 4, Waiting = 4, receiving = 5, received = 6;
+	int Queueing = 0, Started = 1, Connecting = 2, Connected = 3, Sending = 4, Sent = 5, Waiting = 5, receiving = 6, received = 7;
 	int Failed = 10;
-	int type = Queueing;
+	int state = Queueing;
 };
 class HttpEntity: public JSObject {
 public:
 	const char * ip;
-	JSObject * port;
+	int remotePort;
+	JSObject * localPort;
 	char * data;
 
 	int socketFD;
@@ -47,7 +49,7 @@ public:
 	int sentRuturnLength = 0;
 	const char *dataBuffer;
 	bool isSocketBufferFull = false;
-	Type * type = new Type();
+	Status * status = new Status();
 };
 
 void *epollLooperThread(void *arg);
@@ -71,20 +73,23 @@ public:
 	int isReUsedPort = 1;
 	int sendBuffSize = 1024;
 	int PackegeSize = 1024;
-	int MaxBufflen = 1024;
+	int MaxBufflen = 10240;
 
 	bool is_initialized = false;
 
 	bool initialize();
 	bool free();
 
-	int openSend(const char * ip, char * buffer);
-	HttpEntity * intializeHttpEntity(const char * ip, char * buffer);
-	int initializeSendData(HttpEntity * httpEntity);
+	int openSend(char * ip, int remotePort, char * buffer);
+	HttpEntity * intializeHttpEntity(HttpEntity * httpEntity, JSObject * port);
+	int startConnect(HttpEntity * httpEntity);
 	void sendPackeges(HttpEntity * httpEntity);
 	int sendPackege(HttpEntity * httpEntity, const void * buffer, int PackegeSize);
 	void receivePackage(HttpEntity * httpEntity);
+	void parseResponseBody(char * buffer);
 
+	void setState(HttpEntity * httpEntity, int state);
+	Queue * httpEntitiesQueue;
 	HashTable *httpEntitiesMap;
 	int MaxEvent = 100;
 	int epollFD = 0;
