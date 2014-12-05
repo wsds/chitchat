@@ -173,6 +173,9 @@ bool HashTable::resize() {
 }
 
 bool HashTable::initialize() {
+	if (is_initialized == true) {
+		return true;
+	}
 	this->max_size = 1 + 7;
 	this->length = 0;
 	this->threshold = (int) (this->max_size * 0.8);

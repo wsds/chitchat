@@ -22,6 +22,9 @@ bool OpenHttp::initialize() {
 	this->httpEntitiesQueue = new Queue();
 	this->httpEntitiesQueue->initialize();
 
+	this->lineKey = (char *) JSMalloc(50 * sizeof(char));
+	this->lineValue = (char *) JSMalloc(50 * sizeof(char));
+
 	this->epollFD = epoll_create(1024);
 
 	epollLooperPthread = new pthread_t();
@@ -35,24 +38,46 @@ bool OpenHttp::free() {
 }
 int OpenHttp::openSend(char * ip, int remotePort, char * buffer) {
 
-	JSObject * port = this->portPool->pop();
 	HttpEntity * httpEntity = new HttpEntity();
 	httpEntity->ip = (const char *) ip;
 	httpEntity->remotePort = remotePort;
-	httpEntity->data = buffer;
+	httpEntity->sendData = buffer;
+
+	this->openSend(httpEntity);
+
+	//TO DO reuse the httpEntity
+	return 1;
+}
+int OpenHttp::openDownload(char * ip, int remotePort, char * head, char * body, char * path) {
+
+	HttpEntity * httpEntity = new HttpEntity();
+	httpEntity->ip = (const char *) ip;
+	httpEntity->remotePort = remotePort;
+	httpEntity->sendData = head;
+
+	httpEntity->receiveFD = open(path, O_CREAT | O_RDWR, 777);
+	if (httpEntity->receiveFD < 0) {
+		Log((char *) ("Can not open !"));
+		this->setState(httpEntity, httpEntity->status->Failed);
+		return 0;
+	}
+
+	ftruncate(httpEntity->receiveFD, 1);
+
+	this->openSend(httpEntity);
+}
+void OpenHttp::openSend(HttpEntity * httpEntity) {
+	JSObject * port = this->portPool->pop();
+
 	if (port == NULL) {
 		this->httpEntitiesQueue->offer(httpEntity);
 		this->setState(httpEntity, httpEntity->status->Queueing);
 	} else {
 		this->setState(httpEntity, httpEntity->status->Started);
-
 		httpEntity = this->intializeHttpEntity(httpEntity, port);
 		this->httpEntitiesMap->set(httpEntity->socketFD, httpEntity);
 		this->startConnect(httpEntity);
 	}
-
-	//TO DO reuse the httpEntity
-	return 1;
 }
 
 HttpEntity * OpenHttp::intializeHttpEntity(HttpEntity * httpEntity, JSObject * port) {
@@ -102,14 +127,23 @@ HttpEntity * OpenHttp::intializeHttpEntity(HttpEntity * httpEntity, JSObject * p
 
 int OpenHttp::startConnect(HttpEntity * httpEntity) {
 	Log((char*) "startConnect");
-	httpEntity->dataLength = strlen(httpEntity->data);
+	httpEntity->sendDataLength = strlen(httpEntity->sendData);
 	httpEntity->sentLength = 0;
 
-	httpEntity->packegesNum = httpEntity->dataLength / this->PackegeSize;
-	httpEntity->lastPackegeSize = httpEntity->dataLength % this->PackegeSize;
-	if (httpEntity->lastPackegeSize != 0) {
-		httpEntity->packegesNum = httpEntity->dataLength / this->PackegeSize + 1;
+	httpEntity->sendPackegesNum = httpEntity->sendDataLength / this->PackegeSize;
+	httpEntity->sendLastPackegeSize = httpEntity->sendDataLength % this->PackegeSize;
+	if (httpEntity->sendLastPackegeSize != 0) {
+		httpEntity->sendPackegesNum = httpEntity->sendDataLength / this->PackegeSize + 1;
 	}
+
+	httpEntity->receiveBuffer = (char *) JSMalloc(10240 * sizeof(char));
+
+	httpEntity->receivePackagesNumber = 0;
+	httpEntity->receivedLength = 0;
+	httpEntity->receiveContentLength = 0;
+	httpEntity->receiveHeadLength = 0;
+	httpEntity->receiveOffset = 0;
+	httpEntity->receiveFileBuffer == NULL;
 
 	epoll_ctl(this->epollFD, EPOLL_CTL_ADD, httpEntity->socketFD, httpEntity->event);
 
@@ -132,30 +166,30 @@ void OpenHttp::sendPackeges(HttpEntity * httpEntity) {
 //	Log(httpEntity->packegesNum);
 //	Log(httpEntity->sentLength);
 //	Log(httpEntity->dataLength);
-	if (httpEntity->packegesNum <= 0 || httpEntity->sentLength >= httpEntity->dataLength) {
-		if (httpEntity->sentLength >= httpEntity->dataLength) {
+	if (httpEntity->sendPackegesNum <= 0 || httpEntity->sentLength >= httpEntity->sendDataLength) {
+		if (httpEntity->sentLength >= httpEntity->sendDataLength) {
 			this->setState(httpEntity, httpEntity->status->Waiting);
 		}
 		return;
 	}
 	this->setState(httpEntity, httpEntity->status->Sending);
-	char * buffer = httpEntity->data + httpEntity->sentLength;
-	for (int i = httpEntity->sentLength / this->PackegeSize; i < httpEntity->packegesNum - 1; i++) {
+	char * buffer = httpEntity->sendData + httpEntity->sentLength;
+	for (int i = httpEntity->sentLength / this->PackegeSize; i < httpEntity->sendPackegesNum - 1; i++) {
 
 		int sentPackegeLength = this->sendPackege(httpEntity, buffer, this->PackegeSize);
 
-		if (httpEntity->isSocketBufferFull) {
+		if (httpEntity->isSendBufferFull) {
 			return;
 		}
 		httpEntity->sentLength += sentPackegeLength;
 		buffer = buffer + this->PackegeSize;
 	}
-	if (httpEntity->lastPackegeSize != 0) {
-		httpEntity->sentLength += this->sendPackege(httpEntity, buffer, httpEntity->lastPackegeSize);
+	if (httpEntity->sendLastPackegeSize != 0) {
+		httpEntity->sentLength += this->sendPackege(httpEntity, buffer, httpEntity->sendLastPackegeSize);
 	} else {
 		httpEntity->sentLength += this->sendPackege(httpEntity, buffer, this->PackegeSize);
 	}
-	if (httpEntity->sentLength >= httpEntity->dataLength) {
+	if (httpEntity->sentLength >= httpEntity->sendDataLength) {
 		this->setState(httpEntity, httpEntity->status->Sent);
 	}
 }
@@ -165,7 +199,7 @@ int OpenHttp::sendPackege(HttpEntity * httpEntity, const void * buffer, int Pack
 	int sentPackegeLength = send(httpEntity->socketFD, buffer, PackegeSize, 0);
 	if (sentPackegeLength == -1) {
 		if (errno == EAGAIN) {
-			httpEntity->isSocketBufferFull = true;
+			httpEntity->isSendBufferFull = true;
 			Log((char*) "缓冲区已满");
 
 		} else if (errno == ECONNRESET) {
@@ -180,29 +214,71 @@ int OpenHttp::sendPackege(HttpEntity * httpEntity, const void * buffer, int Pack
 	return sentPackegeLength;
 }
 void OpenHttp::receivePackage(HttpEntity * httpEntity) {
-	char * packet = (char *) JSMalloc(this->MaxBufflen * sizeof(char));
-	char * packetPtr = packet;
-
-	int nBytesNeed = this->MaxBufflen;
-	int nBytesRecv = 1;
-	while (nBytesRecv > 0) {
-		Log((char*) "ready to recv");
-		nBytesRecv = recv(httpEntity->socketFD, packetPtr, this->MaxBufflen, 0);
-		*(packetPtr + nBytesRecv) = 0;
-		if (nBytesRecv <= 0) {
-			if (nBytesRecv == -1) {
-				if (errno == EAGAIN || errno == EWOULDBLOCK) {
-//					printf(" recv finish detected, quit.../n ");
-					Log((char*) " recv finish detected, quit.../n");
-//					parseResponseBody(packetPtr);
+	int receiveLength = 1;
+	while (receiveLength > 0) {
+		receiveLength = 0;
+		if (httpEntity->receivePackagesNumber == 0) {
+			receiveLength = recv(httpEntity->socketFD, httpEntity->receiveBuffer, this->MaxBufflen, 0);
+			if (checkReceive(httpEntity, receiveLength)) {
+				this->setState(httpEntity, httpEntity->status->receiving);
+				HashTable * hashTable = this->parseResponseHead(httpEntity->receiveBuffer, receiveLength);
+				bool flag = setReceiceHead(httpEntity, hashTable);
+				if (!flag) {
+					this->setState(httpEntity, httpEntity->status->Failed);
 					break;
 				}
 			} else {
 				break;
 			}
+			httpEntity->receivePackagesNumber++;
+			httpEntity->receivedLength += receiveLength;
+		} else {
+			if (httpEntity->receivedLength >= httpEntity->receiveContentLength + httpEntity->receiveHeadLength) {
+				this->unMapReceiveFile(httpEntity);
+				this->setState(httpEntity, httpEntity->status->received);
+				break;
+			}
+			mapReceiveFile(httpEntity);
+			int length = httpEntity->receiveContentLength + httpEntity->receiveHeadLength - httpEntity->receivedLength;
+			receiveLength = recv(httpEntity->socketFD, httpEntity->receiveFileBuffer + httpEntity->receivedLength - httpEntity->receiveHeadLength, length, 0);
+			if (!checkReceive(httpEntity, receiveLength)) {
+				break;
+			}
+			this->setState(httpEntity, httpEntity->status->receiving);
+			httpEntity->receivePackagesNumber++;
+			httpEntity->receivedLength += receiveLength;
 		}
+	}
+}
 
-		Log((char*) "received<<<<<<<<<<<<<<<<<<<", strlen(packetPtr));
+void OpenHttp::unMapReceiveFile(HttpEntity * httpEntity) {
+	if (httpEntity->receiveFileBuffer != NULL) {
+		JSFree(httpEntity->receiveFileBuffer, httpEntity->receiveContentLength, httpEntity->receiveFD, httpEntity->receiveContentLength);
+		httpEntity->receiveFileBuffer = NULL;
+	}
+}
+void OpenHttp::mapReceiveFile(HttpEntity * httpEntity) {
+	if (httpEntity->receiveFileBuffer == NULL) {
+		httpEntity->receiveFileBuffer = JSMalloc(httpEntity->receiveContentLength, httpEntity->receiveFD, httpEntity->receiveOffset);
+		memcpy(httpEntity->receiveFileBuffer, httpEntity->receiveBuffer + httpEntity->receiveHeadLength, httpEntity->receivedLength - httpEntity->receiveHeadLength);
+	}
+}
+bool OpenHttp::checkReceive(HttpEntity * httpEntity, int receiveLength) {
+	if (receiveLength <= 0) {
+		if (receiveLength == -1) {
+			if (errno == EAGAIN || errno == EWOULDBLOCK) {
+				Log((char*) " recv finish detected, quit.../n");
+				return false;
+			} else {
+				Log((char *) ("ERRNO:"), errno);
+				return false;
+			}
+		} else {
+			this->setState(httpEntity, httpEntity->status->Failed);
+			return false;
+		}
+	} else {
+		return true;
 	}
 }
 
@@ -242,7 +318,7 @@ void OpenHttp::epollLooper(int epollFD) {
 			if (event->events & EPOLLIN) //接收到数据，读socket
 			{
 //				Log((char*)"resolve event  接收到数据");
-//				recvPacket(this->epoll_events[i].data.fd);
+//				recvPacket(this->epoll_events[i].sendData.fd);
 				HttpEntity * httpEntity = (HttpEntity *) this->httpEntitiesMap->get(event->data.fd);
 				if (httpEntity != NULL) {
 					if (httpEntity->status->state == httpEntity->status->Waiting || httpEntity->status->state == httpEntity->status->receiving) {
@@ -272,7 +348,7 @@ void OpenHttp::epollLooper(int epollFD) {
 						}
 					}
 					if (httpEntity->status->state == httpEntity->status->Connected || httpEntity->status->state == httpEntity->status->Sending) {
-						httpEntity->isSocketBufferFull = false;
+						httpEntity->isSendBufferFull = false;
 						this->sendPackeges(httpEntity);
 					}
 				}
@@ -289,5 +365,92 @@ void OpenHttp::epollLooper(int epollFD) {
 }
 void OpenHttp::setState(HttpEntity * httpEntity, int state) {
 	httpEntity->status->state = state;
+}
+HashTable * OpenHttp::parseResponseHead(char * buffer, int length) {
+	HashTable * headMap = new HashTable();
+	headMap->initialize();
 
+	char * lastLine = buffer;
+	char * point = buffer;
+	int lineNumber = 0;
+	for (int i = 0; i < length - 1; i++) {
+		point++;
+		if (*point == '\n') {
+			if (*(point - 1) == '\r') {
+				resolveLine(lastLine, point - lastLine, lineNumber, headMap);
+				if (point - lastLine == 1) {
+					JSObject * jsObject = new JSObject();
+					jsObject->number = i + 2;
+					headMap->set(this->HeadLengthMark, jsObject);
+					break;
+				}
+				lineNumber++;
+				lastLine = point + 1;
+			}
+		}
+	}
+	if (lineNumber <= 0) {
+		return NULL;
+	}
+
+	return headMap;
+}
+
+void OpenHttp::resolveLine(char * start, int length, int lineNumber, HashTable * headMap) {
+	char * point = start;
+	bool isKeyValue = false;
+	for (int i = 0; i < length; i++) {
+		point++;
+		if (*point == 58) {
+			isKeyValue = true;
+			strcopy(start, this->lineKey, i + 1);
+			if (strcmp(this->lineKey, this->ContentLengthMark) == 0) {
+				strcopy(start + i + 1, this->lineValue, length - i - 1);
+				int content_Length = parseStringToNubmer(this->lineValue, length - i - 1);
+				JSObject * jsObject = new JSObject();
+				jsObject->number = content_Length;
+				headMap->set(this->ContentLengthMark, jsObject);
+			} else if (strcmp(this->lineKey, this->ETagMark) == 0) {
+				char * etag_string = (char *) JSMalloc(50 * sizeof(char));
+				strcopy(start + i + 1, etag_string, length - i - 1);
+				JSObject * jsObject = new JSObject();
+				jsObject->char_string = etag_string;
+				headMap->set(this->ETagMark, jsObject);
+			}
+		}
+	}
+	if (isKeyValue == false) {
+		strcopy(start, this->lineKey, 4);
+		if (strcmp(this->lineKey, this->HttpMark) == 0) {
+			JSObject * jsObject = new JSObject();
+			jsObject->number = 1;
+			headMap->set(this->HttpMark, jsObject);
+		}
+	}
+}
+
+bool OpenHttp::setReceiceHead(HttpEntity * httpEntity, HashTable * headMap) {
+	JSObject * jsObject = headMap->get(HttpMark);
+	if (jsObject == NULL) {
+		return false;
+	}
+
+	jsObject = headMap->get(ContentLengthMark);
+	if (jsObject == NULL) {
+		return false;
+	} else {
+		httpEntity->receiveContentLength = jsObject->number;
+	}
+	jsObject = headMap->get(HeadLengthMark);
+	if (jsObject == NULL) {
+		return false;
+	} else {
+		httpEntity->receiveHeadLength = jsObject->number;
+	}
+	jsObject = headMap->get(ETagMark);
+	if (jsObject == NULL) {
+	} else {
+		httpEntity->receivETag = jsObject->char_string;
+	}
+	return true;
 }

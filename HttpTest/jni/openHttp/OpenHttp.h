@@ -29,12 +29,18 @@ public:
 	int Failed = 10;
 	int state = Queueing;
 };
+class DataContainer: public JSObject {
+public:
+	char * data;
+	int length;
+	int maxLength = 10 * 1024;
+};
 class HttpEntity: public JSObject {
 public:
 	const char * ip;
 	int remotePort;
 	JSObject * localPort;
-	char * data;
+	char * sendData;
 
 	int socketFD;
 	sockaddr_in * remoteAddress;
@@ -42,14 +48,29 @@ public:
 
 	epoll_event * event;
 
-	int dataLength = 0;
+	int sendDataLength = 0;
 	int sentLength = 0;
-	int packegesNum = 0;
-	int lastPackegeSize = 0;
+	int sendPackegesNum = 0;
+	int sendLastPackegeSize = 0;
 	int sentRuturnLength = 0;
-	const char *dataBuffer;
-	bool isSocketBufferFull = false;
+	bool isSendBufferFull = false;
 	Status * status = new Status();
+
+	HashTable * responseHeadMap;
+
+//	char * receiveData;
+	int receivePackagesNumber;
+	int receivedLength;
+	int receiveContentLength;
+	int receiveHeadLength;
+	char * receivETag;
+
+	char * receiveBuffer;
+	int receiveOffset;
+	char * receiveFileBuffer;
+
+	int sendFD;
+	int receiveFD;
 };
 
 void *epollLooperThread(void *arg);
@@ -77,10 +98,20 @@ public:
 
 	bool is_initialized = false;
 
+	char * HttpMark = (char *) ("HTTP");
+	char * ContentLengthMark = (char *) ("Content-Length");
+	char * HeadLengthMark = (char *) ("Head-Length");
+	char * ETagMark = (char *) ("ETag");
+
+	char * lineKey;
+	char * lineValue;
+
 	bool initialize();
 	bool free();
 
 	int openSend(char * ip, int remotePort, char * buffer);
+	int openDownload(char * ip, int remotePort, char * head, char * body, char * path);
+	void openSend(HttpEntity * httpEntity);
 	HttpEntity * intializeHttpEntity(HttpEntity * httpEntity, JSObject * port);
 	int startConnect(HttpEntity * httpEntity);
 	void sendPackeges(HttpEntity * httpEntity);
@@ -89,6 +120,15 @@ public:
 	void parseResponseBody(char * buffer);
 
 	void setState(HttpEntity * httpEntity, int state);
+
+	HashTable * parseResponseHead(char * buffer, int length);
+	void resolveLine(char * start, int length, int lineNumber, HashTable * headMap);
+	bool setReceiceHead(HttpEntity * httpEntity, HashTable * headMap);
+
+	void mapReceiveFile(HttpEntity * httpEntity);
+	bool checkReceive(HttpEntity * httpEntity, int receiveLength);
+	void unMapReceiveFile(HttpEntity * httpEntity);
+
 	Queue * httpEntitiesQueue;
 	HashTable *httpEntitiesMap;
 	int MaxEvent = 100;
