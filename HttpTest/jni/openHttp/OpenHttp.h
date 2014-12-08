@@ -25,7 +25,7 @@
 
 class Status {
 public:
-	int Queueing = 0, Started = 1, Connecting = 2, Connected = 3, Sending = 4, Sent = 5, Waiting = 5, receiving = 6, received = 7;
+	int Queueing = 0, Started = 1, Connecting = 2, Connected = 3, Sending = 4, Sent = 5, Waiting = 5, Receiving = 6, Received = 7;
 	int Failed = 10;
 	int state = Queueing;
 };
@@ -128,6 +128,8 @@ public:
 	void mapReceiveFile(HttpEntity * httpEntity);
 	bool checkReceive(HttpEntity * httpEntity, int receiveLength);
 	void unMapReceiveFile(HttpEntity * httpEntity);
+
+	int openUpload(char * ip, int remotePort, char * head, char * body, char * path);
 
 	Queue * httpEntitiesQueue;
 	HashTable *httpEntitiesMap;

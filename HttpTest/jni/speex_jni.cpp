@@ -2,15 +2,15 @@
 #include <stdlib.h>
 //#include <stdio.h>
 //
-#include <sys/mman.h> //mmap头文件
-#include <asm-generic/fcntl.h>#include "lib/Log.h"#include "data_core/base/HashTable.h"#include "data_core/base/Queue.h"#include <sys/socket.h>#include <netinet/in.h>#include <arpa/inet.h>#include "openHttp/OpenHttp.h"#include <fcntl.h>#include "data_core/base/JSObject.h"#include <sys/epoll.h>
+#include <sys/mman.h> //mmap头文件#include <fcntl.h>#include <asm-generic/fcntl.h>#include "lib/Log.h"#include "data_core/base/HashTable.h"#include "data_core/base/Queue.h"#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include "openHttp/OpenHttp.h"
+#include "data_core/base/JSObject.h"
+#include <sys/epoll.h>
 #include <pthread.h>
 
-#include <sys/stat.h> //文件状态结构
-#include <unistd.h>#include <asm-generic/mman-common.h>#include <errno.h>#define MAXBUFLEN 	1024#define MAXEVENTS 100void test(signed char * message);static void make_sendipv4addr(struct sockaddr_in *addr, int remoteport);int setSend(const char *ipAddr);int sendPackege(int sockd, const void * buffer, int PackegeSize, unsigned int mode);
-static void make_recvipv4addr(struct sockaddr_in *addr, const int localport);
-int recvPacket(int sockd);
-static unsigned short GetSocketPort(int sd);
+#include <sys/stat.h> //文件状态结构#include <unistd.h>#include <asm-generic/mman-common.h>#include <errno.h>#define MAXBUFLEN 	1024#define MAXEVENTS 100void test(signed char * message);static void make_sendipv4addr(struct sockaddr_in *addr, int remoteport);int setSend(const char *ipAddr);int sendPackege(int sockd, const void * buffer, int PackegeSize, unsigned int mode);static void make_recvipv4addr(struct sockaddr_in *addr, const int localport);int recvPacket(int sockd);static unsigned short GetSocketPort(int sd);
 int setNonBlocking(int sock);
 void setEpoll(int sock);
 int sendData(int sockd, const char *buffer);
@@ -21,6 +21,7 @@ void test4(JNIEnv *env, jobject myHttpJNI, jbyteArray message);
 void test5();
 void test6();
 void test7();
+void test8();
 void resolveLine(char * start, int length, int lineNumber, HashTable * headMap);
 HashTable * parseResponseHead(char * buffer, int length);
 void epollLooper(int epollFD);
@@ -49,8 +50,7 @@ char * ETagMark = (char *) ("ETag");
 
 //#define  LOG_TAG    "OpenHttp"
 //#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
-extern "C"
-JNIEXPORT jint Java_com_open_clib_MyHttpJNI_nativeSend(JNIEnv *env, jobject obj, jbyteArray ip, jint port, jbyteArray url, jint method, jbyteArray header, jbyteArray body, jint start, jint length, jint id) {
+extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_nativeSend(JNIEnv *env, jobject obj, jbyteArray ip, jint port, jbyteArray url, jint method, jbyteArray header, jbyteArray body, jint start, jint length, jint id) {
 
 	char * url_buffer;
 	char * header_buffer;
@@ -68,8 +68,7 @@ JNIEXPORT jint Java_com_open_clib_MyHttpJNI_nativeSend(JNIEnv *env, jobject obj,
 	return (jint) 1;
 }
 
-extern "C"
-JNIEXPORT jint Java_com_open_clib_MyHttpJNI_test(JNIEnv *env, jobject obj, jbyteArray message, jobject myHttpJNI) {
+extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_test(JNIEnv *env, jobject obj, jbyteArray message, jobject myHttpJNI) {
 
 	int length = env->GetArrayLength(message);
 	signed char * body_buffer = (signed char*) malloc(length + 1 * sizeof(char));
@@ -79,14 +78,14 @@ JNIEXPORT jint Java_com_open_clib_MyHttpJNI_test(JNIEnv *env, jobject obj, jbyte
 
 //	test(body_buffer);
 //	test4(env, myHttpJNI, message);
-	test(body_buffer);
+//	test(body_buffer);
 //	test7();
-//	test6();
+	test8();
 	return (jint) 1;
 }
 
 void test(signed char * message) {
-	char * title = (char *) ("GET /test2.html HTTP/1.1\r\nHost: 192.168.1.7\r\nConnection: keep-alive\r\nContent-Length: 0\r\n\r\n");
+	char * title = (char *) ("GET /index.html HTTP/1.1\r\nHost: 192.168.1.11\r\nConnection: keep-alive\r\nContent-Length: 0\r\n\r\n");
 //	Log(strlen(title));
 	int len = strlen(title);
 	char * buffer = (char*) JSMalloc((3500 + len) * sizeof(char));
@@ -115,8 +114,31 @@ void test(signed char * message) {
 	OpenHttp * openHttp = OpenHttp::getInstance();
 	openHttp->initialize();
 	//char * ip, int remotePort, char * head, char * body, char * path
-	openHttp->openDownload((char *) ("192.168.1.7"), 80, title, "123456", "/storage/sdcard0/welinks/download.js");
+	openHttp->openDownload((char *) ("192.168.1.11"), 80, title, (char *) "123456", (char *) "/storage/sdcard0/welinks/index.html");
 //	openHttp->openSend((char *) ("192.168.1.7"), 80, title);
+}
+void test8() {
+	char * title = (char *) ("PUT /api2/bug/send? HTTP/1.1\r\nHost: 192.168.1.11\r\nConnection: keep-alive\r\nContent-Length: 3004\r\n\r\n");
+	int len = strlen(title);
+	Log(len);
+	char * end = (char *) ("\r\n\r\n");
+	char * buffer = (char*) JSMalloc((3000 + len + 4) * sizeof(char));
+	for (int i = 0; i < 3000 + len + 4; i++) {
+		if (i < len) {
+			*(buffer + i) = *(title + i);
+		} else if (i < 3000 + len) {
+			*(buffer + i) = i / 100 + 1;
+		} else if (i <= 3000 + len + 4) {
+			*(buffer + i) = *(end + i % (3000 + len + 4));
+		}
+	}
+//	*(buffer + len) = (char *) "\r\n\r\n";
+//	int len1 = strlen((char *) ("\r\n\r\n"));
+//	Log(len1);
+	OpenHttp * openHttp = OpenHttp::getInstance();
+	openHttp->initialize();
+	//char * ip, int remotePort, char * head, char * body, char * path
+	openHttp->openUpload((char *) ("192.168.1.11"), 8090, title, buffer, (char *) "/storage/sdcard0/welinks/index.html");
 }
 
 //void *epollLooperThread1(void *arg) {
@@ -208,26 +230,25 @@ void test6() {
 	} else {
 		Log((char *) ("ETagMark @@@: "), ETagMark);
 	}
-
 }
 
 void test7() {
 
 	int fp = 0;
 	if ((fp = open((char *) ("/storage/sdcard0/welinks/test.js"), O_CREAT | O_RDWR, 777)) < 0) {
-		Log(" Can not open !");
+		Log((char *) " Can not open !");
 	}
 	struct stat stat_data;
 	if ((fstat(fp, &stat_data)) < 0) {
-		Log(" fstat error !");
+		Log((char *) " fstat error !");
 	}
 
 	void* start_fp;
 	if ((start_fp = mmap(NULL, 1024 * 3, PROT_READ | PROT_WRITE, MAP_SHARED, fp, 0)) == (void *) -1) {
-		Log(" mmap error !");
+		Log((char *) " mmap error !");
 	}
 	ftruncate(fp, 1); //增加文件大小
-	signed char * buffer = start_fp;
+	char * buffer = (char *) start_fp;
 	for (int i = 1; i < 1024 * 3; i++) {
 		*(buffer + i) = 80;
 	}

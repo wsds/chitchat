@@ -4,9 +4,13 @@ import java.util.HashMap;
 
 import android.util.Log;
 
+import com.open.lib.MyLog;
 import com.open.welinks.model.MyLinkedListQueue;
 
 public class MyHttpJNI {
+
+	public String tag = "MyHttpJNI";
+	public MyLog log = new MyLog(null, true);
 
 	public static MyHttpJNI instance;
 
@@ -54,7 +58,7 @@ public class MyHttpJNI {
 	}
 
 	public class Type {
-		public int Queueing = 0, Started = 1, Connecting = 2, Connected = 3, Sending = 4, Sent = 5, Waiting = 5, receiving = 6, received = 7;
+		public int Queueing = 0, Started = 1, Connecting = 2, Connected = 3, Sending = 4, Sent = 5, Waiting = 5, Receiving = 6, Received = 7;
 		public int Failed = 10;
 		public int type = Queueing;
 	}
@@ -75,17 +79,20 @@ public class MyHttpJNI {
 						// success
 						Log.e("Http", "type:" + myCallBack.type + "data:" + myCallBack.type + "data:" + myCallBack.type + "id:" + myCallBack.id + "param:" + myCallBack.param);
 						if (myCallBack.type == type.Connected) {
-
+							log.e("Connected");
 						} else if (myCallBack.type == type.Sending) {
-
-						} else if (myCallBack.type == type.receiving) {
-							String result = new String(myCallBack.data);
-							MyHttp myHttp = myHttpPool.get(myCallBack.id);
-							if (myHttp != null && result != null) {
-								myHttp.responseHandler.onSuccess(result);
-							}
+							log.e("Sending");
+						} else if (myCallBack.type == type.Receiving) {
+							log.e("Receiving");
+							// String result = new String(myCallBack.data);
+							// MyHttp myHttp = myHttpPool.get(myCallBack.id);
+							// if (myHttp != null && result != null) {
+							// myHttp.responseHandler.onSuccess(result);
+							// }
+						} else if (myCallBack.type == type.Received) {
+							log.e("Received");
 						} else if (myCallBack.type == type.Failed) {
-
+							log.e("Failed");
 						}
 						// Log.e("Http", myCallBack.type + "--" + new String(myCallBack.data));
 					}

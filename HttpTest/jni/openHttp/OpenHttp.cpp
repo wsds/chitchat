@@ -57,7 +57,7 @@ int OpenHttp::openDownload(char * ip, int remotePort, char * head, char * body, 
 
 	httpEntity->receiveFD = open(path, O_CREAT | O_RDWR, 777);
 	if (httpEntity->receiveFD < 0) {
-		Log((char *) ("Can not open !"));
+		Log((char *) ("Download File,Can not open !"));
 		this->setState(httpEntity, httpEntity->status->Failed);
 		return 0;
 	}
@@ -65,6 +65,23 @@ int OpenHttp::openDownload(char * ip, int remotePort, char * head, char * body, 
 	ftruncate(httpEntity->receiveFD, 1);
 
 	this->openSend(httpEntity);
+	return 1;
+}
+int OpenHttp::openUpload(char * ip, int remotePort, char * head, char * body, char * path) {
+	HttpEntity * httpEntity = new HttpEntity();
+	httpEntity->ip = (const char *) ip;
+	httpEntity->remotePort = remotePort;
+	httpEntity->sendData = body;
+	httpEntity->sendFD = open(path, O_RDWR, 777);
+	if (httpEntity->sendFD < 0) {
+		Log((char *) ("Upload File,Can not open !"));
+		this->setState(httpEntity, httpEntity->status->Failed);
+		return 0;
+	}
+
+	this->openSend(httpEntity);
+
+	return 1;
 }
 void OpenHttp::openSend(HttpEntity * httpEntity) {
 	JSObject * port = this->portPool->pop();
@@ -191,6 +208,7 @@ void OpenHttp::sendPackeges(HttpEntity * httpEntity) {
 	}
 	if (httpEntity->sentLength >= httpEntity->sendDataLength) {
 		this->setState(httpEntity, httpEntity->status->Sent);
+		Log((char *) ("发送完成"));
 	}
 }
 
@@ -220,7 +238,7 @@ void OpenHttp::receivePackage(HttpEntity * httpEntity) {
 		if (httpEntity->receivePackagesNumber == 0) {
 			receiveLength = recv(httpEntity->socketFD, httpEntity->receiveBuffer, this->MaxBufflen, 0);
 			if (checkReceive(httpEntity, receiveLength)) {
-				this->setState(httpEntity, httpEntity->status->receiving);
+				this->setState(httpEntity, httpEntity->status->Receiving);
 				HashTable * hashTable = this->parseResponseHead(httpEntity->receiveBuffer, receiveLength);
 				bool flag = setReceiceHead(httpEntity, hashTable);
 				if (!flag) {
@@ -232,10 +250,12 @@ void OpenHttp::receivePackage(HttpEntity * httpEntity) {
 			}
 			httpEntity->receivePackagesNumber++;
 			httpEntity->receivedLength += receiveLength;
+//			Log(httpEntity->receiveBuffer);
 		} else {
 			if (httpEntity->receivedLength >= httpEntity->receiveContentLength + httpEntity->receiveHeadLength) {
 				this->unMapReceiveFile(httpEntity);
-				this->setState(httpEntity, httpEntity->status->received);
+				this->setState(httpEntity, httpEntity->status->Received);
+				Log((char *) ("接收完成"));
 				break;
 			}
 			mapReceiveFile(httpEntity);
@@ -244,7 +264,7 @@ void OpenHttp::receivePackage(HttpEntity * httpEntity) {
 			if (!checkReceive(httpEntity, receiveLength)) {
 				break;
 			}
-			this->setState(httpEntity, httpEntity->status->receiving);
+			this->setState(httpEntity, httpEntity->status->Receiving);
 			httpEntity->receivePackagesNumber++;
 			httpEntity->receivedLength += receiveLength;
 		}
@@ -259,7 +279,7 @@ void OpenHttp::unMapReceiveFile(HttpEntity * httpEntity) {
 }
 void OpenHttp::mapReceiveFile(HttpEntity * httpEntity) {
 	if (httpEntity->receiveFileBuffer == NULL) {
-		httpEntity->receiveFileBuffer = JSMalloc(httpEntity->receiveContentLength, httpEntity->receiveFD, httpEntity->receiveOffset);
+		httpEntity->receiveFileBuffer = (char *) JSMalloc(httpEntity->receiveContentLength, httpEntity->receiveFD, httpEntity->receiveOffset);
 		memcpy(httpEntity->receiveFileBuffer, httpEntity->receiveBuffer + httpEntity->receiveHeadLength, httpEntity->receivedLength - httpEntity->receiveHeadLength);
 	}
 }
@@ -321,11 +341,12 @@ void OpenHttp::epollLooper(int epollFD) {
 //				recvPacket(this->epoll_events[i].sendData.fd);
 				HttpEntity * httpEntity = (HttpEntity *) this->httpEntitiesMap->get(event->data.fd);
 				if (httpEntity != NULL) {
-					if (httpEntity->status->state == httpEntity->status->Waiting || httpEntity->status->state == httpEntity->status->receiving) {
+					if (httpEntity->status->state == httpEntity->status->Waiting || httpEntity->status->state == httpEntity->status->Receiving) {
 						this->receivePackage(httpEntity);
 					}
 //					this->setState(httpEntity, httpEntity->status->receiving);
 //					this->setState(httpEntity, httpEntity->status->received);
+//					this->receivePackage(httpEntity);
 				}
 			}
 			if (event->events & EPOLLOUT) {
@@ -365,6 +386,19 @@ void OpenHttp::epollLooper(int epollFD) {
 }
 void OpenHttp::setState(HttpEntity * httpEntity, int state) {
 	httpEntity->status->state = state;
+	if (httpEntity->status->state == httpEntity->status->Connected) {
+
+	} else if (httpEntity->status->state == httpEntity->status->Sending) {
+
+	} else if (httpEntity->status->state == httpEntity->status->Sent) {
+
+	} else if (httpEntity->status->state == httpEntity->status->Receiving) {
+
+	} else if (httpEntity->status->state == httpEntity->status->Received) {
+
+	} else if (httpEntity->status->state == httpEntity->status->Failed) {
+
+	}
 }
 HashTable * OpenHttp::parseResponseHead(char * buffer, int length) {
 	HashTable * headMap = new HashTable();
@@ -440,17 +474,20 @@ bool OpenHttp::setReceiceHead(HttpEntity * httpEntity, HashTable * headMap) {
 		return false;
 	} else {
 		httpEntity->receiveContentLength = jsObject->number;
+		Log((char *) ("ContentLengthMark"), jsObject->number);
 	}
 	jsObject = headMap->get(HeadLengthMark);
 	if (jsObject == NULL) {
 		return false;
 	} else {
 		httpEntity->receiveHeadLength = jsObject->number;
+		Log((char *) ("receiveHeadLength"), jsObject->number);
 	}
 	jsObject = headMap->get(ETagMark);
 	if (jsObject == NULL) {
 	} else {
 		httpEntity->receivETag = jsObject->char_string;
+		Log((char *) ("receivETag"), jsObject->char_string);
 	}
 	return true;
 }
