@@ -26,7 +26,7 @@
 class Status {
 public:
 	int Queueing = 0, Started = 1, Connecting = 2, Connected = 3, Sending = 4, Sent = 5, Waiting = 5, Receiving = 6, Received = 7;
-	int Failed = 10;
+	int Failed = 10, Timeout = 11;
 	int state = Queueing;
 };
 class DataContainer: public JSObject {
@@ -65,12 +65,14 @@ public:
 	int receiveHeadLength;
 	char * receivETag;
 
+	int receiveFD;
 	char * receiveBuffer;
 	int receiveOffset;
 	char * receiveFileBuffer;
 
 	int sendFD;
-	int receiveFD;
+	int sendOffser;
+	char * sendFileBuffer;
 };
 
 void *epollLooperThread(void *arg);
@@ -107,7 +109,7 @@ public:
 	char * lineValue;
 
 	bool initialize();
-	bool free();
+	bool freeHttpEntity(HttpEntity * httpEntity);
 
 	int openSend(char * ip, int remotePort, char * buffer);
 	int openDownload(char * ip, int remotePort, char * head, char * body, char * path);
@@ -131,8 +133,17 @@ public:
 
 	int openUpload(char * ip, int remotePort, char * head, char * body, char * path);
 
+	void openSend(HttpEntity * httpEntity, JSObject * port);
+
+	void nextHttpEntity();
+
+	HttpEntity * getNewHttpEntity();
+
+	void closeSocketFd(HttpEntity * httpEntity);
+
 	Queue * httpEntitiesQueue;
 	HashTable *httpEntitiesMap;
+	Queue * httpEntitiedOldQueue;
 	int MaxEvent = 100;
 	int epollFD = 0;
 	epoll_event * epoll_events;
@@ -140,6 +151,8 @@ public:
 
 	void epollLooper(int epollFD);
 };
-
+extern "C" {
+extern void CallBack(int type);
+}
 #endif /* OPENHTTP_H */
 

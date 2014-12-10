@@ -1,16 +1,18 @@
 package com.open.clib;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 
-import android.util.Log;
+import android.annotation.SuppressLint;
 
 import com.open.lib.MyLog;
 import com.open.welinks.model.MyLinkedListQueue;
 
 public class MyHttpJNI {
 
-	public String tag = "MyHttpJNI";
-	public MyLog log = new MyLog(null, true);
+	public String tag = "MyHttpJNI:>>>";
+	public MyLog log = new MyLog(tag, true);
 
 	public static MyHttpJNI instance;
 
@@ -25,10 +27,12 @@ public class MyHttpJNI {
 		init();
 	}
 
+	@SuppressLint("UseSparseArrays")
 	public void init() {
 		load();
 		fileUploadRunnable = new FileUploadRunnable();
 		myFileUploadQueue = new MyLinkedListQueue<MyCallBack>();
+		myFileUploadQueue.currentRunnable = fileUploadRunnable;
 		myHttpPool = new HashMap<Integer, MyHttp>();
 	}
 
@@ -77,11 +81,13 @@ public class MyHttpJNI {
 						break;
 					} else {
 						// success
-						Log.e("Http", "type:" + myCallBack.type + "data:" + myCallBack.type + "data:" + myCallBack.type + "id:" + myCallBack.id + "param:" + myCallBack.param);
+						log.e("type:" + myCallBack.type + "data:" + myCallBack.type + "data:" + myCallBack.type + "id:" + myCallBack.id + "param:" + myCallBack.param);
 						if (myCallBack.type == type.Connected) {
 							log.e("Connected");
 						} else if (myCallBack.type == type.Sending) {
 							log.e("Sending");
+						} else if (myCallBack.type == type.Sent) {
+							log.e("Sent");
 						} else if (myCallBack.type == type.Receiving) {
 							log.e("Receiving");
 							// String result = new String(myCallBack.data);
@@ -126,6 +132,20 @@ public class MyHttpJNI {
 			new Thread(fileUploadRunnable).start();
 			callBackIsRunning = true;
 		}
+	}
+
+	// 获取指定域名的ip地址
+	public void getInetAddress() {
+		new Thread(new Runnable() {
+			public void run() {
+				try {
+					InetAddress address = InetAddress.getByName("images2.we-links.com");
+					log.e("ip:" + address);
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+				}
+			}
+		}).start();
 	}
 
 	public native int nativeSend(byte ip[], int port, byte url[], int method, byte header[], byte body[], int start, int length, int id);

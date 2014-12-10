@@ -22,6 +22,9 @@ bool OpenHttp::initialize() {
 	this->httpEntitiesQueue = new Queue();
 	this->httpEntitiesQueue->initialize();
 
+	this->httpEntitiedOldQueue = new Queue();
+	this->httpEntitiedOldQueue->initialize();
+
 	this->lineKey = (char *) JSMalloc(50 * sizeof(char));
 	this->lineValue = (char *) JSMalloc(50 * sizeof(char));
 
@@ -33,24 +36,21 @@ bool OpenHttp::initialize() {
 	return true;
 }
 
-bool OpenHttp::free() {
-	return true;
-}
 int OpenHttp::openSend(char * ip, int remotePort, char * buffer) {
 
-	HttpEntity * httpEntity = new HttpEntity();
+	HttpEntity * httpEntity = this->getNewHttpEntity();
 	httpEntity->ip = (const char *) ip;
 	httpEntity->remotePort = remotePort;
 	httpEntity->sendData = buffer;
 
 	this->openSend(httpEntity);
 
-	//TO DO reuse the httpEntity
+//TO DO reuse the httpEntity
 	return 1;
 }
 int OpenHttp::openDownload(char * ip, int remotePort, char * head, char * body, char * path) {
 
-	HttpEntity * httpEntity = new HttpEntity();
+	HttpEntity * httpEntity = this->getNewHttpEntity();
 	httpEntity->ip = (const char *) ip;
 	httpEntity->remotePort = remotePort;
 	httpEntity->sendData = head;
@@ -68,7 +68,7 @@ int OpenHttp::openDownload(char * ip, int remotePort, char * head, char * body, 
 	return 1;
 }
 int OpenHttp::openUpload(char * ip, int remotePort, char * head, char * body, char * path) {
-	HttpEntity * httpEntity = new HttpEntity();
+	HttpEntity * httpEntity = this->getNewHttpEntity();
 	httpEntity->ip = (const char *) ip;
 	httpEntity->remotePort = remotePort;
 	httpEntity->sendData = body;
@@ -83,6 +83,7 @@ int OpenHttp::openUpload(char * ip, int remotePort, char * head, char * body, ch
 
 	return 1;
 }
+
 void OpenHttp::openSend(HttpEntity * httpEntity) {
 	JSObject * port = this->portPool->pop();
 
@@ -95,6 +96,31 @@ void OpenHttp::openSend(HttpEntity * httpEntity) {
 		this->httpEntitiesMap->set(httpEntity->socketFD, httpEntity);
 		this->startConnect(httpEntity);
 	}
+}
+
+HttpEntity * OpenHttp::getNewHttpEntity() {
+	HttpEntity * httpEntity = (HttpEntity *) this->httpEntitiedOldQueue->take();
+	if (httpEntity == NULL) {
+		httpEntity = new HttpEntity();
+	}
+	return httpEntity;
+}
+
+void OpenHttp::nextHttpEntity() {
+	if (this->portPool->length > 0 && this->httpEntitiesQueue->length > 0) {
+		JSObject * port = this->portPool->pop();
+		if (port != NULL) {
+			HttpEntity * httpEntity = (HttpEntity *) this->httpEntitiesQueue->take();
+			this->openSend(httpEntity, port);
+		}
+	}
+}
+
+void OpenHttp::openSend(HttpEntity * httpEntity, JSObject * port) {
+	this->setState(httpEntity, httpEntity->status->Started);
+	httpEntity = this->intializeHttpEntity(httpEntity, port);
+	this->httpEntitiesMap->set(httpEntity->socketFD, httpEntity);
+	this->startConnect(httpEntity);
 }
 
 HttpEntity * OpenHttp::intializeHttpEntity(HttpEntity * httpEntity, JSObject * port) {
@@ -123,8 +149,14 @@ HttpEntity * OpenHttp::intializeHttpEntity(HttpEntity * httpEntity, JSObject * p
 	setsockopt(httpEntity->socketFD, SOL_SOCKET, SO_REUSEADDR, &(this->isReUsedPort), sizeof(int));
 	setsockopt(httpEntity->socketFD, SOL_SOCKET, SO_SNDBUF, &this->sendBuffSize, sizeof(int));
 
+	//超时时间
+	//	struct timeval timeout = { 10, 0 };
+	//设置发送超时
+	//	setsockopt(httpEntity->socketFD, SOL_SOCKET, SO_SNDTIMEO, (char *) &timeout, sizeof(timeout));
+	//设置接收超时
+	//	setsockopt(httpEntity->socketFD, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout));
+
 	if (-1 == bind(httpEntity->socketFD, (sockaddr *) httpEntity->localAddress, sizeof(sockaddr_in))) {
-		char target[15] = "";
 		Log(sizeof(httpEntity->localAddress));
 		Log((char*) "bind fail !");
 		return NULL;
@@ -180,9 +212,6 @@ int OpenHttp::startConnect(HttpEntity * httpEntity) {
 
 void OpenHttp::sendPackeges(HttpEntity * httpEntity) {
 	Log((char*) "sendPackeges");
-//	Log(httpEntity->packegesNum);
-//	Log(httpEntity->sentLength);
-//	Log(httpEntity->dataLength);
 	if (httpEntity->sendPackegesNum <= 0 || httpEntity->sentLength >= httpEntity->sendDataLength) {
 		if (httpEntity->sentLength >= httpEntity->sendDataLength) {
 			this->setState(httpEntity, httpEntity->status->Waiting);
@@ -191,6 +220,7 @@ void OpenHttp::sendPackeges(HttpEntity * httpEntity) {
 	}
 	this->setState(httpEntity, httpEntity->status->Sending);
 	char * buffer = httpEntity->sendData + httpEntity->sentLength;
+
 	for (int i = httpEntity->sentLength / this->PackegeSize; i < httpEntity->sendPackegesNum - 1; i++) {
 
 		int sentPackegeLength = this->sendPackege(httpEntity, buffer, this->PackegeSize);
@@ -222,9 +252,12 @@ int OpenHttp::sendPackege(HttpEntity * httpEntity, const void * buffer, int Pack
 
 		} else if (errno == ECONNRESET) {
 			// 对端重置,对方发送了RST
+			Log((char *) ("sendPackege errno == ECONNRESET"));
 		} else if (errno == EINTR) {
 			// 被信号中断
+			Log((char *) ("sendPackege errno == EINTR"));
 		} else {
+			Log((char *) ("sendPackege errno == other"));
 			sentPackegeLength = 0;
 		}
 		sentPackegeLength = 0;
@@ -250,7 +283,6 @@ void OpenHttp::receivePackage(HttpEntity * httpEntity) {
 			}
 			httpEntity->receivePackagesNumber++;
 			httpEntity->receivedLength += receiveLength;
-//			Log(httpEntity->receiveBuffer);
 		} else {
 			if (httpEntity->receivedLength >= httpEntity->receiveContentLength + httpEntity->receiveHeadLength) {
 				this->unMapReceiveFile(httpEntity);
@@ -258,7 +290,7 @@ void OpenHttp::receivePackage(HttpEntity * httpEntity) {
 				Log((char *) ("接收完成"));
 				break;
 			}
-			mapReceiveFile(httpEntity);
+			this->mapReceiveFile(httpEntity);
 			int length = httpEntity->receiveContentLength + httpEntity->receiveHeadLength - httpEntity->receivedLength;
 			receiveLength = recv(httpEntity->socketFD, httpEntity->receiveFileBuffer + httpEntity->receivedLength - httpEntity->receiveHeadLength, length, 0);
 			if (!checkReceive(httpEntity, receiveLength)) {
@@ -294,6 +326,13 @@ bool OpenHttp::checkReceive(HttpEntity * httpEntity, int receiveLength) {
 				return false;
 			}
 		} else {
+			if (receiveLength == 0) {
+				//TODO 超时处理
+				Log((char *) ("tcp 超时."));
+				Log((char *) "error:*zero*");
+			} else {
+				Log((char *) "error:", receiveLength);
+			}
 			this->setState(httpEntity, httpEntity->status->Failed);
 			return false;
 		}
@@ -302,9 +341,10 @@ bool OpenHttp::checkReceive(HttpEntity * httpEntity, int receiveLength) {
 	}
 }
 
-void *epollLooperThread(void *arg) {
+void * epollLooperThread(void *arg) {
 	OpenHttp *openHttp = OpenHttp::getInstance();
 	openHttp->epollLooper(openHttp->epollFD);
+	return (void *) 1;
 }
 
 void OpenHttp::epollLooper(int epollFD) {
@@ -320,14 +360,14 @@ void OpenHttp::epollLooper(int epollFD) {
 			epoll_event * event = this->epoll_events + i;
 			Log((char*) "resolve event>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", event->events);
 //			if (event->data.fd == listeningSocketFD) {
-////				Log((char*)"resolve event  新建连接");
-////				struct sockaddr clientAddress;
-////				socklen_t clientaddrLen = (socklen_t) sizeof(clientAddress);
-////				connectingSocketFD = accept(listeningSocketFD, &clientAddress, &(clientaddrLen));
-////				epoll_event* clientEvent = new epoll_event();
-////				clientEvent->data.fd = connectingSocketFD;
-////				clientEvent->events = EPOLLIN | EPOLLET;
-////				epoll_ctl(epollFD, EPOLL_CTL_ADD, connectingSocketFD, clientEvent);
+//				Log((char*)"resolve event  新建连接");
+//				struct sockaddr clientAddress;
+//				socklen_t clientaddrLen = (socklen_t) sizeof(clientAddress);
+//				connectingSocketFD = accept(listeningSocketFD, &clientAddress, &(clientaddrLen));
+//				epoll_event* clientEvent = new epoll_event();
+//				clientEvent->data.fd = connectingSocketFD;
+//				clientEvent->events = EPOLLIN | EPOLLET;
+//				epoll_ctl(epollFD, EPOLL_CTL_ADD, connectingSocketFD, clientEvent);
 //			}
 			if (event->events & EPOLLHUP) {
 				Log((char *) ("event: EPOLLHUP"));
@@ -343,10 +383,15 @@ void OpenHttp::epollLooper(int epollFD) {
 				if (httpEntity != NULL) {
 					if (httpEntity->status->state == httpEntity->status->Waiting || httpEntity->status->state == httpEntity->status->Receiving) {
 						this->receivePackage(httpEntity);
+					} else {
+						Log((char *) "Status：<<<", httpEntity->status->state);
 					}
 //					this->setState(httpEntity, httpEntity->status->receiving);
 //					this->setState(httpEntity, httpEntity->status->received);
+//					Log(httpEntity->status->state);
 //					this->receivePackage(httpEntity);
+				} else {
+					Log((char *) ("HttpEntity NULL1"));
 				}
 			}
 			if (event->events & EPOLLOUT) {
@@ -372,33 +417,93 @@ void OpenHttp::epollLooper(int epollFD) {
 						httpEntity->isSendBufferFull = false;
 						this->sendPackeges(httpEntity);
 					}
+				} else {
+					Log((char *) ("HttpEntity NULL2"));
 				}
 			}
 
 			{
 				//其他的处理
-//				Log((char*)"事件@");
-////				parseNubmerToString(this->epoll_events[i].events, target);
-//				Log(target);
+//				Log((char*) "事件@");
+//				char target[15] = "";
+//				parseNubmerToString(this->epoll_events[i].events, target);
+//				Log((char *) ("other:>>>"), target);
 			}
 		}
 	}
 }
+
 void OpenHttp::setState(HttpEntity * httpEntity, int state) {
 	httpEntity->status->state = state;
 	if (httpEntity->status->state == httpEntity->status->Connected) {
-
+		CallBack(httpEntity->status->state);
 	} else if (httpEntity->status->state == httpEntity->status->Sending) {
-
+		CallBack(httpEntity->status->state);
 	} else if (httpEntity->status->state == httpEntity->status->Sent) {
-
+		CallBack(httpEntity->status->state);
 	} else if (httpEntity->status->state == httpEntity->status->Receiving) {
-
+		CallBack(httpEntity->status->state);
 	} else if (httpEntity->status->state == httpEntity->status->Received) {
-
+		CallBack(httpEntity->status->state);
+		this->closeSocketFd(httpEntity);
+		this->freeHttpEntity(httpEntity);
+		this->nextHttpEntity();
 	} else if (httpEntity->status->state == httpEntity->status->Failed) {
-
+		CallBack(httpEntity->status->state);
+		this->closeSocketFd(httpEntity);
 	}
+}
+
+void OpenHttp::closeSocketFd(HttpEntity * httpEntity) {
+	close(httpEntity->socketFD);
+	JSObject * localPort = httpEntity->localPort;
+	this->portPool->push(localPort);
+}
+
+bool OpenHttp::freeHttpEntity(HttpEntity * httpEntity) {
+	if (httpEntity == NULL) {
+		return false;
+	}
+	httpEntity->ip = NULL;
+	httpEntity->remotePort = NULL;
+	httpEntity->localPort = NULL;
+	httpEntity->sendData = NULL;
+
+	httpEntity->socketFD = NULL;
+	httpEntity->remoteAddress = NULL;
+	httpEntity->localAddress = NULL;
+
+	httpEntity->event = NULL;
+
+	httpEntity->sendDataLength = 0;
+	httpEntity->sentLength = 0;
+	httpEntity->sendPackegesNum = 0;
+	httpEntity->sendLastPackegeSize = 0;
+	httpEntity->sentRuturnLength = 0;
+	httpEntity->isSendBufferFull = false;
+	Status * status = new Status();
+	httpEntity->status->state = httpEntity->status->Queueing;
+
+	//TODO free items
+	httpEntity->responseHeadMap = new HashTable();
+	httpEntity->responseHeadMap->initialize();
+
+	httpEntity->receivePackagesNumber = 0;
+	httpEntity->receivedLength = 0;
+	httpEntity->receiveContentLength = 0;
+	httpEntity->receiveHeadLength = 0;
+	httpEntity->receivETag = 0;
+
+	httpEntity->receiveFD = NULL;
+	httpEntity->receiveBuffer = NULL;
+	httpEntity->receiveOffset = NULL;
+	httpEntity->receiveFileBuffer = NULL;
+
+	httpEntity->sendFD = NULL;
+	httpEntity->sendOffser = NULL;
+	httpEntity->sendFileBuffer = NULL;
+	this->httpEntitiedOldQueue->offer(httpEntity);
+	return true;
 }
 HashTable * OpenHttp::parseResponseHead(char * buffer, int length) {
 	HashTable * headMap = new HashTable();
@@ -474,20 +579,20 @@ bool OpenHttp::setReceiceHead(HttpEntity * httpEntity, HashTable * headMap) {
 		return false;
 	} else {
 		httpEntity->receiveContentLength = jsObject->number;
-		Log((char *) ("ContentLengthMark"), jsObject->number);
+//		Log((char *) ("ContentLengthMark"), jsObject->number);
 	}
 	jsObject = headMap->get(HeadLengthMark);
 	if (jsObject == NULL) {
 		return false;
 	} else {
 		httpEntity->receiveHeadLength = jsObject->number;
-		Log((char *) ("receiveHeadLength"), jsObject->number);
+//		Log((char *) ("receiveHeadLength"), jsObject->number);
 	}
 	jsObject = headMap->get(ETagMark);
 	if (jsObject == NULL) {
 	} else {
 		httpEntity->receivETag = jsObject->char_string;
-		Log((char *) ("receivETag"), jsObject->char_string);
+//		Log((char *) ("receivETag"), jsObject->char_string);
 	}
 	return true;
 }
