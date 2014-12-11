@@ -1,23 +1,31 @@
 package com.open.clib;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 
 import com.android.gl2jni.R;
+import com.lidroid.xutils.HttpUtils;
+import com.open.clib.MyHttpHandler.MyHttpMethod;
+import com.open.lib.MyLog;
 
 public class AudioActivity extends Activity implements OnClickListener {
+
+	public String tag = "AudioActivity";
+	public MyLog log = new MyLog(tag, true);
+
 	Button button1, button2, button3, button4;
-	String tag = "Speex";
 	MyHttp myHttp;
 
 	public static AudioActivity instance;
+	MyHttpHandler myHttpHandler = MyHttpHandler.getInstance();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +49,7 @@ public class AudioActivity extends Activity implements OnClickListener {
 			myHttp.myHttpJNI.test(("this is java!").getBytes(), myHttp.myHttpJNI);
 			// myHttp.myHttpJNI.send(myHttp);
 		} else if (view == button2) {
+			myHttpHandler.initUpload();
 		} else if (view == button3) {
 		} else if (view == button4) {
 		}

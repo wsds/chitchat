@@ -1,7 +1,5 @@
 package com.open.clib;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 
 import android.annotation.SuppressLint;
@@ -69,15 +67,16 @@ public class MyHttpJNI {
 
 	public Type type = new Type();
 
+	MyHttpHandler myHttpHandler = MyHttpHandler.getInstance();
+
 	class FileUploadRunnable implements Runnable {
 
 		@Override
 		public void run() {
-			while (callBackIsRunning) {
+			while (myFileUploadQueue.isRunning) {
 				try {
 					MyCallBack myCallBack = myFileUploadQueue.takeE();
 					if (myCallBack == null) {
-						callBackIsRunning = false;
 						break;
 					} else {
 						// success
@@ -97,6 +96,28 @@ public class MyHttpJNI {
 							// }
 						} else if (myCallBack.type == type.Received) {
 							log.e("Received");
+							if (myHttpHandler.status.state == myHttpHandler.status.None) {
+								myHttpHandler.status.state = myHttpHandler.status.Uploading;
+								log.e("None");
+								String result = new String(myCallBack.data);
+								log.e(result);
+								myHttpHandler.initiateMultipartUploadResult = myHttpHandler.parseXml(result);
+								myHttpHandler.startUpload();
+							} else if (myHttpHandler.status.state == myHttpHandler.status.Uploading) {
+								myHttpHandler.status.state = myHttpHandler.status.UploadComplete;
+								log.e("Uploading");
+								String eTag = new String(myCallBack.eTag);
+								log.e("ETag:>>>>>>>>>>>>>" + eTag);
+								eTag = eTag.substring(3);
+								eTag = eTag.substring(0, eTag.length() - 2);
+								myHttpHandler.addPart(1, eTag);
+
+							} else if (myHttpHandler.status.state == myHttpHandler.status.UploadComplete) {
+								log.e("UploadComplete");
+								String result = new String(myCallBack.data);
+								log.e("上传成功:>>>>>>" + result);
+							}
+							// 824D0C8DB3FE4F258006503DE8E2411B
 						} else if (myCallBack.type == type.Failed) {
 							log.e("Failed");
 						}
@@ -104,6 +125,7 @@ public class MyHttpJNI {
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
+					log.e(e.toString());
 				}
 			}
 		}
@@ -112,6 +134,7 @@ public class MyHttpJNI {
 	class MyCallBack {
 		public int type;
 		public byte data[];
+		public byte eTag[];
 		public int id;
 		public float param;
 	}
@@ -119,37 +142,21 @@ public class MyHttpJNI {
 	public MyLinkedListQueue<MyCallBack> myFileUploadQueue;
 
 	FileUploadRunnable fileUploadRunnable;
-	boolean callBackIsRunning = false;
 
-	public void callback(int type, byte data[], int id, float param) {
+	public void callback(int type, byte data[], byte eTag[], int id, float param) {
 		MyCallBack myCallBack = new MyCallBack();
 		myCallBack.type = type;
 		myCallBack.data = data;
+		myCallBack.eTag = eTag;
 		myCallBack.id = id;
 		myCallBack.param = param;
 		myFileUploadQueue.offerE(myCallBack);
-		if (!callBackIsRunning) {
-			new Thread(fileUploadRunnable).start();
-			callBackIsRunning = true;
-		}
-	}
-
-	// 获取指定域名的ip地址
-	public void getInetAddress() {
-		new Thread(new Runnable() {
-			public void run() {
-				try {
-					InetAddress address = InetAddress.getByName("images2.we-links.com");
-					log.e("ip:" + address);
-				} catch (UnknownHostException e) {
-					e.printStackTrace();
-				}
-			}
-		}).start();
 	}
 
 	public native int nativeSend(byte ip[], int port, byte url[], int method, byte header[], byte body[], int start, int length, int id);
 
 	public native int test(byte message[], MyHttpJNI thiz);
+
+	public native int normalRequest(MyHttpJNI thiz, byte ip[], int port, byte body[], int id);
 
 }

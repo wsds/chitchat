@@ -19,7 +19,7 @@
         android:layout_alignLeft="@+id/button3"
         android:layout_below="@+id/button1"
         android:layout_marginTop="50dp"
-        android:text="单击开始录音" />
+        android:text="上传" />
 
     <Button
         android:id="@+id/button3"

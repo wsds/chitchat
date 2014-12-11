@@ -63,7 +63,7 @@ public:
 	int receivedLength;
 	int receiveContentLength;
 	int receiveHeadLength;
-	char * receivETag;
+	char * receivETag = NULL;
 
 	int receiveFD;
 	char * receiveBuffer;
@@ -152,7 +152,7 @@ public:
 	void epollLooper(int epollFD);
 };
 extern "C" {
-extern void CallBack(int type);
+extern void CallBack(int type,const signed char * buffer,const signed char * etag,int partId);
 }
 #endif /* OPENHTTP_H */
 

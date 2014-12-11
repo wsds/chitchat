@@ -139,7 +139,7 @@ HttpEntity * OpenHttp::intializeHttpEntity(HttpEntity * httpEntity, JSObject * p
 	httpEntity->remoteAddress->sin_port = htons(httpEntity->remotePort);
 	httpEntity->remoteAddress->sin_addr.s_addr = inet_addr(httpEntity->ip);
 
-	httpEntity->socketFD = socketFD;
+//	httpEntity->socketFD = socketFD;
 	httpEntity->localAddress = new sockaddr_in();
 	memset(httpEntity->localAddress, 0, sizeof(struct sockaddr_in));
 	httpEntity->localAddress->sin_family = AF_INET;
@@ -284,6 +284,7 @@ void OpenHttp::receivePackage(HttpEntity * httpEntity) {
 			httpEntity->receivePackagesNumber++;
 			httpEntity->receivedLength += receiveLength;
 		} else {
+			Log(httpEntity->receiveBuffer);
 			if (httpEntity->receivedLength >= httpEntity->receiveContentLength + httpEntity->receiveHeadLength) {
 				this->unMapReceiveFile(httpEntity);
 				this->setState(httpEntity, httpEntity->status->Received);
@@ -411,8 +412,10 @@ void OpenHttp::epollLooper(int epollFD) {
 							//说明链接建立成功。即可以向fd上写数据。
 							Log((char *) ("连接成功！"));
 							this->setState(httpEntity, httpEntity->status->Connected);
+							Log("-------+++++-----------");
 						}
 					}
+					Log("------------------");
 					if (httpEntity->status->state == httpEntity->status->Connected || httpEntity->status->state == httpEntity->status->Sending) {
 						httpEntity->isSendBufferFull = false;
 						this->sendPackeges(httpEntity);
@@ -435,21 +438,27 @@ void OpenHttp::epollLooper(int epollFD) {
 
 void OpenHttp::setState(HttpEntity * httpEntity, int state) {
 	httpEntity->status->state = state;
+	const signed char * buffer = (char *) ("A");
 	if (httpEntity->status->state == httpEntity->status->Connected) {
-		CallBack(httpEntity->status->state);
+		CallBack(httpEntity->status->state, buffer, buffer, 0);
 	} else if (httpEntity->status->state == httpEntity->status->Sending) {
-		CallBack(httpEntity->status->state);
+		CallBack(httpEntity->status->state, buffer, buffer, 0);
 	} else if (httpEntity->status->state == httpEntity->status->Sent) {
-		CallBack(httpEntity->status->state);
+		CallBack(httpEntity->status->state, buffer, buffer, 0);
 	} else if (httpEntity->status->state == httpEntity->status->Receiving) {
-		CallBack(httpEntity->status->state);
+		CallBack(httpEntity->status->state, buffer, buffer, 0);
 	} else if (httpEntity->status->state == httpEntity->status->Received) {
-		CallBack(httpEntity->status->state);
-		this->closeSocketFd(httpEntity);
-		this->freeHttpEntity(httpEntity);
+//		this->closeSocketFd(httpEntity);
+		const signed char * buffer1 = httpEntity->receiveBuffer + httpEntity->receiveHeadLength;
+		char * etag = httpEntity->receivETag;
+		if (etag == NULL) {
+			etag = "B";
+		}
+		CallBack(httpEntity->status->state, buffer1, (const signed char *) etag, 0);
+//		this->freeHttpEntity(httpEntity);
 		this->nextHttpEntity();
 	} else if (httpEntity->status->state == httpEntity->status->Failed) {
-		CallBack(httpEntity->status->state);
+		CallBack(httpEntity->status->state, buffer, buffer, 0);
 		this->closeSocketFd(httpEntity);
 	}
 }
@@ -492,7 +501,7 @@ bool OpenHttp::freeHttpEntity(HttpEntity * httpEntity) {
 	httpEntity->receivedLength = 0;
 	httpEntity->receiveContentLength = 0;
 	httpEntity->receiveHeadLength = 0;
-	httpEntity->receivETag = 0;
+	httpEntity->receivETag = NULL;
 
 	httpEntity->receiveFD = NULL;
 	httpEntity->receiveBuffer = NULL;

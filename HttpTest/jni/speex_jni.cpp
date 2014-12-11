@@ -17,11 +17,10 @@
 #include <sys/epoll.h>
 #include <pthread.h>
 
-#include <sys/stat.h> //文件状态结构#include <unistd.h>#include <asm-generic/mman-common.h>#include <errno.h>#include <sys/mman.h> //mmap头文件#define MAXBUFLEN 	1024#define MAXEVENTS 100void test(signed char * message);static void make_sendipv4addr(struct sockaddr_in *addr, int remoteport);int setSend(const char *ipAddr);int sendPackege(int sockd, const void * buffer, int PackegeSize, unsigned int mode);static void make_recvipv4addr(struct sockaddr_in *addr, const int localport);int recvPacket(int sockd);static unsigned short GetSocketPort(int sd);int setNonBlocking(int sock);void setEpoll(int sock);int sendData(int sockd, const char *buffer);void sendPackeges(int sockd, const char *buffer);void test2();void test3();void CallBack(int type);void test5();void test6();void test7();void test8(JNIEnv *env, jobject myHttpJNI);void test9();void CallTest(JNIEnv *env, jobject myHttpJNI);jmethodID GetClassMethodID(JNIEnv* env);void resolveLine(char * start, int length, int lineNumber, HashTable * headMap);HashTable * parseResponseHead(char * buffer, int length);void epollLooper(int epollFD);int epollFD = 0;int listeningSocketFD = 0;int connectingSocketFD = 0;int sendingSocketFD = 0;int PackegeSize = 1024;int dataLength = 0;int sentLength = 0;int packegesNum = 0;int lastPackegeSize = 0;int sentRuturnLength = 0;const char *dataBuffer;bool isSocketBufferFull = false;char target[15] = "";char * HttpMark = (char *) ("HTTP");char * ContentLengthMark = (char *) ("Content-Length");char * HeadLengthMark = (char *) ("Head-Length");char * ETagMark = (char *) ("ETag");//
-static JavaVM *g_jvm = NULL;
-static jobject s_jobj = NULL;
-static jmethodID s_jcallback = NULL;
+#include <sys/stat.h> //文件状态结构#include <unistd.h>#include <asm-generic/mman-common.h>#include <errno.h>#include <sys/mman.h> //mmap头文件#define MAXBUFLEN 	1024#define MAXEVENTS 100void test(signed char * message);static void make_sendipv4addr(struct sockaddr_in *addr, int remoteport);int setSend(const char *ipAddr);int sendPackege(int sockd, const void * buffer, int PackegeSize, unsigned int mode);static void make_recvipv4addr(struct sockaddr_in *addr, const int localport);int recvPacket(int sockd);static unsigned short GetSocketPort(int sd);int setNonBlocking(int sock);void setEpoll(int sock);int sendData(int sockd, const char *buffer);void sendPackeges(int sockd, const char *buffer);void test2();void test3();void CallBack(int type,char * buffer,char * etag,int partId);void test5();void test6();void test7();void test8(JNIEnv *env, jobject myHttpJNI);void test9();void testPost();void CallTest(JNIEnv *env, jobject myHttpJNI);jmethodID GetClassMethodID(JNIEnv* env);void resolveLine(char * start, int length, int lineNumber, HashTable * headMap);HashTable * parseResponseHead(char * buffer, int length);void epollLooper(int epollFD);int epollFD = 0;int listeningSocketFD = 0;int connectingSocketFD = 0;int sendingSocketFD = 0;int PackegeSize = 1024;int dataLength = 0;int sentLength = 0;int packegesNum = 0;int lastPackegeSize = 0;int sentRuturnLength = 0;const char *dataBuffer;bool isSocketBufferFull = false;char target[15] = "";char * HttpMark = (char *) ("HTTP");char * ContentLengthMark = (char *) ("Content-Length");char * HeadLengthMark = (char *) ("Head-Length");char * ETagMark = (char *) ("ETag");//
+static JavaVM *g_jvm = NULL;static jobject s_jobj = NULL;static jmethodID s_jcallback = NULL;
 //#define  LOG_TAG    "OpenHttp"
+
 int JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
 	g_jvm = vm;
 	Log((char*) "JVM");
@@ -72,9 +71,58 @@ extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_test(JNIEnv *env, jobject
 //	test7();
 	s_jobj = env->NewGlobalRef(myHttpJNI);
 	s_jcallback = GetClassMethodID(env);
-	test8(env, myHttpJNI);
+//	test8(env, myHttpJNI);
 //	test9();
+	testPost();
 	return (jint) 1;
+}
+
+extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_normalRequest(JNIEnv *env, jobject obj, jobject myHttpJNI, jbyteArray ip, jint port, jbyteArray body, jint id) {
+	Log("in..");
+	int length = env->GetArrayLength(body);
+	signed char * body_buffer = (signed char*) malloc(length + 1 * sizeof(char));
+	env->GetByteArrayRegion(body, 0, length, body_buffer);
+	body_buffer[length] = 0;
+
+	int iplength = env->GetArrayLength(ip);
+	signed char * ip_buffer = (signed char*) malloc(iplength + 1 * sizeof(char));
+	env->GetByteArrayRegion(ip, 0, iplength, ip_buffer);
+	ip_buffer[iplength] = 0;
+
+	s_jobj = env->NewGlobalRef(myHttpJNI);
+	s_jcallback = GetClassMethodID(env);
+
+	Log("in....");
+	OpenHttp * openHttp = OpenHttp::getInstance();
+	openHttp->initialize();
+
+	openHttp->openSend((char *) ip_buffer, port, (char *) body_buffer);
+
+	return (jint) 1;
+}
+
+void testPost() {
+	int length = 20000;
+	char * title = (char *) ("POST /api2/bug/send? HTTP/1.1\r\nHost: 192.168.1.11\r\nConnection: keep-alive\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 20000\r\n\r\n");
+	int len = strlen(title);
+	Log(len);
+	char * key = (char *) ("data=");
+	char * value = (char *) ("12345");
+	char * buffer = (char*) JSMalloc((length + len) * sizeof(char));
+	for (int i = 0; i < length + len; i++) {
+		if (i < len) {
+			*(buffer + i) = *(title + i);
+		} else if (i < len + 5) {
+			*(buffer + i) = *(key + i % len);
+		} else if (i < length + len) {
+//			*(buffer + i) = i / 100 + 1;
+			*(buffer + i) = *(value + i % 5);
+		}
+	}
+	OpenHttp * openHttp = OpenHttp::getInstance();
+	openHttp->initialize();
+//char * ip, int remotePort, char * head, char * body, char * path
+	openHttp->openUpload((char *) ("192.168.1.11"), 8090, title, buffer, (char *) "/storage/sdcard0/welinks/index.html");
 }
 
 void test(signed char * message) {
@@ -98,7 +146,7 @@ void test(signed char * message) {
 }
 
 void test9() {
-	//读取本地文件
+//读取本地文件
 	char * path = (char *) ("/storage/sdcard0/welinks/upload.txt");
 	int sendFD = open(path, O_RDONLY, 777);
 	if (sendFD < 0) {
@@ -129,8 +177,8 @@ void test9() {
 void test8(JNIEnv *env1, jobject myHttpJNI1) {
 
 //	CallTest(env1, myHttpJNI1);
-	//发送200000个字节，并调用Java的回调函数
-	int length = 1000;//20000
+//发送200000个字节，并调用Java的回调函数
+	int length = 1000; //20000
 	char * title = (char *) ("PUT /api2/bug/send? HTTP/1.1\r\nHost: 192.168.1.11\r\nConnection: keep-alive\r\nContent-Length: 1000\r\n\r\n");
 	int len = strlen(title);
 	Log(len);
@@ -182,7 +230,7 @@ void test3() {
 	openHttp->openSend((char *) ("192.168.1.7"), 8091, (char *) buffer);
 }
 
-void CallBack(int type) {
+void CallBack(int type, const signed char * buffer, const signed char * etag, int partId) {
 //	Log((char *) ("test4 callback"));
 	JNIEnv * env = NULL;
 	if (g_jvm->AttachCurrentThread(&env, NULL) != JNI_OK) {
@@ -196,10 +244,16 @@ void CallBack(int type) {
 	if (env == NULL) {
 		return;
 	}
-	const signed char * buffer = (const signed char *) ("abcdefghij");
-	jbyteArray body = env->NewByteArray(1000);
-	env->SetByteArrayRegion(body, 0, 11, buffer);
-	env->CallVoidMethod(s_jobj, s_jcallback, type, body, 100, 10.10);
+//	const signed char * buffer = (const signed char *) ("abcdefghij");
+	int length = strlen((char *) buffer);
+	jbyteArray body = env->NewByteArray(length);
+	env->SetByteArrayRegion(body, 0, length, buffer);
+
+	int lengthetag = strlen((char *) etag);
+	jbyteArray bodyetag = env->NewByteArray(lengthetag);
+	env->SetByteArrayRegion(bodyetag, 0, lengthetag, etag);
+
+	env->CallVoidMethod(s_jobj, s_jcallback, type, body, bodyetag, 100, partId);
 	if (g_jvm->DetachCurrentThread() != JNI_OK) {
 		Log((char *) "FFAILED");
 	}
@@ -211,7 +265,7 @@ jmethodID GetClassMethodID(JNIEnv* env) {
 		return NULL;
 	}
 
-	jmethodID jcallback = env->GetMethodID(clazz, "callback", "(I[BIF)V");
+	jmethodID jcallback = env->GetMethodID(clazz, "callback", "(I[B[BIF)V");
 	if (jcallback == NULL) {
 		Log((char*) "[GetClassMethod()]Failed to find method callback");
 		return NULL;
