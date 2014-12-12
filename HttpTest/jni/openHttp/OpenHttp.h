@@ -88,7 +88,7 @@ public:
 		}
 		return instance;
 	}
-	LIST * portPool;
+	Queue * portPool;
 
 	int startPortNumber = 9060;
 	int portPoolSize = 10;

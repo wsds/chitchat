@@ -102,10 +102,23 @@ public class MyHttpHandler {
 		public String eTag;
 	}
 
-	String fileName = "upload1.txt";
+	public void test() {
+		try {
+			File file = new File("/storage/sdcard0/welinks/test0023.png");
+			FileInputStream fileInputStream = new FileInputStream(file);
+			byte[] bytes = StreamParser.parseToByteArray(fileInputStream);
+			String head = "PUT /api2/bug/send? HTTP/1.1\r\nHost: 192.168.1.11\r\nConnection: keep-alive\r\nContent-Length: " + bytes.length + "\r\n\r\n";
+			byte[] data = byteMerger(head.getBytes(), bytes);
+			MyHttpJNI myHttpJNI = MyHttpJNI.getInstance();
+			myHttpJNI.test(data, myHttpJNI);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
 
 	public void initUpload() {
 		status.state = status.None;
+		parts.clear();
 		try {
 			MyRequestParams params = new MyRequestParams();
 
@@ -125,18 +138,43 @@ public class MyHttpHandler {
 		}
 	}
 
+	int partSuccessCount = 0;
+	int partCount = 0;
+	String fileName = "test0023.png";
+
 	public void startUpload() {
 		try {
-			File file = new File("/storage/sdcard0/welinks/upload1.txt");
+			File file = new File("/storage/sdcard0/welinks/test0023.png");
 			FileInputStream fileInputStream = new FileInputStream(file);
 			byte[] bytes = StreamParser.parseToByteArray(fileInputStream);
-			upload(bytes);
+			partSuccessCount = 0;
+			partCount = (int) Math.ceil((double) bytes.length / (double) 256000);
+
+			// log.e("partCount:" + partCount);
+
+			for (int i = 0; i < 1; i++) {
+				int partID = i + 1;
+				upload(partID, bytes);
+			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void upload(byte[] buffer) {
+	public void upload(int partID, byte[] bytes) {
+		int length = 256000;
+
+		int start = (partID - 1) * length;
+		if (partID * length > bytes.length) {
+			length = bytes.length - start;
+		}
+
+		byte[] buffer = new byte[length];
+
+		for (int j = 0; j < length; j++) {
+			buffer[j] = bytes[start + j];
+		}
+		log.e("length---------------:" + buffer.length);
 		log.e("upload.....");
 		MessageDigest digest = null;
 		try {
@@ -183,7 +221,11 @@ public class MyHttpHandler {
 		part.partNumber = partId;
 		part.eTag = eTag;
 		parts.add(part);
-		uploadCompelte();
+		partSuccessCount++;
+		if (partSuccessCount == partCount) {
+			status.state = status.Uploading;
+			uploadCompelte();
+		}
 	}
 
 	public void uploadCompelte() {
@@ -217,13 +259,17 @@ public class MyHttpHandler {
 	}
 
 	public void send(String method, String url, MyRequestParams params) {
-		String data = splicingRequestHeader(method, url, params);
+		byte[] data = splicingRequestHeader(method, url, params);
+		if (data == null) {
+			log.e("REDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDRED");
+		}
 		MyHttpJNI myHttpJNI = MyHttpJNI.getInstance();
-		myHttpJNI.normalRequest(myHttpJNI, ip.getBytes(), port, data.getBytes(), 1);
-		log.e(data);
+		log.e("bytes#######################:" + data.length);
+		myHttpJNI.normalRequest(myHttpJNI, ip.getBytes(), port, data, 1);
 	}
 
-	public String splicingRequestHeader(String method, String url, MyRequestParams params) {
+	public byte[] splicingRequestHeader(String method, String url, MyRequestParams params) {
+		byte[] bytes = null;
 		String head = "";
 		if (method.equals(MyHttpMethod.GET)) {
 			String getUrl = head;
@@ -237,6 +283,7 @@ public class MyHttpHandler {
 				}
 			}
 			head += (method + " " + getUrl + " HTTP/1.1\r\nHost: " + host + "\r\nConnection: keep-alive\r\n" + "Content-Length: 0\r\n\r\n");
+			bytes = head.getBytes();
 		} else if (method.equals(MyHttpMethod.POST)) {
 			String data = head;
 			for (int i = 0; i < params.keys.size(); i++) {
@@ -249,8 +296,9 @@ public class MyHttpHandler {
 				}
 			}
 			int length = data.length();
-			head += (method + " " + url + " HTTP/1.1\r\nHost: " + host + "\r\nConnection: keep-alive\r\nContent-Type: application/x-www-form-urlencoded\r\n" + "Content-Length: " + length + "\r\n\r\n");
-			head += data;
+			head += (method + " " + url + " HTTP/1.1\r\nHost: " + host + "\r\nConnection: keep-alive\r\n" + "Content-Length: " + length + "\r\n\r\n");
+			head += data;// \r\nContent-Type: application/x-www-form-urlencoded
+			bytes = head.getBytes();
 		} else if (method.equals(MyHttpMethod.PUT)) {
 			String header = head;
 			for (int i = 0; i < params.keys.size(); i++) {
@@ -259,8 +307,9 @@ public class MyHttpHandler {
 				header += (key + ": " + value + "\r\n");
 			}
 			int length = params.bytes.length;
-			head += (method + " " + url + " HTTP/1.1\r\n" + header + "Host: " + host + "\r\nConnection: keep-alive\r\n" + "Content-Length: " + length + "\r\n\r\n");
-			head += new String(params.bytes);// warn
+			head += (method + " " + url + " HTTP/1.1\r\n" + header + "Host: " + host + "\r\nUser-Agent: Mozilla/5.0 (Linux; U; Android 4.4.2; zh-cn; NX507J Build/KVT49L) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1\r\nAccept-Encoding: gzip\r\nConnection: keep-alive\r\n" + "Content-Length: " + length + "\r\n\r\n");
+			log.e("head length:::::::::::::::::::::::" + head.getBytes().length);
+			bytes = byteMerger(head.getBytes(), params.bytes);
 		} else if (method.equals(MyHttpMethod.GETPUT)) {
 			String header = head;
 			for (int i = 0; i < params.keys.size(); i++) {
@@ -270,9 +319,16 @@ public class MyHttpHandler {
 			}
 			int length = params.bytes.length;
 			head += ("POST" + " " + url + " HTTP/1.1\r\n" + header + "Host: " + host + "\r\nConnection: keep-alive\r\n" + "Content-Length: " + length + "\r\n\r\n");
-			head += new String(params.bytes);// warn
+			bytes = byteMerger(head.getBytes(), params.bytes);
 		}
-		return head;
+		return bytes;
+	}
+
+	public static byte[] byteMerger(byte[] byte_1, byte[] byte_2) {
+		byte[] byte_3 = new byte[byte_1.length + byte_2.length];
+		System.arraycopy(byte_1, 0, byte_3, 0, byte_1.length);
+		System.arraycopy(byte_2, 0, byte_3, byte_1.length, byte_2.length);
+		return byte_3;
 	}
 
 	class InitiateMultipartUploadResult {

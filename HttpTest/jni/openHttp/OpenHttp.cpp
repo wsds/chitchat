@@ -8,12 +8,12 @@ bool OpenHttp::initialize() {
 		return true;
 	}
 	this->is_initialized = true;
-	this->portPool = new LIST();
+	this->portPool = new Queue();
 	this->portPool->initialize();
 	for (int i = 0; i < portPoolSize; i++) {
 		JSObject * port = new JSObject();
 		port->number = startPortNumber + i;
-		this->portPool->push(port);
+		this->portPool->offer(port);
 	}
 
 	this->httpEntitiesMap = new HashTable();
@@ -85,7 +85,7 @@ int OpenHttp::openUpload(char * ip, int remotePort, char * head, char * body, ch
 }
 
 void OpenHttp::openSend(HttpEntity * httpEntity) {
-	JSObject * port = this->portPool->pop();
+	JSObject * port = this->portPool->take();
 
 	if (port == NULL) {
 		this->httpEntitiesQueue->offer(httpEntity);
@@ -108,7 +108,7 @@ HttpEntity * OpenHttp::getNewHttpEntity() {
 
 void OpenHttp::nextHttpEntity() {
 	if (this->portPool->length > 0 && this->httpEntitiesQueue->length > 0) {
-		JSObject * port = this->portPool->pop();
+		JSObject * port = this->portPool->take();
 		if (port != NULL) {
 			HttpEntity * httpEntity = (HttpEntity *) this->httpEntitiesQueue->take();
 			this->openSend(httpEntity, port);
@@ -144,7 +144,7 @@ HttpEntity * OpenHttp::intializeHttpEntity(HttpEntity * httpEntity, JSObject * p
 	memset(httpEntity->localAddress, 0, sizeof(struct sockaddr_in));
 	httpEntity->localAddress->sin_family = AF_INET;
 	httpEntity->localAddress->sin_port = htons(httpEntity->localPort->number);
-	httpEntity->localAddress->sin_addr.s_addr = INADDR_ANY;
+	httpEntity->localAddress->sin_addr.s_addr = htonl(INADDR_ANY);
 
 	setsockopt(httpEntity->socketFD, SOL_SOCKET, SO_REUSEADDR, &(this->isReUsedPort), sizeof(int));
 	setsockopt(httpEntity->socketFD, SOL_SOCKET, SO_SNDBUF, &this->sendBuffSize, sizeof(int));
@@ -159,6 +159,7 @@ HttpEntity * OpenHttp::intializeHttpEntity(HttpEntity * httpEntity, JSObject * p
 	if (-1 == bind(httpEntity->socketFD, (sockaddr *) httpEntity->localAddress, sizeof(sockaddr_in))) {
 		Log(sizeof(httpEntity->localAddress));
 		Log((char*) "bind fail !");
+		closeSocketFd(httpEntity);
 		return NULL;
 	}
 	Log((char*) "bind ok !");
@@ -204,14 +205,25 @@ int OpenHttp::startConnect(HttpEntity * httpEntity) {
 			Log((char*) "正在连接");
 		} else {
 			Log((char*) "Connect fail!");
+			Log("connect errno:", errno);
+			closeSocketFd(httpEntity);
+			Log("ip", (char *) httpEntity->ip);
+			Log("port", httpEntity->remotePort);
+			Log("localport", httpEntity->localPort->number);
 			return 0;
 		}
 	}
+	Log("ip******", (char *) httpEntity->ip);
+	Log("port******", httpEntity->remotePort);
+	Log("localport******", httpEntity->localPort->number);
 	return 1;
 }
 
 void OpenHttp::sendPackeges(HttpEntity * httpEntity) {
 	Log((char*) "sendPackeges");
+	Log((char*) "sendDataLength", httpEntity->sendDataLength);
+	Log((char*) "sendPackegesNum", httpEntity->sendPackegesNum);
+	Log((char*) "sendLastPackegeSize", httpEntity->sendLastPackegeSize);
 	if (httpEntity->sendPackegesNum <= 0 || httpEntity->sentLength >= httpEntity->sendDataLength) {
 		if (httpEntity->sentLength >= httpEntity->sendDataLength) {
 			this->setState(httpEntity, httpEntity->status->Waiting);
@@ -238,7 +250,7 @@ void OpenHttp::sendPackeges(HttpEntity * httpEntity) {
 	}
 	if (httpEntity->sentLength >= httpEntity->sendDataLength) {
 		this->setState(httpEntity, httpEntity->status->Sent);
-		Log((char *) ("发送完成"));
+		Log((char *) ("发送完成"), httpEntity->sentLength);
 	}
 }
 
@@ -448,7 +460,7 @@ void OpenHttp::setState(HttpEntity * httpEntity, int state) {
 	} else if (httpEntity->status->state == httpEntity->status->Receiving) {
 		CallBack(httpEntity->status->state, buffer, buffer, 0);
 	} else if (httpEntity->status->state == httpEntity->status->Received) {
-//		this->closeSocketFd(httpEntity);
+		this->closeSocketFd(httpEntity);
 		const signed char * buffer1 = httpEntity->receiveBuffer + httpEntity->receiveHeadLength;
 		char * etag = httpEntity->receivETag;
 		if (etag == NULL) {
@@ -464,9 +476,13 @@ void OpenHttp::setState(HttpEntity * httpEntity, int state) {
 }
 
 void OpenHttp::closeSocketFd(HttpEntity * httpEntity) {
+	linger m_sLinger;
+	m_sLinger.l_onoff = 0;
+	m_sLinger.l_linger = 0;
+	setsockopt(httpEntity->socketFD, SOL_SOCKET, SO_LINGER, (const char*) &m_sLinger, sizeof(linger));
 	close(httpEntity->socketFD);
 	JSObject * localPort = httpEntity->localPort;
-	this->portPool->push(localPort);
+	this->portPool->offer(localPort);
 }
 
 bool OpenHttp::freeHttpEntity(HttpEntity * httpEntity) {

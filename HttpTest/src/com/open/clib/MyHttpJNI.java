@@ -104,7 +104,7 @@ public class MyHttpJNI {
 								myHttpHandler.initiateMultipartUploadResult = myHttpHandler.parseXml(result);
 								myHttpHandler.startUpload();
 							} else if (myHttpHandler.status.state == myHttpHandler.status.Uploading) {
-								myHttpHandler.status.state = myHttpHandler.status.UploadComplete;
+								myHttpHandler.status.state = myHttpHandler.status.Uploading;
 								log.e("Uploading");
 								String eTag = new String(myCallBack.eTag);
 								log.e("ETag:>>>>>>>>>>>>>" + eTag);

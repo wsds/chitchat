@@ -51,6 +51,7 @@ public class AudioActivity extends Activity implements OnClickListener {
 		} else if (view == button2) {
 			myHttpHandler.initUpload();
 		} else if (view == button3) {
+			myHttpHandler.test();
 		} else if (view == button4) {
 		}
 	}
