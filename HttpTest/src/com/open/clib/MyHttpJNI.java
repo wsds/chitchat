@@ -1,5 +1,6 @@
 package com.open.clib;
 
+import java.util.Date;
 import java.util.HashMap;
 
 import android.annotation.SuppressLint;
@@ -79,8 +80,9 @@ public class MyHttpJNI {
 					if (myCallBack == null) {
 						break;
 					} else {
+						log.e("************************Java CallBack**************************");
 						// success
-						log.e("type:" + myCallBack.type + "data:" + myCallBack.type + "data:" + myCallBack.type + "id:" + myCallBack.id + "param:" + myCallBack.param);
+						log.e("type:" + myCallBack.type + "data:" + myCallBack.type + "data:" + myCallBack.type + "id:" + myCallBack.id + "param:");
 						if (myCallBack.type == type.Connected) {
 							log.e("Connected");
 						} else if (myCallBack.type == type.Sending) {
@@ -110,18 +112,17 @@ public class MyHttpJNI {
 								log.e("ETag:>>>>>>>>>>>>>" + eTag);
 								eTag = eTag.substring(3);
 								eTag = eTag.substring(0, eTag.length() - 2);
-								myHttpHandler.addPart(1, eTag);
-
+								myHttpHandler.addPart(myCallBack.id, eTag);
 							} else if (myHttpHandler.status.state == myHttpHandler.status.UploadComplete) {
 								log.e("UploadComplete");
 								String result = new String(myCallBack.data);
 								log.e("上传成功:>>>>>>" + result);
+								myHttpHandler.time.received = new Date().getTime();
+								log.e("上传文件共耗时：" + (myHttpHandler.time.received - myHttpHandler.time.start));
 							}
-							// 824D0C8DB3FE4F258006503DE8E2411B
 						} else if (myCallBack.type == type.Failed) {
 							log.e("Failed");
 						}
-						// Log.e("Http", myCallBack.type + "--" + new String(myCallBack.data));
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -136,7 +137,7 @@ public class MyHttpJNI {
 		public byte data[];
 		public byte eTag[];
 		public int id;
-		public float param;
+		public float param = 0;
 	}
 
 	public MyLinkedListQueue<MyCallBack> myFileUploadQueue;

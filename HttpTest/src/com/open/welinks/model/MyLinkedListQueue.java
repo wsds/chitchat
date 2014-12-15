@@ -40,15 +40,24 @@ public class MyLinkedListQueue<E> extends LinkedList<E> {
 
 	public E takeE() throws Exception {
 		E myFile = null;
-		if (size() > 0) {
-			myFile = this.poll();
-			// this.pop();
-		} else {
-			log.e("isRunning3:" + isRunning);
+		try {
+			myFile = null;
+			if (size() > 0) {
+				myFile = this.poll();
+				// this.pop();
+			} else {
+				log.e("isRunning3:" + isRunning);
+				if (isRunning) {
+					isRunning = false;
+					log.e("isRunning4:" + isRunning);
+				}
+			}
+		} catch (Exception e) {
 			if (isRunning) {
 				isRunning = false;
 				log.e("isRunning4:" + isRunning);
 			}
+			log.e(e.toString());
 		}
 		return myFile;
 	}

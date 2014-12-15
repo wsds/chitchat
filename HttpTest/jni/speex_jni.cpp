@@ -17,35 +17,14 @@
 #include <sys/epoll.h>
 #include <pthread.h>
 
-#include <sys/stat.h> //文件状态结构#include <unistd.h>#include <asm-generic/mman-common.h>#include <errno.h>#include <sys/mman.h> //mmap头文件#define MAXBUFLEN 	1024#define MAXEVENTS 100void test(signed char * message);static void make_sendipv4addr(struct sockaddr_in *addr, int remoteport);int setSend(const char *ipAddr);int sendPackege(int sockd, const void * buffer, int PackegeSize, unsigned int mode);static void make_recvipv4addr(struct sockaddr_in *addr, const int localport);int recvPacket(int sockd);static unsigned short GetSocketPort(int sd);int setNonBlocking(int sock);void setEpoll(int sock);int sendData(int sockd, const char *buffer);void sendPackeges(int sockd, const char *buffer);void test2();void test3();void CallBack(int type,char * buffer,char * etag,int partId);void test5();void test6();void test7();void test8(JNIEnv *env, jobject myHttpJNI);void test9();void testPost();
-void test10(signed char * buffer);
-void CallTest(JNIEnv *env, jobject myHttpJNI);
-jmethodID GetClassMethodID(JNIEnv* env);
-void resolveLine(char * start, int length, int lineNumber, HashTable * headMap);
-HashTable * parseResponseHead(char * buffer, int length);
-void epollLooper(int epollFD);
-int epollFD = 0;
-int listeningSocketFD = 0;
-int connectingSocketFD = 0;
-int sendingSocketFD = 0;
-int PackegeSize = 1024;
-int dataLength = 0;
-int sentLength = 0;
-int packegesNum = 0;
-int lastPackegeSize = 0;
-int sentRuturnLength = 0;
-const char *dataBuffer;
-bool isSocketBufferFull = false;
-char target[15] = "";
-char * HttpMark = (char *) ("HTTP");
-char * ContentLengthMark = (char *) ("Content-Length");
+#include <sys/stat.h> //文件状态结构#include <unistd.h>#include <asm-generic/mman-common.h>#include <errno.h>#include <sys/mman.h> //mmap头文件#define MAXBUFLEN 	1024#define MAXEVENTS 100void test(signed char * message);static void make_sendipv4addr(struct sockaddr_in *addr, int remoteport);int setSend(const char *ipAddr);int sendPackege(int sockd, const void * buffer, int PackegeSize, unsigned int mode);static void make_recvipv4addr(struct sockaddr_in *addr, const int localport);int recvPacket(int sockd);static unsigned short GetSocketPort(int sd);int setNonBlocking(int sock);void setEpoll(int sock);int sendData(int sockd, const char *buffer);void sendPackeges(int sockd, const char *buffer);void test2();void test3();void CallBack(int type,char * buffer,char * etag,int partId);void test5();void test6();void test7();void test8(JNIEnv *env, jobject myHttpJNI);void test9();void testPost();void test10(signed char * buffer);void CallTest(JNIEnv *env, jobject myHttpJNI);jmethodID GetClassMethodID(JNIEnv* env);void resolveLine(char * start, int length, int lineNumber, HashTable * headMap);HashTable * parseResponseHead(char * buffer, int length);void epollLooper(int epollFD);int epollFD = 0;int listeningSocketFD = 0;int connectingSocketFD = 0;int sendingSocketFD = 0;int PackegeSize = 1024;int dataLength = 0;int sentLength = 0;int packegesNum = 0;int lastPackegeSize = 0;int sentRuturnLength = 0;const char *dataBuffer;bool isSocketBufferFull = false;char target[15] = "";char * HttpMark = (char *) ("HTTP");char * ContentLengthMark = (char *) ("Content-Length");
 char * HeadLengthMark = (char *) ("Head-Length");
 char * ETagMark = (char *) ("ETag");
 //
 
 static JavaVM *g_jvm = NULL;
-static jobject s_jobj = NULL;
-static jmethodID s_jcallback = NULL;
+//static jobject s_jobj = NULL;
+//static jmethodID s_jcallback = NULL;
 //#define  LOG_TAG    "OpenHttp"
 
 int JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
@@ -86,11 +65,11 @@ extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_nativeSend(JNIEnv *env, j
 extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_test(JNIEnv *env, jobject obj, jbyteArray message, jobject myHttpJNI) {
 
 //	env->GetJavaVM(&g_jvm);
+
 	int length = env->GetArrayLength(message);
-	Log("message length:", length);
-	char * by = env->GetByteArrayElements(message, 0);
-	Log("A:",strlen(by));
+
 	signed char * body_buffer = (signed char*) malloc(length + 1 * sizeof(char));
+
 	env->GetByteArrayRegion(message, 0, length, body_buffer);
 	body_buffer[length] = 0;
 	Log((char*) body_buffer);
@@ -99,21 +78,23 @@ extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_test(JNIEnv *env, jobject
 //	CallTest(env, myHttpJNI, message);
 //	test(body_buffer);
 //	test7();
-	s_jobj = env->NewGlobalRef(myHttpJNI);
-	s_jcallback = GetClassMethodID(env);
+	jobject s_jobj = env->NewGlobalRef(myHttpJNI);
+	jmethodID s_jcallback = GetClassMethodID(env);
 //	test8(env, myHttpJNI);
-//	test9();
+	test9();
 //	testPost();
 	return (jint) 1;
 }
 
 extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_normalRequest(JNIEnv *env, jobject obj, jobject myHttpJNI, jbyteArray ip, jint port, jbyteArray body, jint id) {
-	Log("in..");
+//	Log("in..");
+	env->GetJavaVM(&g_jvm);
 	int length = env->GetArrayLength(body);
-	signed char * body_buffer = (signed char*) malloc(length + 1 * sizeof(char));
+	signed char * body_buffer = (signed char*) malloc(length + 1);
 	env->GetByteArrayRegion(body, 0, length, body_buffer);
 
-	body_buffer[length] = 0;
+	body_buffer[length + 1] = 0;
+	Log((char *) body_buffer);
 
 	Log("body length:", length);
 	Log("body_buffer length:", strlen((char *) body_buffer));
@@ -125,14 +106,14 @@ extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_normalRequest(JNIEnv *env
 	Log("iplength length:", iplength);
 	Log("iplength_buffer length:", strlen((char *) ip_buffer));
 
-	s_jobj = env->NewGlobalRef(myHttpJNI);
-	s_jcallback = GetClassMethodID(env);
+	_jobject * s_jobj = env->NewGlobalRef(myHttpJNI);
+	_jmethodID * s_jcallback = GetClassMethodID(env);
 
 	Log("in....");
 	OpenHttp * openHttp = OpenHttp::getInstance();
 	openHttp->initialize();
 
-	openHttp->openSend((char *) ip_buffer, port, (char *) body_buffer);
+	openHttp->openSend((char *) ip_buffer, port, (char *) body_buffer, length, id, s_jobj, s_jcallback);
 
 	return (jint) 1;
 }
@@ -163,7 +144,6 @@ void testPost() {
 //char * ip, int remotePort, char * head, char * body, char * path
 	openHttp->openUpload((char *) ("192.168.1.11"), 8090, title, buffer, (char *) "/storage/sdcard0/welinks/index.html");
 }
-
 void test(signed char * message) {
 	char * title = (char *) ("GET /index.html HTTP/1.1\r\nHost: 192.168.1.11\r\nConnection: keep-alive\r\nContent-Length: 0\r\n\r\n");
 //	Log(strlen(title));
@@ -193,8 +173,7 @@ void test9() {
 		return;
 	}
 	Log((char *) ("success."), sendFD);
-	void *pointer;
-	pointer = mmap(NULL, 1458, PROT_READ, MAP_SHARED, sendFD, 0);
+	void *pointer = mmap(NULL, 1024 * 10, PROT_READ, MAP_SHARED, sendFD, 0);
 
 	if ((pointer) == (void *) -1) {
 		Log((char*) ("Failed"));
@@ -202,16 +181,19 @@ void test9() {
 	}
 	Log((char *) ("success..."), sendFD);
 	char * buffer = (char *) pointer;
-//	Log(buffer);
-	int len = 1023;
-	int size = strlen(buffer) / len;
-	if (strlen(buffer) % len != 0) {
-		size += 1;
-	}
-	for (int i = 0; i < size; i++) {
-		Log(buffer + i * len);
-		Log(strlen(buffer + i * len));
-	}
+	Log(buffer);
+	Log(buffer+1024);
+	Log(buffer+2048);
+	Log(strlen(buffer));
+//	int len = 1023;
+//	int size = strlen(buffer) / len;
+//	if (strlen(buffer) % len != 0) {
+//		size += 1;
+//	}
+//	for (int i = 0; i < size; i++) {
+//		Log(buffer + i * len);
+//		Log(strlen(buffer + i * len));
+//	}
 }
 void test8(JNIEnv *env1, jobject myHttpJNI1) {
 
@@ -240,11 +222,11 @@ void test8(JNIEnv *env1, jobject myHttpJNI1) {
 //}
 void test2() {
 
-	char * buffer = (char*) malloc(1024 * 3 * sizeof(char));
-	for (int i = 1; i < 1024 * 3 - 2; i++) {
-		*(buffer + i) = i / 100 + 1;
-	}
-	*(buffer + 1024 * 3 - 1) = 0;
+//	char * buffer = (char*) malloc(1024 * 3 * sizeof(char));
+//	for (int i = 1; i < 1024 * 3 - 2; i++) {
+//		*(buffer + i) = i / 100 + 1;
+//	}
+//	*(buffer + 1024 * 3 - 1) = 0;
 
 //	sendingSocketFD = setSend("192.168.1.7");
 //	setEpoll(sendingSocketFD);
@@ -266,10 +248,10 @@ void test3() {
 	OpenHttp *openHttp = OpenHttp::getInstance();
 
 	openHttp->initialize();
-	openHttp->openSend((char *) ("192.168.1.7"), 8091, (char *) buffer);
+	openHttp->openSend((char *) ("192.168.1.7"), 8091, (char *) buffer, 1024 * 3, 0, NULL, NULL);
 }
 
-void CallBack(int type, const signed char * buffer, const signed char * etag, int partId) {
+void CallBack(_jobject * s_obj, _jmethodID * s_jcallback, int type, const signed char * buffer, const signed char * etag, int partId) {
 //	Log((char *) ("test4 callback"));
 	JNIEnv * env = NULL;
 	if (g_jvm->AttachCurrentThread(&env, NULL) != JNI_OK) {
@@ -291,20 +273,22 @@ void CallBack(int type, const signed char * buffer, const signed char * etag, in
 	int lengthetag = strlen((char *) etag);
 	jbyteArray bodyetag = env->NewByteArray(lengthetag);
 	env->SetByteArrayRegion(bodyetag, 0, lengthetag, etag);
+	Log("IDS:", partId);
 
-	env->CallVoidMethod(s_jobj, s_jcallback, type, body, bodyetag, 100, partId);
+	env->CallVoidMethod(s_obj, s_jcallback, type, body, bodyetag, partId, 100.00);
 	if (g_jvm->DetachCurrentThread() != JNI_OK) {
 		Log((char *) "FFAILED");
 	}
+	Log((char *) ("-------------------------CallBack-------------------------"));
 }
-jmethodID GetClassMethodID(JNIEnv* env) {
+_jmethodID * GetClassMethodID(JNIEnv* env) {
 	jclass clazz = env->FindClass("com/open/clib/MyHttpJNI");
 	if (clazz == NULL) {
 		Log((char*) "[GetClassMethod()]Failed to find jclass");
 		return NULL;
 	}
 
-	jmethodID jcallback = env->GetMethodID(clazz, "callback", "(I[B[BIF)V");
+	_jmethodID * jcallback = env->GetMethodID(clazz, "callback", "(I[B[BIF)V");
 	if (jcallback == NULL) {
 		Log((char*) "[GetClassMethod()]Failed to find method callback");
 		return NULL;

@@ -1,10 +1,5 @@
 package com.open.clib;
 
-import java.net.InetAddress;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Date;
-
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
@@ -12,8 +7,6 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 
 import com.android.gl2jni.R;
-import com.lidroid.xutils.HttpUtils;
-import com.open.clib.MyHttpHandler.MyHttpMethod;
 import com.open.lib.MyLog;
 
 public class AudioActivity extends Activity implements OnClickListener {

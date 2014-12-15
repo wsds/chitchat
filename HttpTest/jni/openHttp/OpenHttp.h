@@ -8,6 +8,7 @@
 #include "../data_core/base/Queue.h"
 #include "lib/Log.h"
 
+#include <jni.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -70,9 +71,14 @@ public:
 	int receiveOffset;
 	char * receiveFileBuffer;
 
+	int partId;
 	int sendFD;
 	int sendOffser;
 	char * sendFileBuffer;
+
+	_jobject * s_obj = NULL;
+	_jmethodID * s_jcallback = NULL;
+
 };
 
 void *epollLooperThread(void *arg);
@@ -111,7 +117,7 @@ public:
 	bool initialize();
 	bool freeHttpEntity(HttpEntity * httpEntity);
 
-	int openSend(char * ip, int remotePort, char * buffer);
+	int openSend(char * ip, int remotePort, char * buffer, int length, int partId, jobject s_obj, jmethodID s_jcallback);
 	int openDownload(char * ip, int remotePort, char * head, char * body, char * path);
 	void openSend(HttpEntity * httpEntity);
 	HttpEntity * intializeHttpEntity(HttpEntity * httpEntity, JSObject * port);
@@ -152,7 +158,7 @@ public:
 	void epollLooper(int epollFD);
 };
 extern "C" {
-extern void CallBack(int type,const signed char * buffer,const signed char * etag,int partId);
+extern void CallBack(_jobject * s_obj, _jmethodID * s_jcallback, int type, const signed char * buffer, const signed char * etag, int partId);
 }
 #endif /* OPENHTTP_H */
 
