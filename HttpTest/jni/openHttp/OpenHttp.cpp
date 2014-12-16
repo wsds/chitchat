@@ -170,15 +170,21 @@ HttpEntity * OpenHttp::intializeHttpEntity(HttpEntity * httpEntity, JSObject * p
 	httpEntity->localAddress->sin_addr.s_addr = htonl(INADDR_ANY);
 
 	setsockopt(httpEntity->socketFD, SOL_SOCKET, SO_REUSEADDR, &(this->isReUsedPort), sizeof(int));
-	this->isReUsedPort++;
+
 	setsockopt(httpEntity->socketFD, SOL_SOCKET, SO_SNDBUF, &this->sendBuffSize, sizeof(int));
 
-	//超时时间
-	//	struct timeval timeout = { 10, 0 };
-	//设置发送超时
-	//	setsockopt(httpEntity->socketFD, SOL_SOCKET, SO_SNDTIMEO, (char *) &timeout, sizeof(timeout));
-	//设置接收超时
-	//	setsockopt(httpEntity->socketFD, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout));
+	setsockopt(httpEntity->socketFD, SOL_SOCKET, SO_RCVBUF, &this->sendBuffSize, sizeof(int));
+
+//	struct tcp_info info;
+//	int tcp_info_length = sizeof(info);
+//	getsockopt(httpEntity->socketFD, SOL_TCP, TCP_INFO, (void *) &info, &tcp_info_length);
+
+//超时时间
+//	struct timeval timeout = { 10, 0 };
+//设置发送超时
+//	setsockopt(httpEntity->socketFD, SOL_SOCKET, SO_SNDTIMEO, (char *) &timeout, sizeof(timeout));
+//设置接收超时
+//	setsockopt(httpEntity->socketFD, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout));
 
 	if (-1 == bind(httpEntity->socketFD, (sockaddr *) httpEntity->localAddress, sizeof(sockaddr_in))) {
 		Log(sizeof(httpEntity->localAddress));
@@ -236,10 +242,7 @@ int OpenHttp::startConnect(HttpEntity * httpEntity) {
 //			this->httpEntitiesQueue->offer(httpEntity);
 //			this->portPool->offer(httpEntity->localPort);
 //			int i = 10 / 0;
-			Log((char *) "connect>>>>>>>");
-			Log((char *) "ip---", (char *) httpEntity->ip);
-			Log((char *) "port---", httpEntity->remotePort);
-			Log((char *) "localport---", httpEntity->localPort->number);
+
 			return 0;
 		}
 	}
@@ -671,3 +674,41 @@ bool OpenHttp::setReceiceHead(HttpEntity * httpEntity, HashTable * headMap) {
 	}
 	return true;
 }
+char * OpenHttp::getCurrentTime() {
+	time_t rawtime;
+	struct tm * timeinfo;
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+//	asctime(timeinfo);
+	int year, month, day, hour, sec, min;
+	year = timeinfo->tm_year + 1900;
+	month = timeinfo->tm_mon + 1;
+	day = timeinfo->tm_mday;
+	hour = timeinfo->tm_hour;
+	sec = timeinfo->tm_sec;
+	min = timeinfo->tm_min;
+	char * result = (char *) JSMalloc(50 * sizeof(char));
+	char * target = (char *) JSMalloc(10 * sizeof(char));
+	parseNubmerToString(year, target);
+	strcpy(result, target);
+	parseNubmerToString(month, target);
+	strcat(result, "-");
+	strcat(result, target);
+	parseNubmerToString(day, target);
+	strcat(result, "-");
+	strcat(result, target);
+	strcat(result, " ");
+	parseNubmerToString(hour, target);
+	strcat(result, target);
+	parseNubmerToString(min, target);
+	strcat(result, ":");
+	if (min < 10) {
+		strcat(result, "0");
+	}
+	strcat(result, target);
+	parseNubmerToString(sec, target);
+	strcat(result, ":");
+	strcat(result, target);
+	return result;
+}
+

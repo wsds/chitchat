@@ -113,7 +113,7 @@ extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_normalRequest(JNIEnv *env
 	OpenHttp * openHttp = OpenHttp::getInstance();
 	openHttp->initialize();
 
-	openHttp->openSend((char *) ip_buffer, port, (char *) body_buffer, length, id, s_jobj, s_jcallback);
+//	openHttp->openSend((char *) ip_buffer, port, (char *) body_buffer, length, id, s_jobj, s_jcallback);
 
 	return (jint) 1;
 }

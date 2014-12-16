@@ -147,6 +147,8 @@ public:
 
 	void closeSocketFd(HttpEntity * httpEntity);
 
+	char * getCurrentTime();
+
 	Queue * httpEntitiesQueue;
 	HashTable *httpEntitiesMap;
 	Queue * httpEntitiedOldQueue;

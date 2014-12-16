@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.math.BigInteger;
-import java.net.InetAddress;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -41,9 +40,9 @@ public class MyHttpHandler {
 	public String tag = "HttpHandler";
 	public MyLog log = new MyLog(tag, true);
 
-	public String ip = "";
-	public int port = 80;
-	public String host = "";
+	public String ip = "192.168.1.11";
+	public int port = 8010;
+	public String host = "115.28.250.5";
 
 	public String BUCKETNAME = "wxgs";// welinkstest
 	public String OSSACCESSKEYID = "dpZe5yUof6KSJ8RM";
@@ -70,10 +69,10 @@ public class MyHttpHandler {
 			@Override
 			public void run() {
 				try {
-					InetAddress address = InetAddress.getByName("images2.we-links.com");
-					String host = address.getHostAddress();
-					instance.ip = host;
-					instance.host = host;
+					// InetAddress address = InetAddress.getByName("images2.we-links.com");
+					// String host = address.getHostAddress();
+					// instance.ip = host;
+					// instance.host = host;
 				} catch (Exception e) {
 					e.printStackTrace();
 					log.e(e.toString());
