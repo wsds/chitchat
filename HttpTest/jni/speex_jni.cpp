@@ -3,6 +3,7 @@
 //#include <stdio.h>
 
 //
+#include <test.h>
 
 #include <fcntl.h>
 #include <asm-generic/fcntl.h>
@@ -12,7 +13,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "openHttp/OpenHttp.h"
+//#include "openHttp/OpenHttp.h"
 #include "data_core/base/JSObject.h"
 #include <sys/epoll.h>
 #include <pthread.h>
@@ -55,8 +56,8 @@ extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_nativeSend(JNIEnv *env, j
 	env->GetByteArrayRegion(ip, 0, 15, ip_buffer);
 	Log((char*) "hello");
 
-	OpenHttp * openHttp = OpenHttp::getInstance();
-	openHttp->initialize();
+//	OpenHttp * openHttp = OpenHttp::getInstance();
+//	openHttp->initialize();
 //	openHttp->openSend(ip_buffer, body_buffer);
 
 	return (jint) 1;
@@ -74,15 +75,16 @@ extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_test(JNIEnv *env, jobject
 	body_buffer[length] = 0;
 	Log((char*) body_buffer);
 
-	test10(body_buffer);
+//	test10(body_buffer);
 //	CallTest(env, myHttpJNI, message);
 //	test(body_buffer);
 //	test7();
 	jobject s_jobj = env->NewGlobalRef(myHttpJNI);
 	jmethodID s_jcallback = GetClassMethodID(env);
 //	test8(env, myHttpJNI);
-	test9();
+//	test9();
 //	testPost();
+	test001();
 	return (jint) 1;
 }
 
@@ -110,9 +112,9 @@ extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_normalRequest(JNIEnv *env
 	_jmethodID * s_jcallback = GetClassMethodID(env);
 
 	Log("in....");
-	OpenHttp * openHttp = OpenHttp::getInstance();
-	openHttp->initialize();
-
+//	OpenHttp * openHttp = OpenHttp::getInstance();
+//	openHttp->initialize();
+//
 //	openHttp->openSend((char *) ip_buffer, port, (char *) body_buffer, length, id, s_jobj, s_jcallback);
 
 	return (jint) 1;
@@ -121,48 +123,48 @@ void test10(signed char * buffer) {
 	Log(strlen((char *) buffer));
 	Log((char *) buffer);
 }
-void testPost() {
-	int length = 20000;
-	char * title = (char *) ("POST /api2/bug/send? HTTP/1.1\r\nHost: 192.168.1.11\r\nConnection: keep-alive\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 20000\r\n\r\n");
-	int len = strlen(title);
-	Log(len);
-	char * key = (char *) ("data=");
-	char * value = (char *) ("12345");
-	char * buffer = (char*) JSMalloc((length + len) * sizeof(char));
-	for (int i = 0; i < length + len; i++) {
-		if (i < len) {
-			*(buffer + i) = *(title + i);
-		} else if (i < len + 5) {
-			*(buffer + i) = *(key + i % len);
-		} else if (i < length + len) {
+//void testPost() {
+//	int length = 20000;
+//	char * title = (char *) ("POST /api2/bug/send? HTTP/1.1\r\nHost: 192.168.1.11\r\nConnection: keep-alive\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 20000\r\n\r\n");
+//	int len = strlen(title);
+//	Log(len);
+//	char * key = (char *) ("data=");
+//	char * value = (char *) ("12345");
+//	char * buffer = (char*) JSMalloc((length + len) * sizeof(char));
+//	for (int i = 0; i < length + len; i++) {
+//		if (i < len) {
+//			*(buffer + i) = *(title + i);
+//		} else if (i < len + 5) {
+//			*(buffer + i) = *(key + i % len);
+//		} else if (i < length + len) {
+////			*(buffer + i) = i / 100 + 1;
+//			*(buffer + i) = *(value + i % 5);
+//		}
+//	}
+//	OpenHttp * openHttp = OpenHttp::getInstance();
+//	openHttp->initialize();
+////char * ip, int remotePort, char * head, char * body, char * path
+//	openHttp->openUpload((char *) ("192.168.1.11"), 8090, title, buffer, (char *) "/storage/sdcard0/welinks/index.html");
+//}
+//void test(signed char * message) {
+//	char * title = (char *) ("GET /index.html HTTP/1.1\r\nHost: 192.168.1.11\r\nConnection: keep-alive\r\nContent-Length: 0\r\n\r\n");
+////	Log(strlen(title));
+//	int len = strlen(title);
+//	char * buffer = (char*) JSMalloc((3500 + len) * sizeof(char));
+//	for (int i = 0; i < 3500 + len; i++) {
+//		if (i < len) {
+////			Log((char *) ("char"), i);
+//			*(buffer + i) = *(title + i);
+//		} else {
+////			Log((char *) ("charsss"), i);
 //			*(buffer + i) = i / 100 + 1;
-			*(buffer + i) = *(value + i % 5);
-		}
-	}
-	OpenHttp * openHttp = OpenHttp::getInstance();
-	openHttp->initialize();
-//char * ip, int remotePort, char * head, char * body, char * path
-	openHttp->openUpload((char *) ("192.168.1.11"), 8090, title, buffer, (char *) "/storage/sdcard0/welinks/index.html");
-}
-void test(signed char * message) {
-	char * title = (char *) ("GET /index.html HTTP/1.1\r\nHost: 192.168.1.11\r\nConnection: keep-alive\r\nContent-Length: 0\r\n\r\n");
-//	Log(strlen(title));
-	int len = strlen(title);
-	char * buffer = (char*) JSMalloc((3500 + len) * sizeof(char));
-	for (int i = 0; i < 3500 + len; i++) {
-		if (i < len) {
-//			Log((char *) ("char"), i);
-			*(buffer + i) = *(title + i);
-		} else {
-//			Log((char *) ("charsss"), i);
-			*(buffer + i) = i / 100 + 1;
-		}
-	}
-
-	OpenHttp * openHttp = OpenHttp::getInstance();
-	openHttp->initialize();
-	openHttp->openDownload((char *) ("192.168.1.11"), 80, title, (char *) "123456", (char *) ("/storage/sdcard0/welinks/index.html"));
-}
+//		}
+//	}
+//
+//	OpenHttp * openHttp = OpenHttp::getInstance();
+//	openHttp->initialize();
+//	openHttp->openDownload((char *) ("192.168.1.11"), 80, title, (char *) "123456", (char *) ("/storage/sdcard0/welinks/index.html"));
+//}
 
 void test9() {
 //读取本地文件
@@ -182,8 +184,8 @@ void test9() {
 	Log((char *) ("success..."), sendFD);
 	char * buffer = (char *) pointer;
 	Log(buffer);
-	Log(buffer+1024);
-	Log(buffer+2048);
+	Log(buffer + 1024);
+	Log(buffer + 2048);
 	Log(strlen(buffer));
 //	int len = 1023;
 //	int size = strlen(buffer) / len;
@@ -195,27 +197,27 @@ void test9() {
 //		Log(strlen(buffer + i * len));
 //	}
 }
-void test8(JNIEnv *env1, jobject myHttpJNI1) {
-
-//	CallTest(env1, myHttpJNI1);
-//发送200000个字节，并调用Java的回调函数
-	int length = 1000; //20000
-	char * title = (char *) ("PUT /api2/bug/send? HTTP/1.1\r\nHost: 192.168.1.11\r\nConnection: keep-alive\r\nContent-Length: 1000\r\n\r\n");
-	int len = strlen(title);
-	Log(len);
-	char * buffer = (char*) JSMalloc((length + len) * sizeof(char));
-	for (int i = 0; i < length + len; i++) {
-		if (i < len) {
-			*(buffer + i) = *(title + i);
-		} else if (i < length + len) {
-			*(buffer + i) = i / 100 + 1;
-		}
-	}
-	OpenHttp * openHttp = OpenHttp::getInstance();
-	openHttp->initialize();
-//char * ip, int remotePort, char * head, char * body, char * path
-	openHttp->openUpload((char *) ("192.168.1.11"), 8090, title, buffer, (char *) "/storage/sdcard0/welinks/index.html");
-}
+//void test8(JNIEnv *env1, jobject myHttpJNI1) {
+//
+////	CallTest(env1, myHttpJNI1);
+////发送200000个字节，并调用Java的回调函数
+//	int length = 1000; //20000
+//	char * title = (char *) ("PUT /api2/bug/send? HTTP/1.1\r\nHost: 192.168.1.11\r\nConnection: keep-alive\r\nContent-Length: 1000\r\n\r\n");
+//	int len = strlen(title);
+//	Log(len);
+//	char * buffer = (char*) JSMalloc((length + len) * sizeof(char));
+//	for (int i = 0; i < length + len; i++) {
+//		if (i < len) {
+//			*(buffer + i) = *(title + i);
+//		} else if (i < length + len) {
+//			*(buffer + i) = i / 100 + 1;
+//		}
+//	}
+//	OpenHttp * openHttp = OpenHttp::getInstance();
+//	openHttp->initialize();
+////char * ip, int remotePort, char * head, char * body, char * path
+//	openHttp->openUpload((char *) ("192.168.1.11"), 8090, title, buffer, (char *) "/storage/sdcard0/welinks/index.html");
+//}
 
 //void *epollLooperThread1(void *arg) {
 //	epollLooper(epollFD);
@@ -233,23 +235,23 @@ void test2() {
 
 	pthread_t epollLooperPthread;
 //	int ret = pthread_create(&epollLooperPthread, NULL, epollLooperThread1, (void *) 1);
-	sleep(1);
+//	sleep(1);
 //	sendData(sendingSocketFD, buffer);
 
 }
 
-void test3() {
-	signed char * buffer = (signed char *) malloc(1024 * 3 * sizeof(char));
-	for (int i = 1; i < 1024 * 3 - 2; i++) {
-		*(buffer + i) = i / 100 + 1;
-	}
-	*(buffer + 1024 * 3 - 1) = 0;
-
-	OpenHttp *openHttp = OpenHttp::getInstance();
-
-	openHttp->initialize();
-	openHttp->openSend((char *) ("192.168.1.7"), 8091, (char *) buffer, 1024 * 3, 0, NULL, NULL);
-}
+//void test3() {
+//	signed char * buffer = (signed char *) malloc(1024 * 3 * sizeof(char));
+//	for (int i = 1; i < 1024 * 3 - 2; i++) {
+//		*(buffer + i) = i / 100 + 1;
+//	}
+//	*(buffer + 1024 * 3 - 1) = 0;
+//
+//	OpenHttp *openHttp = OpenHttp::getInstance();
+//
+//	openHttp->initialize();
+//	openHttp->openSend((char *) ("192.168.1.7"), 8091, (char *) buffer, 1024 * 3, 0, NULL, NULL);
+//}
 
 void CallBack(_jobject * s_obj, _jmethodID * s_jcallback, int type, const signed char * buffer, const signed char * etag, int partId) {
 //	Log((char *) ("test4 callback"));
@@ -352,33 +354,33 @@ void test6() {
 //	}
 }
 
-void test7() {
-
-	int fp = 0;
-	if ((fp = open((char *) ("/storage/sdcard0/welinks/test.js"), O_CREAT | O_RDWR, 777)) < 0) {
-		Log((char *) " Can not open !");
-	}
-	struct stat stat_data;
-	if ((fstat(fp, &stat_data)) < 0) {
-		Log((char *) " fstat error !");
-	}
-
-	void* start_fp;
-	if ((start_fp = mmap(NULL, 1024 * 3, PROT_READ | PROT_WRITE, MAP_SHARED, fp, 0)) == (void *) -1) {
-		Log((char *) " mmap error !");
-	}
-	ftruncate(fp, 1); //增加文件大小
-	char * buffer = (char *) start_fp;
-	for (int i = 1; i < 1024 * 3; i++) {
-		*(buffer + i) = 80;
-	}
-	*(buffer + 1024 * 3 - 1) = 0;
-	ftruncate(fp, 1024 * 3); //增加文件大小
-//	memcpy(start_fp, "12345678901234567890", 7);
-
-	munmap(start_fp, 1024 * 3);
-	close(fp);
-}
+//void test7() {
+//
+//	int fp = 0;
+//	if ((fp = open((char *) ("/storage/sdcard0/welinks/test.js"), O_CREAT | O_RDWR, 777)) < 0) {
+//		Log((char *) " Can not open !");
+//	}
+//	struct stat stat_data;
+//	if ((fstat(fp, &stat_data)) < 0) {
+//		Log((char *) " fstat error !");
+//	}
+//
+//	void* start_fp;
+//	if ((start_fp = mmap(NULL, 1024 * 3, PROT_READ | PROT_WRITE, MAP_SHARED, fp, 0)) == (void *) -1) {
+//		Log((char *) " mmap error !");
+//	}
+//	ftruncate(fp, 1); //增加文件大小
+//	char * buffer = (char *) start_fp;
+//	for (int i = 1; i < 1024 * 3; i++) {
+//		*(buffer + i) = 80;
+//	}
+//	*(buffer + 1024 * 3 - 1) = 0;
+//	ftruncate(fp, 1024 * 3); //增加文件大小
+////	memcpy(start_fp, "12345678901234567890", 7);
+//
+//	munmap(start_fp, 1024 * 3);
+//	close(fp);
+//}
 //
 //HashTable * parseResponseHead(char * buffer, int length) {
 //	HashTable * headMap = new HashTable();

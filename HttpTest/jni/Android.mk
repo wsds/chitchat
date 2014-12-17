@@ -14,7 +14,7 @@ data_core/base/LIST.cpp \
 data_core/base/Queue.cpp \
 data_core/base/MemoryManagement.cpp \
 data_core/base/JSObject.cpp \
-openHttp/openHttp.cpp \
+test.cpp \
 
 LOCAL_LDLIBS := -landroid -llog 
 LOCAL_CPPFLAGS := -pthread                    \
