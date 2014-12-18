@@ -1,51 +1,82 @@
 #include <test.h>
 
-void test001() {
-//	struct socket * iSocket = NULL;
-//	void *sk = (void *)iSocket->sk;
-//	struct tcp_info info;
-//	int tcp_info_length = sizeof(info);
-//	getsockopt(httpEntity->socketFD, SOL_TCP, TCP_INFO, (void *) &info, &tcp_info_length);
-}
-static struct inet_sock *inet_sk(const struct sock *sk) {
-	return (struct inet_sock *) sk;
-}
-int tcp_getsockopt(struct sock *sk, int level, int optname, char __user *optval, int __user *optlen) {
-	struct inet_connection_sock *icsk = inet_csk(sk);
+void test001231() {
 
-	if (level != SOL_TCP) {
-		return icsk->icsk_af_ops->getsockopt(sk, level, optname, optval, optlen);
-		getsockopt(sk, level, optname, optval, optlen);
+//	MySocket * mySocket = NULL;
+//	void *sk = (void *)mySocket->sk;
+
+//	Socket123 * iSocket;
+
+//	void *sk = (void *)iSocket->sk;
+
+	int socketFD = socket(AF_INET, SOCK_STREAM, 0);
+	if (socketFD < 0) {
+		return;
 	}
 
-	return do_tcp_getsockopt(sk, level, optname, optval, optlen);
+	sockaddr_in * remoteAddress = new sockaddr_in();
+	memset(remoteAddress, 0, sizeof(struct sockaddr_in));
+	remoteAddress->sin_family = AF_INET;
+	int remotePort = 80;
+	remoteAddress->sin_port = htons(remotePort);
+	const char * remoteIp = (const char *) ("192.168.1.7"); ///61.135.169.121
+	remoteAddress->sin_addr.s_addr = inet_addr(remoteIp);
+
+	sockaddr_in * localAddress = new sockaddr_in();
+	memset(localAddress, 0, sizeof(struct sockaddr_in));
+	localAddress->sin_family = AF_INET;
+	int localPort = 8090;
+	localAddress->sin_port = htons(localPort);
+	localAddress->sin_addr.s_addr = htonl(INADDR_ANY);
+	int isReUsedPort = 1;
+	setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR,
+			(const void *) &(isReUsedPort), sizeof(int));
+//
+//	setsockopt(socketFD, SOL_SOCKET, SO_SNDBUF, &(1024), sizeof(int));
+
+//bind
+	if (-1 == bind(socketFD, (sockaddr *) localAddress, sizeof(sockaddr_in))) {
+		Log((char*) "bind fail !");
+		return;
+	}
+	Log((char*) "bind OK !");
+	//connect
+	int status = connect(socketFD, (sockaddr *) remoteAddress,
+			sizeof(sockaddr_in));
+
+	if (status != 0) {
+		if (errno == EINPROGRESS) {
+			Log((char*) "正在连接");
+		} else { //EADDRNOTAVAIL 99
+			Log((char*) "Connect fail!");
+			return;
+		}
+	}
+	Log((char*) "Connect OK!");
+
+	char * buffer =
+			(char *) ("GET /index.html HTTP/1.1\r\nHost: 192.168.1.7\r\nConnection: keep-alive\r\nContent-Length: 0\r\n\r\n");
+	int sentPackegeLength = send(socketFD, buffer, strlen(buffer), 0);
+
+	struct tcp_info info1;
+	int tcp_info_length = sizeof(info1);
+	getsockopt(socketFD, SOL_TCP, TCP_INFO, (void *) &info1, &tcp_info_length);
+	Log((char *) "tcpi_rtt*:  ", info1.tcpi_rtt);
+	Log((char *) "tcpi_rttvar*:  ", info1.tcpi_rttvar);
+	Log((char *) "tcpi_rcv_rtt*:  ", info1.tcpi_rcv_rtt);
+
+	char * receiveBuffer = (char *) JSMalloc(1024 * sizeof(char));
+	int receiveLength = recv(socketFD, receiveBuffer, 1024, 0);
+	Log(receiveLength);
+
+	struct tcp_info info2;
+	int tcp_info_length1 = sizeof(info2);
+	getsockopt(socketFD, SOL_TCP, TCP_INFO, (void *) &info2, &tcp_info_length1);
+	Log((char *) "tcpi_rtt:  ", info2.tcpi_rtt);
+	Log((char *) "tcpi_rttvar:  ", info2.tcpi_rttvar);
+	Log((char *) "tcpi_rcv_rtt:  ", info2.tcpi_rcv_rtt);
+
+	Log((char *) "test001.....");
+	close(socketFD);
 }
-static int do_tcp_getsockopt(struct sock *sk, int level, int optname, char __user *optval, int __user *optlen) {
-	struct inet_connection_sock *icsk = inet_csk(sk);
-	struct tcp_sock *tp = tcp_sk(sk);
-	int val, len;
 
-	if (get_user(len, optlen))
-		return -EFAULT;
-
-	len = min_t(unsigned int, len, sizeof(int));
-	if (len < 0)
-		return -EINVAL;
-
-	struct tcp_info info;
-
-	if (get_user(len, optlen))
-		return -EFAULT;
-
-	tcp_get_info(sk, &info); /* 获取TCP连接的详细信息！*/
-
-	len = min_t(unsigned int, len, sizeof(info));
-
-	if (put_user(len, optlen))
-		return -EFAULT;
-
-	if (copy_to_user(optval, &info, len))
-		return -EFAULT;
-
-	return 0;
-}

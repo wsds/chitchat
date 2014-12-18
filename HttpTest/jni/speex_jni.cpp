@@ -84,7 +84,7 @@ extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_test(JNIEnv *env, jobject
 //	test8(env, myHttpJNI);
 //	test9();
 //	testPost();
-	test001();
+	test001231();
 	return (jint) 1;
 }
 

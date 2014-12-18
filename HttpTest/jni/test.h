@@ -15,21 +15,26 @@
 //#define s64 int64_t
 //#define u64 u_int64_t
 
-#define IN6ADDR_LOOPBACK_INIT { { { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 } } }
-
+#include <errno.h>
+#include <sys/endian.h>
 #include <sys/socket.h>
-
 #include <arpa/inet.h>
-
-#include <linux/net.h>
-#include <sys/types.h>
-#include <net/inet_connection_sock.h>
-
+#include <netinet/in.h>
+//#include "lib/MyNet.h"
+////
+//#include <arpa/inet.h>
+////
+//#include <linux/net.h>
+//#include <sys/types.h>
+////#include <net/inet_connection_sock.h>
+//
 //#include <net/sock.h>
-//#include <fcntl.h>
+////#include <fcntl.h>
 #include <linux/tcp.h>
-#include <netinet/tcp.h>
+//#include <netinet/tcp.h>
 
-void test001();
+#include "lib/Log.h"
+
+void test001231();
 
 #endif /* TEST_H */

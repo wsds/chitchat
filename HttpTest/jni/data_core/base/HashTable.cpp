@@ -320,6 +320,16 @@ void strclear(char *str) {
 int parseNubmerToString(int number, char * target) {
 	char buf[15] = ""; //need memory optimize
 	int len = 0;
+	if (number == 0) {
+		target[0] = 48;
+		target[1] = '\0';
+		return len;
+	} else if (number < 0) {
+		target[0] = 61;
+		len = 1;
+		number = -number;
+	}
+
 	while (number != 0) {
 		buf[len++] = number % 10 + NUMBERCHARSTART;
 		number /= 10;
