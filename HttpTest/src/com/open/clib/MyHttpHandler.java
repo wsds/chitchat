@@ -69,7 +69,8 @@ public class MyHttpHandler {
 			@Override
 			public void run() {
 				try {
-					// InetAddress address = InetAddress.getByName("images2.we-links.com");
+					// InetAddress address =
+					// InetAddress.getByName("images2.we-links.com");
 					// String host = address.getHostAddress();
 					// instance.ip = host;
 					// instance.host = host;
@@ -115,6 +116,37 @@ public class MyHttpHandler {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void testDownload() {
+		final MyHttpJNI myHttpJNI = MyHttpJNI.getInstance();
+		String head = "GET /test.jpg HTTP/1.1\r\nHost: 192.168.1.7\r\nConnection: keep-alive\r\nContent-Length: " + 0 + "\r\n\r\n";
+		byte[] data = head.getBytes();
+		String ip = "192.168.1.7";
+		///storage/sdcard0/welinks/index.html
+		String path = "/storage/sdcard0/welinks/test.jpg";
+		new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				while (true) {
+					float percent = myHttpJNI.updateStates(1001);
+					if (percent != 100) {
+						log.e("percent>>>>>>>>>:" + percent);
+					} else {
+						break;
+					}
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}).start();
+		byte[] ips = ip.getBytes();
+		byte[] paths = path.getBytes();
+		myHttpJNI.openDownload(myHttpJNI, ips, 80, data, paths, 1001);
 	}
 
 	public class TimeLine {

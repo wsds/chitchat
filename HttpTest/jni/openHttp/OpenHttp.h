@@ -3,7 +3,7 @@
 
 #include "../data_core/base/JSObject.h"
 #include "../data_core/base/MemoryManagement.h"
-#include "../data_core/base/LIST.h"
+#include "../data_core/base/List.h"
 #include "../data_core/base/HashTable.h"
 #include "../data_core/base/Queue.h"
 #include "lib/Log.h"
@@ -12,6 +12,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
+#include <linux/tcp.h>
 
 #include <fcntl.h>
 
@@ -28,6 +30,8 @@ class Status {
 public:
 	int Queueing = 0, Started = 1, Connecting = 2, Connected = 3, Sending = 4, Sent = 5, Waiting = 5, Receiving = 6, Received = 7;
 	int Failed = 10, Timeout = 11;
+	long time_queueing = 0, time_started = 0, time_connecting = 0, time_connected = 0, time_sending = 0, time_sent = 0, time_waiting = 0, time_receiving = 0, time_received = 0;
+	long time_failed = 0, time_timeout = 0;
 	int state = Queueing;
 };
 class DataContainer: public JSObject {
@@ -43,11 +47,15 @@ public:
 	JSObject * localPort;
 	char * sendData;
 
+	int id;
+
 	int socketFD;
 	sockaddr_in * remoteAddress;
 	sockaddr_in * localAddress;
 
 	epoll_event * event;
+
+	bool keep_alive = false;
 
 	int sendDataLength = 0;
 	int sentLength = 0;
@@ -70,6 +78,8 @@ public:
 	char * receiveBuffer;
 	int receiveOffset;
 	char * receiveFileBuffer;
+
+	float receive_percent = 0;
 
 	int partId;
 	int sendFD;
@@ -118,7 +128,9 @@ public:
 	bool freeHttpEntity(HttpEntity * httpEntity);
 
 	int openSend(char * ip, int remotePort, char * buffer, int length, int partId, jobject s_obj, jmethodID s_jcallback);
-	int openDownload(char * ip, int remotePort, char * head, char * body, char * path);
+	int openDownload(char * ip, int remotePort, char * body, char * path, int id, _jobject * s_obj, _jmethodID * s_jcallback,int length);
+	int openUpload(char * ip, int remotePort, char * head, char * body, char * path);
+	int openLongPull(char * ip, int remotePort, char * buffer, int length, int partId, _jobject * s_obj, _jmethodID * s_jcallback);
 	void openSend(HttpEntity * httpEntity);
 	HttpEntity * intializeHttpEntity(HttpEntity * httpEntity, JSObject * port);
 	int startConnect(HttpEntity * httpEntity);
@@ -136,21 +148,25 @@ public:
 	void mapReceiveFile(HttpEntity * httpEntity);
 	bool checkReceive(HttpEntity * httpEntity, int receiveLength);
 	void unMapReceiveFile(HttpEntity * httpEntity);
+	void onEndConnect(HttpEntity * httpEntity);
 
-	int openUpload(char * ip, int remotePort, char * head, char * body, char * path);
-
-	void openSend(HttpEntity * httpEntity, JSObject * port);
-
-	void nextHttpEntity();
+	void openSendQueue();
+	void openSendHttpEntity(HttpEntity * httpEntity, JSObject * port);
 
 	HttpEntity * getNewHttpEntity();
 
 	void closeSocketFd(HttpEntity * httpEntity);
 
-	char * getCurrentTime();
+	timeval * iTimeval;
+	long start_time;
+	long getCurrentMillisecond();
+
+	tcp_info * i_tcp_info;
+	int tcp_info_length;
 
 	Queue * httpEntitiesQueue;
 	HashTable *httpEntitiesMap;
+	HashTable *httpEntitiesIdMap;
 	Queue * httpEntitiedOldQueue;
 	int MaxEvent = 100;
 	int epollFD = 0;
@@ -160,7 +176,7 @@ public:
 	void epollLooper(int epollFD);
 };
 extern "C" {
-extern void CallBack(_jobject * s_obj, _jmethodID * s_jcallback, int type, const signed char * buffer, const signed char * etag, int partId);
+extern void CallBack(int id, _jobject * s_obj, _jmethodID * s_jcallback, int type, const signed char * buffer, const signed char * etag, int partId);
 }
 #endif /* OPENHTTP_H */
 

@@ -82,7 +82,7 @@ public class MyHttpJNI {
 					} else {
 						log.e("************************Java CallBack**************************");
 						// success
-						log.e("type:" + myCallBack.type + "data:" + myCallBack.type + "data:" + myCallBack.type + "id:" + myCallBack.id + "param:");
+//						log.e("type:" + myCallBack.type + "data:" + myCallBack.type + "data:" + myCallBack.type + "id:" + myCallBack.id + "param:");
 						if (myCallBack.type == type.Connected) {
 							log.e("Connected");
 						} else if (myCallBack.type == type.Sending) {
@@ -98,28 +98,6 @@ public class MyHttpJNI {
 							// }
 						} else if (myCallBack.type == type.Received) {
 							log.e("Received");
-							if (myHttpHandler.status.state == myHttpHandler.status.None) {
-								myHttpHandler.status.state = myHttpHandler.status.Uploading;
-								log.e("None");
-								String result = new String(myCallBack.data);
-								log.e(result);
-								myHttpHandler.initiateMultipartUploadResult = myHttpHandler.parseXml(result);
-								myHttpHandler.startUpload();
-							} else if (myHttpHandler.status.state == myHttpHandler.status.Uploading) {
-								myHttpHandler.status.state = myHttpHandler.status.Uploading;
-								log.e("Uploading");
-								String eTag = new String(myCallBack.eTag);
-								log.e("ETag:>>>>>>>>>>>>>" + eTag);
-								eTag = eTag.substring(3);
-								eTag = eTag.substring(0, eTag.length() - 2);
-								myHttpHandler.addPart(myCallBack.id, eTag);
-							} else if (myHttpHandler.status.state == myHttpHandler.status.UploadComplete) {
-								log.e("UploadComplete");
-								String result = new String(myCallBack.data);
-								log.e("上传成功:>>>>>>" + result);
-								myHttpHandler.time.received = new Date().getTime();
-								log.e("上传文件共耗时：" + (myHttpHandler.time.received - myHttpHandler.time.start));
-							}
 						} else if (myCallBack.type == type.Failed) {
 							log.e("Failed");
 						}
@@ -159,5 +137,9 @@ public class MyHttpJNI {
 	public native int test(byte message[], MyHttpJNI thiz);
 
 	public native int normalRequest(MyHttpJNI thiz, byte ip[], int port, byte body[], int id);
+
+	public native int openDownload(MyHttpJNI thiz, byte ip[], int port, byte body[], byte path[], int id);
+	
+	public native float updateStates(int id);
 
 }

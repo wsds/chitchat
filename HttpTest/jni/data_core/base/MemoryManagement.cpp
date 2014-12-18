@@ -12,6 +12,7 @@ void* JSMalloc(size_t size) {
 
 void* JSMalloc(size_t size, int FD, int offset) {
 	void *pointer;
+	ftruncate(FD, size);
 	pointer = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, FD, offset);
 
 	if ((pointer) == (void *) -1) {
@@ -22,7 +23,7 @@ void* JSMalloc(size_t size, int FD, int offset) {
 }
 
 void JSFree(void* pointer, size_t size, int FD, size_t fileLength) {
-	ftruncate(FD, fileLength);
+
 	munmap(pointer, size);
 	close(FD);
 }

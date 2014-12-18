@@ -38,3 +38,10 @@ void Log(int number) {
 	parseNubmerToString(number, target);
 	Log((char*) target);
 }
+
+
+void Log(long number) {
+	char target[32] = "";
+	parseNubmerToString(number, target);
+	Log((char*) target);
+}

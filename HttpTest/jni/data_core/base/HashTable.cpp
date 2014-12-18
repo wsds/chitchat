@@ -341,6 +341,31 @@ int parseNubmerToString(int number, char * target) {
 	return len;
 }
 
+
+int parseNubmerToString(long number, char * target) {
+	char buf[32] = ""; //need memory optimize
+	int len = 0;
+	if (number == 0) {
+		target[0] = 48;
+		target[1] = '\0';
+		return len;
+	} else if (number < 0) {
+		target[0] = 61;
+		len = 1;
+		number = -number;
+	}
+
+	while (number != 0) {
+		buf[len++] = number % 10 + NUMBERCHARSTART;
+		number /= 10;
+	}
+	for (int j = len - 1; j >= 0; j--) {
+		target[len - j - 1] = buf[j];
+	}
+	target[len] = '\0';
+	return len;
+}
+
 int parseStringToNubmer(char* string, int length) {
 	char number_char;
 	int result = 0;

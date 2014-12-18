@@ -20,6 +20,8 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <time.h>
+#include "data_core/base/MemoryManagement.h"
 //#include "lib/MyNet.h"
 ////
 //#include <arpa/inet.h>
@@ -35,6 +37,15 @@
 
 #include "lib/Log.h"
 
+#include <stdlib.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <fcntl.h>
+
 void test001231();
+
+void test001232();
+
+void test321414();
 
 #endif /* TEST_H */

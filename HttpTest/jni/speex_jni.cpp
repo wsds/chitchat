@@ -13,7 +13,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-//#include "openHttp/OpenHttp.h"
+#include "openHttp/OpenHttp.h"
 #include "data_core/base/JSObject.h"
 #include <sys/epoll.h>
 #include <pthread.h>
@@ -84,7 +84,7 @@ extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_test(JNIEnv *env, jobject
 //	test8(env, myHttpJNI);
 //	test9();
 //	testPost();
-	test001231();
+	test321414();
 	return (jint) 1;
 }
 
@@ -118,6 +118,50 @@ extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_normalRequest(JNIEnv *env
 //	openHttp->openSend((char *) ip_buffer, port, (char *) body_buffer, length, id, s_jobj, s_jcallback);
 
 	return (jint) 1;
+}
+extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_openDownload(JNIEnv *env, jobject obj, jobject myHttpJNI, jbyteArray ip, jint port, jbyteArray body, jbyteArray path, jint id) {
+	env->GetJavaVM(&g_jvm);
+
+	int body_length = env->GetArrayLength(body);
+	signed char * body_buffer = (signed char*) malloc(body_length);
+	env->GetByteArrayRegion(body, 0, body_length, body_buffer);
+	body_buffer[body_length] = 0;
+
+	int ip_length = env->GetArrayLength(ip);
+	signed char * ip_buffer = (signed char*) malloc(ip_length + 1 * sizeof(char));
+	env->GetByteArrayRegion(ip, 0, ip_length, ip_buffer);
+	ip_buffer[ip_length] = 0;
+
+	int path_length = env->GetArrayLength(path);
+	signed char * path_buffer = (signed char*) malloc(path_length + 1 * sizeof(char));
+	env->GetByteArrayRegion(path, 0, path_length, path_buffer);
+	path_buffer[path_length] = 0;
+
+	_jobject * s_jobj = env->NewGlobalRef(myHttpJNI);
+	_jmethodID * s_jcallback = GetClassMethodID(env);
+
+	OpenHttp * openHttp = OpenHttp::getInstance();
+	openHttp->initialize();
+	openHttp->openDownload((char *) ip_buffer, port, (char *) body_buffer, (char *) path_buffer, (int) id, s_jobj, s_jcallback, body_length);
+
+	return (jint) 1;
+}
+extern "C" JNIEXPORT jfloat Java_com_open_clib_MyHttpJNI_updateStates(JNIEnv *env, jobject obj, jint id) {
+
+	OpenHttp * openHttp = OpenHttp::getInstance();
+
+	if (openHttp != NULL) {
+		HttpEntity * httpEntity = openHttp->httpEntitiesIdMap->get(id);
+		if (httpEntity != NULL) {
+			return httpEntity->receive_percent;
+		} else {
+			return 0.01;
+		}
+	} else {
+		return 0.01;
+	}
+
+	return (jint) 0.01;
 }
 void test10(signed char * buffer) {
 	Log(strlen((char *) buffer));
@@ -253,7 +297,7 @@ void test2() {
 //	openHttp->openSend((char *) ("192.168.1.7"), 8091, (char *) buffer, 1024 * 3, 0, NULL, NULL);
 //}
 
-void CallBack(_jobject * s_obj, _jmethodID * s_jcallback, int type, const signed char * buffer, const signed char * etag, int partId) {
+void CallBack(int id, _jobject * s_obj, _jmethodID * s_jcallback, int type, const signed char * buffer, const signed char * etag, int partId) {
 //	Log((char *) ("test4 callback"));
 	JNIEnv * env = NULL;
 	if (g_jvm->AttachCurrentThread(&env, NULL) != JNI_OK) {
@@ -277,7 +321,7 @@ void CallBack(_jobject * s_obj, _jmethodID * s_jcallback, int type, const signed
 	env->SetByteArrayRegion(bodyetag, 0, lengthetag, etag);
 	Log("IDS:", partId);
 
-	env->CallVoidMethod(s_obj, s_jcallback, type, body, bodyetag, partId, 100.00);
+	env->CallVoidMethod(s_obj, s_jcallback, type, body, bodyetag, id, partId);
 	if (g_jvm->DetachCurrentThread() != JNI_OK) {
 		Log((char *) "FFAILED");
 	}

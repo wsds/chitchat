@@ -76,6 +76,7 @@ static char NUMBERCHAREND = '9';
 bool isNumber(char *string);
 int parseStringToNubmer(char* string, int length);
 int parseNubmerToString(int number, char * target);
+int parseNubmerToString(long number, char * target);
 
 #endif /* HASHTABLE_H */
 

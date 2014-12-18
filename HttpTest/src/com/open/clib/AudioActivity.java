@@ -14,7 +14,7 @@ public class AudioActivity extends Activity implements OnClickListener {
 	public String tag = "AudioActivity";
 	public MyLog log = new MyLog(tag, true);
 
-	Button button1, button2, button3, button4;
+	Button button1, button2, button3, button4, button5;
 	MyHttp myHttp;
 
 	public static AudioActivity instance;
@@ -29,10 +29,12 @@ public class AudioActivity extends Activity implements OnClickListener {
 		button2 = (Button) findViewById(R.id.button2);
 		button3 = (Button) findViewById(R.id.button3);
 		button4 = (Button) findViewById(R.id.button4);
+		button5 = (Button) findViewById(R.id.button5);
 		button1.setOnClickListener(this);
 		button2.setOnClickListener(this);
 		button3.setOnClickListener(this);
 		button4.setOnClickListener(this);
+		button5.setOnClickListener(this);
 		myHttp = new MyHttp();
 	}
 
@@ -46,6 +48,8 @@ public class AudioActivity extends Activity implements OnClickListener {
 		} else if (view == button3) {
 			myHttpHandler.test();
 		} else if (view == button4) {
+		}else if (view == button5) {
+			myHttpHandler.testDownload();
 		}
 	}
 }

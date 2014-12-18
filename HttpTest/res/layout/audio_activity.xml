@@ -38,4 +38,12 @@
         android:layout_marginTop="46dp"
         android:text="播放" />
 
+    <Button
+        android:id="@+id/button5"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignLeft="@+id/button1"
+        android:layout_below="@+id/button4"
+        android:layout_marginTop="46dp"
+        android:text="Download File" />
 </RelativeLayout>
