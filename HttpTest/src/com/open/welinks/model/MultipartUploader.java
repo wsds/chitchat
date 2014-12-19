@@ -276,7 +276,7 @@ public class MultipartUploader {
 					eTag = "0" + eTag;
 				}
 			}
-			Part part = myFile.new Part(partID, eTag);
+			Part part = myFile.new Part(partID);
 			part.status = part.PART_INIT;
 			if (!myFile.parts.contains(part)) {
 				myFile.parts.add(part);

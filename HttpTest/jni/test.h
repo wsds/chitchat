@@ -14,7 +14,7 @@
 //#define u32 uint32_t
 //#define s64 int64_t
 //#define u64 u_int64_t
-
+#include <jni.h>
 #include <errno.h>
 #include <sys/endian.h>
 #include <sys/socket.h>
@@ -47,5 +47,7 @@ void test001231();
 void test001232();
 
 void test321414();
+
+void test321415();
 
 #endif /* TEST_H */

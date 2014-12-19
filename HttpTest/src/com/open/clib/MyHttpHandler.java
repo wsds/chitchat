@@ -7,22 +7,18 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.math.BigInteger;
 import java.security.InvalidKeyException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.http.entity.ByteArrayEntity;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -31,13 +27,20 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 import org.xmlpull.v1.XmlSerializer;
 
+import com.lidroid.xutils.HttpUtils;
+import com.lidroid.xutils.http.RequestParams;
+import com.lidroid.xutils.http.ResponseInfo;
+import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
 import com.open.lib.MyLog;
+import com.open.lib.ResponseHandler;
+import com.open.welinks.model.MyFile;
+import com.open.welinks.model.MyFile.Part;
 import com.open.welinks.utils.Base64;
 import com.open.welinks.utils.StreamParser;
 
 public class MyHttpHandler {
 
-	public String tag = "HttpHandler";
+	public String tag = "MyHttpHandler";
 	public MyLog log = new MyLog(tag, true);
 
 	public String ip = "192.168.1.11";
@@ -97,13 +100,6 @@ public class MyHttpHandler {
 		public int state = None;
 	}
 
-	public List<Part> parts = new ArrayList<Part>();
-
-	public class Part {
-		public int partNumber;
-		public String eTag;
-	}
-
 	public void test() {
 		try {
 			File file = new File("/storage/sdcard0/welinks/test0023.png");
@@ -120,10 +116,10 @@ public class MyHttpHandler {
 
 	public void testDownload() {
 		final MyHttpJNI myHttpJNI = MyHttpJNI.getInstance();
-		String head = "GET /test.jpg HTTP/1.1\r\nHost: 192.168.1.7\r\nConnection: keep-alive\r\nContent-Length: " + 0 + "\r\n\r\n";
+		String head = "GET /index.html HTTP/1.1\r\nHost: 192.168.1.7\r\nConnection: keep-alive\r\nContent-Length: " + 0 + "\r\n\r\n";
 		byte[] data = head.getBytes();
 		String ip = "192.168.1.7";
-		///storage/sdcard0/welinks/index.html
+		// /storage/sdcard0/welinks/index.html
 		String path = "/storage/sdcard0/welinks/test.jpg";
 		new Thread(new Runnable() {
 
@@ -131,7 +127,7 @@ public class MyHttpHandler {
 			public void run() {
 				while (true) {
 					float percent = myHttpJNI.updateStates(1001);
-					if (percent != 100) {
+					if (percent != 1.0) {
 						log.e("percent>>>>>>>>>:" + percent);
 					} else {
 						break;
@@ -146,7 +142,30 @@ public class MyHttpHandler {
 		}).start();
 		byte[] ips = ip.getBytes();
 		byte[] paths = path.getBytes();
-		myHttpJNI.openDownload(myHttpJNI, ips, 80, data, paths, 1001);
+
+		TestCallBack testCallBack = new TestCallBack();
+		MyHttp myHttp = new MyHttp();
+		myHttp.responseHandler = testCallBack;
+		myHttpJNI.myHttpPool.put(1001, myHttp);
+
+		myHttpJNI.openDownload(ips, 80, data, paths, 1001);
+	}
+
+	class TestCallBack extends MyResponseHandler {
+
+		@Override
+		public void onSuccess(String data, int param) {
+			log.e("MyResponseHandler data:" + data);
+		}
+	}
+
+	public void testOpenUpload() {
+		MyFile myFile = new MyFile();
+
+		myFile.Oss_Directory = "";
+		myFile.fileName = "test2.apk";
+
+		initiateUpLoad(myFile);
 	}
 
 	public class TimeLine {
@@ -163,27 +182,78 @@ public class MyHttpHandler {
 
 	public TimeLine time = new TimeLine();
 
-	public void initUpload() {
-		time.start = new Date().getTime();
-		status.state = status.None;
-		parts.clear();
-		partsMap.clear();
+	public void initiateUpLoad(MyFile myFile) {
+		long expires = (new Date().getTime() / 1000) + addExpires;
+		String postContent = "POST\n\n\n" + expires + "\n/" + BUCKETNAME + "/" + myFile.Oss_Directory + myFile.fileName + "?uploads";
+		String signature = "";
 		try {
-			MyRequestParams params = new MyRequestParams();
-
-			long expires = (new Date().getTime() / 1000) + addExpires;
-			String postContent = "POST\n\n\n" + expires + "\n/" + BUCKETNAME + "/" + fileName + "?uploads";
-			String signature = "";
-			signature = MyHttpHandler.getHmacSha1Signature(postContent, ACCESSKEYSECRET);
-			String url = "http://" + host + "/" + BUCKETNAME + "/" + fileName + "?uploads";
-
-			params.putParameter("OSSAccessKeyId", OSSACCESSKEYID);
-			params.putParameter("Expires", expires + "");
-			params.putParameter("Signature", signature);
-
-			send(MyHttpMethod.POST, url, params, 0);
+			signature = getHmacSha1Signature(postContent, ACCESSKEYSECRET);
 		} catch (Exception e) {
 			e.printStackTrace();
+			StackTraceElement ste = new Throwable().getStackTrace()[1];
+			log.e("Exception@initiateUpLoad" + ste.getLineNumber());
+		}
+
+		RequestParams params = new RequestParams();
+		HttpUtils httpUtils = new HttpUtils();
+
+		String url = OSS_HOST_URL + myFile.Oss_Directory + myFile.fileName + "?uploads";
+
+		// if (contentType != null) {
+		// params.addHeader("Content-Type", contentType);
+		// }
+
+		params.addQueryStringParameter("OSSAccessKeyId", OSSACCESSKEYID);
+		params.addQueryStringParameter("Expires", expires + "");
+		params.addQueryStringParameter("Signature", signature);
+
+		InitUpload initUpload = new InitUpload();
+		initUpload.myFile = myFile;
+		httpUtils.send(HttpMethod.POST, url, params, initUpload);
+	}
+
+	public class InitUpload extends ResponseHandler<String> {
+		MyFile myFile;
+
+		@Override
+		public void onSuccess(ResponseInfo<String> responseInfo) {
+			try {
+				log.e(responseInfo.result);
+				parseXml(responseInfo.result, myFile);
+				startUpload(myFile);
+			} catch (Exception e) {
+				e.printStackTrace();
+				StackTraceElement ste = new Throwable().getStackTrace()[1];
+				log.e("Exception@InitUpload" + ste.getLineNumber());
+			}
+		};
+
+		@Override
+		public void onFailure(com.lidroid.xutils.exception.HttpException error, String msg) {
+			myFile.status.state = myFile.status.Exception;
+			StackTraceElement ste = new Throwable().getStackTrace()[1];
+			log.e("Exception@InitUpload" + ste.getLineNumber());
+		};
+	};
+
+	public void parseXml(String resultXml, MyFile myFile) throws Exception {
+		InputStream is = new ByteArrayInputStream(resultXml.getBytes("UTF-8"));
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder builder = factory.newDocumentBuilder();
+		Document doc = builder.parse(is);
+		Element rootElement = doc.getDocumentElement();
+		Node item = rootElement;
+		NodeList properties = item.getChildNodes();
+		for (int j = 0; j < properties.getLength(); j++) {
+			Node property = properties.item(j);
+			String nodeName = property.getNodeName();
+			if (nodeName.equals("Bucket")) {
+				myFile.bucket = property.getFirstChild().getNodeValue();
+			} else if (nodeName.equals("Key")) {
+				myFile.key = property.getFirstChild().getNodeValue();
+			} else if (nodeName.equals("UploadId")) {
+				myFile.uploadId = property.getFirstChild().getNodeValue();
+			}
 		}
 	}
 
@@ -191,132 +261,190 @@ public class MyHttpHandler {
 	int partCount = 0;
 	String fileName = "test0024.png";
 
-	int partSize = 256000;
+	public void startUpload(MyFile myFile) {
+		myFile.uploadPath = "/sdcard/welinks/test3.jpg";
+		File file = new File(myFile.uploadPath);
+		log.e("File::::" + file.exists());
+		long fileLength = file.length();
+		myFile.length = fileLength;
+		partSuccessCount = 0;
+		partCount = (int) Math.ceil((double) fileLength / (double) PartSize);
+		myFile.partCount = partCount;
+		log.e("partCount:" + partCount + ",   fileLength:" + fileLength);
 
-	public void startUpload() {
-		try {
-			File file = new File("/storage/sdcard0/welinks/test0024.png");
-			FileInputStream fileInputStream = new FileInputStream(file);
-			byte[] bytes = StreamParser.parseToByteArray(fileInputStream);
-			partSuccessCount = 0;
-			partCount = (int) Math.ceil((double) bytes.length / (double) partSize);
-
-			// log.e("partCount:" + partCount);
-
-			for (int i = 0; i < partCount; i++) {
-				int partID = i + 1;
-				upload(partID, bytes);
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+		for (int i = 0; i < partCount; i++) {
+			int partID = i + 1;
+			uploadPart(myFile, partID);
 		}
 	}
 
-	public void upload(int partID, byte[] bytes) {
-		int length = partSize;
+	public int PartSize = 262144;
 
-		int start = (partID - 1) * length;
-		if (partID * length > bytes.length) {
-			length = bytes.length - start;
-		}
+	public void uploadPart(MyFile myFile, int partID) {
+		long expires = (new Date().getTime() / 1000) + addExpires;
 
-		byte[] buffer = new byte[length];
+		MyHttp myHttp = new MyHttp();
+		myHttp.type = 1;
+		myHttp.port = 80;
+		myHttp.IP = host;
 
-		for (int j = 0; j < length; j++) {
-			buffer[j] = bytes[start + j];
-		}
-		log.e("length---------------:" + buffer.length);
-		log.e("upload.....");
-		MessageDigest digest = null;
+		String postContent = "PUT\n\n\n" + expires + "\n/" + BUCKETNAME + "/" + myFile.Oss_Directory + myFile.fileName + "?partNumber=" + partID + "&uploadId=" + myFile.uploadId;
+		String signature = "";
 		try {
-			digest = MessageDigest.getInstance("MD5");
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
-		digest.update(buffer, 0, buffer.length);
-		BigInteger bigInt = new BigInteger(1, digest.digest());
-		String eTag = bigInt.toString(16).toUpperCase(Locale.getDefault());
-		if (eTag.length() < 32) {
-			for (int h = 0; h < 32 - eTag.length(); h++) {
-				eTag = "0" + eTag;
-			}
-		}
-		log.e("*************************************：" + eTag);
-		// Part part = new Part();
-		// part.partNumber = partID;
-		// part.eTag = eTag;
-		// parts.add(part);
-		try {
-			long expires = (new Date().getTime() / 1000) + addExpires;
-			String postContent = "PUT\n\n\n" + expires + "\n/" + BUCKETNAME + "/" + fileName + "?partNumber=" + partID + "&uploadId=" + initiateMultipartUploadResult.uploadId;
-			String signature = "";
-			try {
-				signature = MyHttpHandler.getHmacSha1Signature(postContent, ACCESSKEYSECRET);
-			} catch (InvalidKeyException e) {
-				e.printStackTrace();
-			} catch (NoSuchAlgorithmException e) {
-				e.printStackTrace();
-			}
-			String url = "http://" + host + "/" + BUCKETNAME + "/" + fileName + "?partNumber=" + partID + "&uploadId=" + initiateMultipartUploadResult.uploadId;
-
-			MyRequestParams params = new MyRequestParams();
-			params.putParameter("OSSAccessKeyId", OSSACCESSKEYID);
-			params.putParameter("Expires", expires + "");
-			params.putParameter("Signature", signature);
-			params.putBodyEntity(buffer);
-			send(MyHttpMethod.PUT, url, params, partID);
+			signature = getHmacSha1Signature(postContent, ACCESSKEYSECRET);
 		} catch (Exception e) {
 			e.printStackTrace();
-			log.e(e.toString());
 		}
-	}
+		// RequestParams params = new RequestParams();
+		// HttpUtils httpUtils = new HttpUtils();
 
-	Map<Integer, Part> partsMap = new HashMap<Integer, Part>();
+		// String url = OSS_HOST_URL + myFile.Oss_Directory + myFile.fileName +
+		// "?partNumber=" + partID + "&uploadId=" + myFile.uploadId;
 
-	public void addPart(int partId, String eTag) {
-		Part part = new Part();
-		part.partNumber = partId;
-		part.eTag = eTag;
-		// parts.add(part);
-		partsMap.put(partId, part);
-		partSuccessCount++;
-		log.e("partSuccessCount:" + partSuccessCount);
-		log.e("partCount:" + partCount);
-		if (partSuccessCount == partCount) {
-			status.state = status.UploadComplete;
-			uploadCompelte();
-		}
-	}
+		myHttp.url = OSS_HOST_URL + myFile.Oss_Directory + myFile.fileName;
+		myHttp.urlParams = new HashMap<String, String>();
+		myHttp.urlParams.put("partNumber", partID + "");
+		myHttp.urlParams.put("uploadId", myFile.uploadId + "");
+		myHttp.headerParams = new HashMap<String, String>();
+		myHttp.headerParams.put("OSSAccessKeyId", OSSACCESSKEYID);
+		myHttp.headerParams.put("Expires", expires + "");
+		myHttp.headerParams.put("Signature", signature);
+		myHttp.headerParams.put("Host", "images2.we-links.com");
 
-	public void uploadCompelte() {
-		try {
-			long expires = (new Date().getTime() / 1000) + addExpires;
+		myHttp.url = OSS_HOST_URL + myFile.Oss_Directory + myFile.fileName;
 
-			String postContent = "POST\n\n\n" + expires + "\n/" + BUCKETNAME + "/" + fileName + "?uploadId=" + initiateMultipartUploadResult.uploadId;
-			String signature = "";
-			try {
-				signature = getHmacSha1Signature(postContent, ACCESSKEYSECRET);
-			} catch (InvalidKeyException e) {
-				e.printStackTrace();
-			} catch (NoSuchAlgorithmException e) {
-				e.printStackTrace();
+		myHttp.myFile = myFile;
+
+		if (myFile.length > 0) {
+
+			myHttp.length = PartSize;
+
+			myHttp.start = (partID - 1) * PartSize;
+			if (partID * PartSize > myFile.length) {
+				myHttp.length = (int) (myFile.length - myHttp.start);
 			}
 
-			MyRequestParams params = new MyRequestParams();
+			myHttp.headerParams.put("Content-Length", myHttp.length + "");
 
-			String url = "http://" + host + "/" + BUCKETNAME + "/" + fileName + "?uploadId=" + initiateMultipartUploadResult.uploadId;
-
-			params.putParameter("OSSAccessKeyId", OSSACCESSKEYID);
-			params.putParameter("Expires", expires + "");
-			params.putParameter("Signature", signature);
-			params.putBodyEntity(writeXml(parts).getBytes());
-
-			send(MyHttpMethod.POST, url, params, 0);
-		} catch (Exception e) {
-			e.printStackTrace();
-			log.e(e.toString());
+			// Part part = myFile.new Part(partID);
+			// part.status = part.PART_INIT;
+			// if (!myFile.parts.contains(part)) {
+			// myFile.parts.add(part);
+			// }
+			UploadResponseHandler uploadResponseHandler = new UploadResponseHandler();
+			uploadResponseHandler.partID = partID;
+			uploadResponseHandler.myFile = myFile;
+			// uploadResponseHandler.part = part;
+			myHttp.responseHandler = uploadResponseHandler;
+			myHttp.send();
+			// httpUtils.send(HttpMethod.PUT, url, params,
+			// uploadResponseHandler);
+		} else {
+			StackTraceElement ste = new Throwable().getStackTrace()[1];
+			log.e("Exception@uploadPart" + ste.getLineNumber());
 		}
 	}
+
+	class UploadResponseHandler extends MyResponseHandler {
+
+		public int partID = 0;
+		public MyFile myFile;
+
+		// public Part part;
+
+		@Override
+		public void onStart() {
+			if (partID == 1) {
+				// time.start = System.currentTimeMillis();
+			}
+			// part.status = part.PART_LOADING;
+		};
+
+		@Override
+		public void onLoading(long total, long current, boolean isUploading) {
+			super.onLoading(total, current, isUploading);
+		}
+
+		@Override
+		public void onSuccess(String data, int partId) {
+			log.e("partId:" + partID + ",   data:" + data);
+			Part part = myFile.new Part();
+			part.partNumber = partID;
+			String eTag = data;
+			eTag = eTag.substring(3);
+			eTag = eTag.substring(0, eTag.length() - 2);
+			part.eTag = eTag;
+			myFile.parts.add(part);
+
+			myFile.partSuccessCount++;
+			part.status = part.PART_SUCCESS;
+			log.e("SuccessCount:" + myFile.partSuccessCount);
+			if (myFile.partSuccessCount == myFile.partCount) {
+				completeFile(myFile);
+			}
+		};
+
+		@Override
+		public void onFailure(int error, String message) {
+			// part.status = part.PART_FAILED;
+			// uploadPart(myFile, partID);
+			StackTraceElement ste = new Throwable().getStackTrace()[1];
+			log.e("Exception@UploadResponseHandler" + ste.getLineNumber());
+		};
+	};
+
+	public void completeFile(MyFile myFile) {
+		long expires = (new Date().getTime() / 1000) + addExpires;
+
+		String postContent = "POST\n\n\n" + expires + "\n/" + BUCKETNAME + "/" + myFile.Oss_Directory + myFile.fileName + "?uploadId=" + myFile.uploadId;
+		String signature = "";
+		try {
+			signature = getHmacSha1Signature(postContent, ACCESSKEYSECRET);
+		} catch (Exception e) {
+			e.printStackTrace();
+			StackTraceElement ste = new Throwable().getStackTrace()[1];
+			log.e("Exception@completeFile" + ste.getLineNumber());
+		}
+
+		RequestParams params = new RequestParams();
+		HttpUtils httpUtils = new HttpUtils();
+
+		String url = OSS_HOST_URL + myFile.Oss_Directory + myFile.fileName + "?uploadId=" + myFile.uploadId;
+
+		params.addQueryStringParameter("OSSAccessKeyId", OSSACCESSKEYID);
+		params.addQueryStringParameter("Expires", expires + "");
+		params.addQueryStringParameter("Signature", signature);
+		String xml = writeXml(myFile.parts);
+		log.e(xml);
+		params.setBodyEntity(new ByteArrayEntity(xml.getBytes()));
+		CompleteUpload completeUpload = new CompleteUpload();
+		completeUpload.myFile = myFile;
+		httpUtils.send(HttpMethod.POST, url, params, completeUpload);
+	}
+
+	public class CompleteUpload extends ResponseHandler<String> {
+		MyFile myFile;
+
+		@Override
+		public void onSuccess(ResponseInfo<String> responseInfo) {
+			log.e("done!!!!");
+			// uploadLoadingListener.onSuccess(instance, (int) (time.received -
+			// time.start));
+
+			// log.e(completeMultipartUploadResult.location + "---" +
+			// completeMultipartUploadResult.bucket + "---" +
+			// completeMultipartUploadResult.key + "---" +
+			// completeMultipartUploadResult.eTag);
+		};
+
+		@Override
+		public void onFailure(com.lidroid.xutils.exception.HttpException error, String msg) {
+			myFile.status.state = myFile.status.Exception;
+			StackTraceElement ste = new Throwable().getStackTrace()[1];
+			log.e("Exception@CompleteUpload" + ste.getLineNumber());
+			log.e("Exception@CompleteUpload" + msg);
+		};
+	};
 
 	public void send(String method, String url, MyRequestParams params, int partId) {
 		byte[] data = splicingRequestHeader(method, url, params);
@@ -415,8 +543,18 @@ public class MyHttpHandler {
 			xmlSerializer.setOutput(stringWriter);
 			xmlSerializer.startDocument("utf-8", true);
 			xmlSerializer.startTag(null, "CompleteMultipartUpload");
-			for (int i = 1; i <= partCount; i++) {
-				Part part = partsMap.get(i);
+			for (int i = 0; i < partCount; i++) {
+				Part part = null;
+				for (int j = 0; j < partCount; j++) {
+					Part scanPart = parts.get(j);
+					if (scanPart.partNumber == i + 1) {
+						part = scanPart;
+						break;
+					}
+				}
+				if (part == null) {
+					break;
+				}
 				xmlSerializer.startTag(null, "Part");
 				xmlSerializer.startTag(null, "PartNumber");
 				xmlSerializer.text(part.partNumber + "");

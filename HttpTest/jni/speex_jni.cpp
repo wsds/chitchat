@@ -67,24 +67,24 @@ extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_test(JNIEnv *env, jobject
 
 //	env->GetJavaVM(&g_jvm);
 
-	int length = env->GetArrayLength(message);
-
-	signed char * body_buffer = (signed char*) malloc(length + 1 * sizeof(char));
-
-	env->GetByteArrayRegion(message, 0, length, body_buffer);
-	body_buffer[length] = 0;
-	Log((char*) body_buffer);
+//	int length = env->GetArrayLength(message);
+//
+//	signed char * body_buffer = (signed char*) malloc(length + 1 * sizeof(char));
+//
+//	env->GetByteArrayRegion(message, 0, length, body_buffer);
+//	body_buffer[length] = 0;
+//	Log((char*) body_buffer);
 
 //	test10(body_buffer);
 //	CallTest(env, myHttpJNI, message);
 //	test(body_buffer);
 //	test7();
-	jobject s_jobj = env->NewGlobalRef(myHttpJNI);
-	jmethodID s_jcallback = GetClassMethodID(env);
+//	jobject s_jobj = env->NewGlobalRef(myHttpJNI);
+//	jmethodID s_jcallback = GetClassMethodID(env);
 //	test8(env, myHttpJNI);
-//	test9();
+	test9();
 //	testPost();
-	test321414();
+
 	return (jint) 1;
 }
 
@@ -98,20 +98,20 @@ extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_normalRequest(JNIEnv *env
 	body_buffer[length + 1] = 0;
 	Log((char *) body_buffer);
 
-	Log("body length:", length);
-	Log("body_buffer length:", strlen((char *) body_buffer));
+//	Log("body length:", length);
+//	Log("body_buffer length:", strlen((char *) body_buffer));
 
 	int iplength = env->GetArrayLength(ip);
 	signed char * ip_buffer = (signed char*) malloc(iplength + 1 * sizeof(char));
 	env->GetByteArrayRegion(ip, 0, iplength, ip_buffer);
 	ip_buffer[iplength] = 0;
-	Log("iplength length:", iplength);
-	Log("iplength_buffer length:", strlen((char *) ip_buffer));
+//	Log("iplength length:", iplength);
+//	Log("iplength_buffer length:", strlen((char *) ip_buffer));
 
 	_jobject * s_jobj = env->NewGlobalRef(myHttpJNI);
 	_jmethodID * s_jcallback = GetClassMethodID(env);
 
-	Log("in....");
+//	Log("in....");
 //	OpenHttp * openHttp = OpenHttp::getInstance();
 //	openHttp->initialize();
 //
@@ -119,8 +119,17 @@ extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_normalRequest(JNIEnv *env
 
 	return (jint) 1;
 }
-extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_openDownload(JNIEnv *env, jobject obj, jobject myHttpJNI, jbyteArray ip, jint port, jbyteArray body, jbyteArray path, jint id) {
-	env->GetJavaVM(&g_jvm);
+extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_openInitialize(JNIEnv *env, jobject obj, jobject myHttpJNI) {
+	Log((char*) "openInitialize");
+	OpenHttp * openHttp = OpenHttp::getInstance();
+	openHttp->initialize();
+	env->GetJavaVM(&openHttp->callback_jvm);
+	openHttp->callback_object = env->NewGlobalRef(myHttpJNI);
+	openHttp->callback_method = GetClassMethodID(env);
+	return 1;
+}
+
+extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_openDownload(JNIEnv *env, jobject obj, jbyteArray ip, jint port, jbyteArray body, jbyteArray path, jint id) {
 
 	int body_length = env->GetArrayLength(body);
 	signed char * body_buffer = (signed char*) malloc(body_length);
@@ -137,15 +146,37 @@ extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_openDownload(JNIEnv *env,
 	env->GetByteArrayRegion(path, 0, path_length, path_buffer);
 	path_buffer[path_length] = 0;
 
-	_jobject * s_jobj = env->NewGlobalRef(myHttpJNI);
-	_jmethodID * s_jcallback = GetClassMethodID(env);
-
 	OpenHttp * openHttp = OpenHttp::getInstance();
 	openHttp->initialize();
-	openHttp->openDownload((char *) ip_buffer, port, (char *) body_buffer, (char *) path_buffer, (int) id, s_jobj, s_jcallback, body_length);
+	openHttp->openDownload((char *) ip_buffer, port, (char *) body_buffer, (char *) path_buffer, (int) id, body_length);
+//	openHttp->openSend((char *) ip_buffer, port, (char *) body_buffer, (char *) path_buffer, (int) id, body_length);
 
 	return (jint) 1;
 }
+extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_openUpload(JNIEnv *env, jobject obj, jbyteArray ip, jint port, jbyteArray head, jbyteArray path, jint start, jint length, jint id) {
+
+	int head_length = env->GetArrayLength(head);
+	signed char * head_buffer = (signed char*) JSMalloc(head_length);
+	env->GetByteArrayRegion(head, 0, head_length, head_buffer);
+	head_buffer[head_length] = 0;
+
+	int ip_length = env->GetArrayLength(ip);
+	signed char * ip_buffer = (signed char*) JSMalloc(ip_length + 1 * sizeof(char));
+	env->GetByteArrayRegion(ip, 0, ip_length, ip_buffer);
+	ip_buffer[ip_length] = 0;
+
+	int path_length = env->GetArrayLength(path);
+	signed char * path_buffer = (signed char*) JSMalloc(path_length + 1 * sizeof(char));
+	env->GetByteArrayRegion(path, 0, path_length, path_buffer);
+	path_buffer[path_length] = 0;
+
+	OpenHttp * openHttp = OpenHttp::getInstance();
+	openHttp->initialize();
+	openHttp->openUpload((char *) ip_buffer, port, (char *) head_buffer, (char *) path_buffer, id, head_length, start, length);
+
+	return (jint) 1;
+}
+
 extern "C" JNIEXPORT jfloat Java_com_open_clib_MyHttpJNI_updateStates(JNIEnv *env, jobject obj, jint id) {
 
 	OpenHttp * openHttp = OpenHttp::getInstance();
@@ -212,14 +243,15 @@ void test10(signed char * buffer) {
 
 void test9() {
 //读取本地文件
-	char * path = (char *) ("/storage/sdcard0/welinks/upload.txt");
+	char * path = (char *) ("/sdcard/welinks/test1.png");
 	int sendFD = open(path, O_RDONLY, 777);
 	if (sendFD < 0) {
 		Log((char *) ("Download File,Can not open !"));
 		return;
 	}
 	Log((char *) ("success."), sendFD);
-	void *pointer = mmap(NULL, 1024 * 10, PROT_READ, MAP_SHARED, sendFD, 0);
+	void *pointer = mmap(NULL, 1000, PROT_READ, MAP_SHARED, sendFD, 0);
+	pointer + 100000;
 
 	if ((pointer) == (void *) -1) {
 		Log((char*) ("Failed"));
@@ -227,10 +259,10 @@ void test9() {
 	}
 	Log((char *) ("success..."), sendFD);
 	char * buffer = (char *) pointer;
-	Log(buffer);
-	Log(buffer + 1024);
-	Log(buffer + 2048);
-	Log(strlen(buffer));
+//	Log(buffer);
+//	Log(buffer + 1024);
+//	Log(buffer + 2048);
+//	Log(strlen(buffer));
 //	int len = 1023;
 //	int size = strlen(buffer) / len;
 //	if (strlen(buffer) % len != 0) {
@@ -297,35 +329,33 @@ void test2() {
 //	openHttp->openSend((char *) ("192.168.1.7"), 8091, (char *) buffer, 1024 * 3, 0, NULL, NULL);
 //}
 
-void CallBack(int id, _jobject * s_obj, _jmethodID * s_jcallback, int type, const signed char * buffer, const signed char * etag, int partId) {
-//	Log((char *) ("test4 callback"));
-	JNIEnv * env = NULL;
-	if (g_jvm->AttachCurrentThread(&env, NULL) != JNI_OK) {
-		Log((char *) "Failed");
-	} else {
-//		Log("Success");
-	}
-	if (g_jvm->GetEnv((void**) &env, JNI_VERSION_1_6) != JNI_OK) {
-		return;
-	}
-	if (env == NULL) {
-		return;
-	}
-//	const signed char * buffer = (const signed char *) ("abcdefghij");
-	int length = strlen((char *) buffer);
-	jbyteArray body = env->NewByteArray(length);
-	env->SetByteArrayRegion(body, 0, length, buffer);
+void CallBack(int id, int type, const signed char * buffer, const signed char * etag, int param) {
+	OpenHttp * openHttp = OpenHttp::getInstance();
+	if (openHttp != NULL) {
+		JNIEnv * env = NULL;
+		if (openHttp->callback_jvm->AttachCurrentThread(&env, NULL) != JNI_OK) {
+			Log((char *) "Failed");
+		} else {
+		}
+		if (openHttp->callback_jvm->GetEnv((void**) &env, JNI_VERSION_1_6) != JNI_OK) {
+			return;
+		}
+		if (env == NULL) {
+			return;
+		}
+		int buffer_length = strlen((char *) buffer);
+		jbyteArray body = env->NewByteArray(buffer_length);
+		env->SetByteArrayRegion(body, 0, buffer_length, buffer);
 
-	int lengthetag = strlen((char *) etag);
-	jbyteArray bodyetag = env->NewByteArray(lengthetag);
-	env->SetByteArrayRegion(bodyetag, 0, lengthetag, etag);
-	Log("IDS:", partId);
+		int etag_length = strlen((char *) etag);
+		jbyteArray bodyetag = env->NewByteArray(etag_length);
+		env->SetByteArrayRegion(bodyetag, 0, etag_length, etag);
 
-	env->CallVoidMethod(s_obj, s_jcallback, type, body, bodyetag, id, partId);
-	if (g_jvm->DetachCurrentThread() != JNI_OK) {
-		Log((char *) "FFAILED");
+		env->CallVoidMethod(openHttp->callback_object, openHttp->callback_method, type, body, bodyetag, id, param);
+		if (openHttp->callback_jvm->DetachCurrentThread() != JNI_OK) {
+			Log((char *) "FFAILED");
+		}
 	}
-	Log((char *) ("-------------------------CallBack-------------------------"));
 }
 _jmethodID * GetClassMethodID(JNIEnv* env) {
 	jclass clazz = env->FindClass("com/open/clib/MyHttpJNI");

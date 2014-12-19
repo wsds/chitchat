@@ -44,11 +44,12 @@ public class AudioActivity extends Activity implements OnClickListener {
 			myHttp.myHttpJNI.test(("this is java!").getBytes(), myHttp.myHttpJNI);
 			// myHttp.myHttpJNI.send(myHttp);
 		} else if (view == button2) {
-			myHttpHandler.initUpload();
+			// myHttpHandler.initUpload();
+			myHttpHandler.testOpenUpload();
 		} else if (view == button3) {
 			myHttpHandler.test();
 		} else if (view == button4) {
-		}else if (view == button5) {
+		} else if (view == button5) {
 			myHttpHandler.testDownload();
 		}
 	}

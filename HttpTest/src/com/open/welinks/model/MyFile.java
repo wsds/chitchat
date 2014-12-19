@@ -33,6 +33,7 @@ public class MyFile {
 	}
 
 	public String path = "";
+	public String uploadPath = "";
 	public String fileName = "";
 	public long length;
 	public String suffixName;
@@ -57,6 +58,7 @@ public class MyFile {
 	public int partSuccessCount = 0;
 	public int partCount = 0;
 	public List<Part> parts = new ArrayList<Part>();
+	
 
 	public class Part {
 		public int partNumber;
@@ -76,9 +78,8 @@ public class MyFile {
 			status = PART_DEFAULT;
 		}
 
-		public Part(int partNumber, String eTag) {
+		public Part(int partNumber) {
 			this.partNumber = partNumber;
-			this.eTag = eTag;
 			status = PART_DEFAULT;
 		}
 

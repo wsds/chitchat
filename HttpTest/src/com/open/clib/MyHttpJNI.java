@@ -1,6 +1,5 @@
 package com.open.clib;
 
-import java.util.Date;
 import java.util.HashMap;
 
 import android.annotation.SuppressLint;
@@ -29,9 +28,10 @@ public class MyHttpJNI {
 	@SuppressLint("UseSparseArrays")
 	public void init() {
 		load();
-		fileUploadRunnable = new FileUploadRunnable();
-		myFileUploadQueue = new MyLinkedListQueue<MyCallBack>();
-		myFileUploadQueue.currentRunnable = fileUploadRunnable;
+		openInitialize(this);
+		callBackRunnable = new CallBackRunnable();
+		myCallBackQueue = new MyLinkedListQueue<MyCallBack>();
+		myCallBackQueue.currentRunnable = callBackRunnable;
 		myHttpPool = new HashMap<Integer, MyHttp>();
 	}
 
@@ -48,16 +48,24 @@ public class MyHttpJNI {
 	int globalID = 0;
 
 	public void send(MyHttp myHttp) {
-		String url2 = "http://192.000";
-		byte url[] = url2.getBytes();
-		String headerStr = "GET /index.html HTTP/1.1\r\nHost: www.example.com";
-		byte header[] = headerStr.getBytes();
-		String ipStr = "192.168.1.7";
-		byte ip[] = ipStr.getBytes();
-		nativeSend(ip, 80, url, myHttp.method, header, myHttp.myFile.bytes, myHttp.start, myHttp.length, globalID);
-
 		myHttpPool.put(globalID, myHttp);
+
+		if (myHttp.type == 0) {
+
+		} else if (myHttp.type == 1) {
+
+			byte header[] = myHttp.header.getBytes();
+			byte ip[] = myHttp.IP.getBytes();
+			byte path[] = myHttp.myFile.uploadPath.getBytes();
+			int length = openUpload(ip, myHttp.port, header, path, myHttp.start, myHttp.length, globalID);
+
+		} else if (myHttp.type == 2) {
+
+		} else if (myHttp.type == 3) {
+
+		}
 		globalID++;
+
 	}
 
 	public class Type {
@@ -70,37 +78,42 @@ public class MyHttpJNI {
 
 	MyHttpHandler myHttpHandler = MyHttpHandler.getInstance();
 
-	class FileUploadRunnable implements Runnable {
+	class CallBackRunnable implements Runnable {
 
 		@Override
 		public void run() {
-			while (myFileUploadQueue.isRunning) {
+			while (myCallBackQueue.isRunning) {
 				try {
-					MyCallBack myCallBack = myFileUploadQueue.takeE();
+					MyCallBack myCallBack = myCallBackQueue.takeE();
 					if (myCallBack == null) {
 						break;
-					} else {
-						log.e("************************Java CallBack**************************");
-						// success
-//						log.e("type:" + myCallBack.type + "data:" + myCallBack.type + "data:" + myCallBack.type + "id:" + myCallBack.id + "param:");
-						if (myCallBack.type == type.Connected) {
-							log.e("Connected");
-						} else if (myCallBack.type == type.Sending) {
-							log.e("Sending");
-						} else if (myCallBack.type == type.Sent) {
-							log.e("Sent");
-						} else if (myCallBack.type == type.Receiving) {
-							log.e("Receiving");
-							// String result = new String(myCallBack.data);
-							// MyHttp myHttp = myHttpPool.get(myCallBack.id);
-							// if (myHttp != null && result != null) {
-							// myHttp.responseHandler.onSuccess(result);
-							// }
-						} else if (myCallBack.type == type.Received) {
-							log.e("Received");
-						} else if (myCallBack.type == type.Failed) {
-							log.e("Failed");
-						}
+					}
+					log.e("************************Java CallBack**************************");
+					// success
+					MyHttp myHttp = myHttpPool.get(myCallBack.id);
+					if (myHttp == null || myHttp.responseHandler == null) {
+						continue;
+					}
+
+					if (myCallBack.type == type.Connected) {
+						log.e("Connected");
+					} else if (myCallBack.type == type.Sending) {
+						log.e("Sending");
+					} else if (myCallBack.type == type.Sent) {
+						log.e("Sent");
+					} else if (myCallBack.type == type.Receiving) {
+						log.e("Receiving");
+						// String result = new String(myCallBack.data);
+						// MyHttp myHttp = myHttpPool.get(myCallBack.id);
+						// if (myHttp != null && result != null) {
+						// myHttp.responseHandler.onSuccess(result);
+						// }
+					} else if (myCallBack.type == type.Received) {
+						String eTag = new String(myCallBack.eTag);
+						myHttp.responseHandler.onSuccess(eTag, (int) myCallBack.param);
+						log.e("Received");
+					} else if (myCallBack.type == type.Failed) {
+						log.e("Failed");
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -115,21 +128,23 @@ public class MyHttpJNI {
 		public byte data[];
 		public byte eTag[];
 		public int id;
+		public String dataStr;
 		public float param = 0;
 	}
 
-	public MyLinkedListQueue<MyCallBack> myFileUploadQueue;
+	public MyLinkedListQueue<MyCallBack> myCallBackQueue;
 
-	FileUploadRunnable fileUploadRunnable;
+	CallBackRunnable callBackRunnable;
 
 	public void callback(int type, byte data[], byte eTag[], int id, float param) {
 		MyCallBack myCallBack = new MyCallBack();
 		myCallBack.type = type;
 		myCallBack.data = data;
+		myCallBack.dataStr = new String(data);
 		myCallBack.eTag = eTag;
 		myCallBack.id = id;
 		myCallBack.param = param;
-		myFileUploadQueue.offerE(myCallBack);
+		myCallBackQueue.offerE(myCallBack);
 	}
 
 	public native int nativeSend(byte ip[], int port, byte url[], int method, byte header[], byte body[], int start, int length, int id);
@@ -138,8 +153,12 @@ public class MyHttpJNI {
 
 	public native int normalRequest(MyHttpJNI thiz, byte ip[], int port, byte body[], int id);
 
-	public native int openDownload(MyHttpJNI thiz, byte ip[], int port, byte body[], byte path[], int id);
-	
+	public native int openInitialize(MyHttpJNI thiz);
+
+	public native int openDownload(byte ip[], int port, byte body[], byte path[], int id);
+
+	public native int openUpload(byte ip[], int port, byte head[], byte path[], int start, int length, int id);
+
 	public native float updateStates(int id);
 
 }

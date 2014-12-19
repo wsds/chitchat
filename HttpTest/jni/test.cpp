@@ -1,5 +1,12 @@
 #include <test.h>
 
+void test321415() {
+
+//	Color * color = new Color();
+//
+//	return color;
+}
+
 void test001231() {
 
 //	MySocket * mySocket = NULL;
@@ -94,7 +101,6 @@ void test321414() {
 
 	int receiveFD = open(path, O_CREAT | O_RDWR, 777);
 
-
 	if (receiveFD < 0) {
 		Log((char *) ("Download File,Can not open !"));
 		Log((char *) "errno:", errno);
@@ -102,7 +108,7 @@ void test321414() {
 	}
 	ftruncate(receiveFD, 4095);
 	char *pointer;
-	pointer = (char *)mmap(NULL, 50, PROT_READ | PROT_WRITE, MAP_SHARED, receiveFD, 0);
+	pointer = (char *) mmap(NULL, 50, PROT_READ | PROT_WRITE, MAP_SHARED, receiveFD, 0);
 
 	if ((pointer) == (void *) -1) {
 		return;

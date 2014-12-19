@@ -43,25 +43,39 @@ public:
 class HttpEntity: public JSObject {
 public:
 	const char * ip;
-	int remotePort;
-	JSObject * localPort;
-	char * sendData;
-
-	int id;
-
-	int socketFD;
 	sockaddr_in * remoteAddress;
 	sockaddr_in * localAddress;
+	int remotePort;
+	JSObject * localPort;
+
+	/*
+	 * 0 API||1 UPLOAD||2 DOWNLOAD||3 LONGPULL
+	 */
+	int type = 0;
+	int id;
+	int socketFD;
+
 
 	epoll_event * event;
 
 	bool keep_alive = false;
 
+
 	int sendDataLength = 0;
 	int sentLength = 0;
+	char * sendData;
+
+	char * path;
+	int sendFD;
+	char * sendFileBuffer;
+	int sendFileStart = 0;
+	int sendFileLength = 0;
+
 	int sendPackegesNum = 0;
 	int sendLastPackegeSize = 0;
-	int sentRuturnLength = 0;
+
+	float send_percent = 0;
+
 	bool isSendBufferFull = false;
 	Status * status = new Status();
 
@@ -78,16 +92,11 @@ public:
 	char * receiveBuffer;
 	int receiveOffset;
 	char * receiveFileBuffer;
+	char * receiveDataBuffer;
 
 	float receive_percent = 0;
 
 	int partId;
-	int sendFD;
-	int sendOffser;
-	char * sendFileBuffer;
-
-	_jobject * s_obj = NULL;
-	_jmethodID * s_jcallback = NULL;
 
 };
 
@@ -104,6 +113,10 @@ public:
 		}
 		return instance;
 	}
+	JavaVM * callback_jvm;
+	_jobject * callback_object;
+	_jmethodID * callback_method;
+
 	Queue * portPool;
 
 	int startPortNumber = 9060;
@@ -127,14 +140,15 @@ public:
 	bool initialize();
 	bool freeHttpEntity(HttpEntity * httpEntity);
 
-	int openSend(char * ip, int remotePort, char * buffer, int length, int partId, jobject s_obj, jmethodID s_jcallback);
-	int openDownload(char * ip, int remotePort, char * body, char * path, int id, _jobject * s_obj, _jmethodID * s_jcallback,int length);
-	int openUpload(char * ip, int remotePort, char * head, char * body, char * path);
-	int openLongPull(char * ip, int remotePort, char * buffer, int length, int partId, _jobject * s_obj, _jmethodID * s_jcallback);
+	int openSend(char * ip, int remotePort, char * buffer, int length, int partId);
+	int openDownload(char * ip, int remotePort, char * body, char * path, int id, int length);
+	int openUpload(char * ip, int remotePort, char * head, char * path, int id, int head_length, int start, int length);
+	int openLongPull(char * ip, int remotePort, char * buffer, int length, int partId);
 	void openSend(HttpEntity * httpEntity);
 	HttpEntity * intializeHttpEntity(HttpEntity * httpEntity, JSObject * port);
 	int startConnect(HttpEntity * httpEntity);
 	void sendPackeges(HttpEntity * httpEntity);
+	void sendUploadPackeges(HttpEntity * httpEntity);
 	int sendPackege(HttpEntity * httpEntity, const void * buffer, int PackegeSize);
 	void receivePackage(HttpEntity * httpEntity);
 	void parseResponseBody(char * buffer);
@@ -146,6 +160,7 @@ public:
 	bool setReceiceHead(HttpEntity * httpEntity, HashTable * headMap);
 
 	void mapReceiveFile(HttpEntity * httpEntity);
+	void mapReceiveData(HttpEntity * httpEntity);
 	bool checkReceive(HttpEntity * httpEntity, int receiveLength);
 	void unMapReceiveFile(HttpEntity * httpEntity);
 	void onEndConnect(HttpEntity * httpEntity);
@@ -176,7 +191,7 @@ public:
 	void epollLooper(int epollFD);
 };
 extern "C" {
-extern void CallBack(int id, _jobject * s_obj, _jmethodID * s_jcallback, int type, const signed char * buffer, const signed char * etag, int partId);
+extern void CallBack(int id, int type, const signed char * buffer, const signed char * etag, int partId);
 }
 #endif /* OPENHTTP_H */
 
