@@ -82,7 +82,8 @@ extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_test(JNIEnv *env, jobject
 //	jobject s_jobj = env->NewGlobalRef(myHttpJNI);
 //	jmethodID s_jcallback = GetClassMethodID(env);
 //	test8(env, myHttpJNI);
-	test9();
+//	test9();
+	test321415();
 //	testPost();
 
 	return (jint) 1;

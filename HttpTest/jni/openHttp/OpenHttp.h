@@ -6,10 +6,13 @@
 #include "../data_core/base/List.h"
 #include "../data_core/base/HashTable.h"
 #include "../data_core/base/Queue.h"
+#include "../data_core/JSON.h"
 #include "lib/Log.h"
 
 #include <jni.h>
+
 #include <sys/socket.h>
+
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -133,6 +136,10 @@ public:
 	char * ContentLengthMark = (char *) ("Content-Length");
 	char * HeadLengthMark = (char *) ("Head-Length");
 	char * ETagMark = (char *) ("ETag");
+	char * DateMark = (char *) ("Date");
+	char * ContentTypeMark = (char *) ("Content-Type");
+	char * ServerMark = (char *) ("Server");
+	char * ConnectionMark = (char *) ("Connection");
 
 	char * lineKey;
 	char * lineValue;

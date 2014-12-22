@@ -1,10 +1,18 @@
 #include <test.h>
 
 void test321415() {
-
-//	Color * color = new Color();
-//
-//	return color;
+	Log((char *) "test321415");
+	JSON * json = new JSON();
+	json->initialize();
+	char * jsString = stringifyJSON(json);
+	Log(jsString);
+	JSObject * jsobj = new JSObject();
+	jsobj->type = 3;
+//	jsobj->number = 10;
+	jsobj->char_string = (char *) "ABC123";
+	json->set((char *) "length", jsobj);
+	jsString = stringifyJSON(json);
+	Log(jsString);
 }
 
 void test001231() {
@@ -36,7 +44,8 @@ void test001231() {
 	localAddress->sin_port = htons(localPort);
 	localAddress->sin_addr.s_addr = htonl(INADDR_ANY);
 	int isReUsedPort = 1;
-	setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, (const void *) &(isReUsedPort), sizeof(int));
+	setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR,
+			(const void *) &(isReUsedPort), sizeof(int));
 //
 //	setsockopt(socketFD, SOL_SOCKET, SO_SNDBUF, &(1024), sizeof(int));
 
@@ -47,7 +56,8 @@ void test001231() {
 	}
 	Log((char*) "bind OK !");
 	//connect
-	int status = connect(socketFD, (sockaddr *) remoteAddress, sizeof(sockaddr_in));
+	int status = connect(socketFD, (sockaddr *) remoteAddress,
+			sizeof(sockaddr_in));
 
 	if (status != 0) {
 		if (errno == EINPROGRESS) {
@@ -59,7 +69,8 @@ void test001231() {
 	}
 	Log((char*) "Connect OK!");
 
-	char * buffer = (char *) ("GET /index.html HTTP/1.1\r\nHost: 192.168.1.7\r\nConnection: keep-alive\r\nContent-Length: 0\r\n\r\n");
+	char * buffer =
+			(char *) ("GET /index.html HTTP/1.1\r\nHost: 192.168.1.7\r\nConnection: keep-alive\r\nContent-Length: 0\r\n\r\n");
 	int sentPackegeLength = send(socketFD, buffer, strlen(buffer), 0);
 
 	tcp_info * info1 = new tcp_info();
@@ -97,7 +108,7 @@ void test001232() {
 
 void test321414() {
 	Log((char *) ("test321414"));
-	char* path = "/sdcard/welinks/test321414.txt";
+	char* path = (char *) "/sdcard/welinks/test321414.txt";
 
 	int receiveFD = open(path, O_CREAT | O_RDWR, 777);
 
@@ -108,7 +119,8 @@ void test321414() {
 	}
 	ftruncate(receiveFD, 4095);
 	char *pointer;
-	pointer = (char *) mmap(NULL, 50, PROT_READ | PROT_WRITE, MAP_SHARED, receiveFD, 0);
+	pointer = (char *) mmap(NULL, 50, PROT_READ | PROT_WRITE, MAP_SHARED,
+			receiveFD, 0);
 
 	if ((pointer) == (void *) -1) {
 		return;
