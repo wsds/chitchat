@@ -16,6 +16,10 @@ data_core/base/List.cpp \
 data_core/base/Queue.cpp \
 data_core/base/MemoryManagement.cpp \
 data_core/base/JSObject.cpp \
+data_core/JSString.cpp \
+data_core/JSNumber.cpp \
+data_core/JSKeyValue.cpp \
+data_core/JSON.cpp \
 openHttp/OpenHttp.cpp \
 test.cpp \
 

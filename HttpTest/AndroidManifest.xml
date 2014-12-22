@@ -19,7 +19,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.android.gl2jni" >
+    package="com.android.gl2jni" android:versionName="1.0" android:versionCode="1">
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
