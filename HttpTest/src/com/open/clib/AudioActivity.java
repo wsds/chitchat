@@ -36,6 +36,7 @@ public class AudioActivity extends Activity implements OnClickListener {
 		button4.setOnClickListener(this);
 		button5.setOnClickListener(this);
 		myHttp = new MyHttp();
+		myHttp.myHttpJNI.test(("this is java!").getBytes(), myHttp.myHttpJNI);
 	}
 
 	@Override

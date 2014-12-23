@@ -40,6 +40,27 @@ public class MyHttp {
 		myHttpJNI.send(this);
 	}
 
+	public void putUrlParam(String key, String value) {
+		if (urlParams == null) {
+			urlParams = new HashMap<String, String>();
+		}
+		urlParams.put(key, value);
+	}
+
+	public void putHeaderParam(String key, String value) {
+		if (headerParams == null) {
+			headerParams = new HashMap<String, String>();
+		}
+		headerParams.put(key, value);
+	}
+
+	public void putBodyParam(String key, String value) {
+		if (bodyParams == null) {
+			bodyParams = new HashMap<String, String>();
+		}
+		bodyParams.put(key, value);
+	}
+
 	public void splicingRequestHeaders() {
 		method = "PUT";
 		this.header = method + " ";

@@ -27,6 +27,10 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 import org.xmlpull.v1.XmlSerializer;
 
+import android.util.TypedValue;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.lidroid.xutils.HttpUtils;
 import com.lidroid.xutils.http.RequestParams;
 import com.lidroid.xutils.http.ResponseInfo;
@@ -163,7 +167,7 @@ public class MyHttpHandler {
 		MyFile myFile = new MyFile();
 
 		myFile.Oss_Directory = "";
-		myFile.fileName = "test2.apk";
+		myFile.fileName = "song.jpg";
 
 		initiateUpLoad(myFile);
 	}
@@ -262,7 +266,7 @@ public class MyHttpHandler {
 	String fileName = "test0024.png";
 
 	public void startUpload(MyFile myFile) {
-		myFile.uploadPath = "/sdcard/welinks/test3.jpg";
+		myFile.uploadPath = "/storage/sdcard0/song.jpg";
 		File file = new File(myFile.uploadPath);
 		log.e("File::::" + file.exists());
 		long fileLength = file.length();
@@ -368,17 +372,21 @@ public class MyHttpHandler {
 		@Override
 		public void onSuccess(String data, int partId) {
 			log.e("partId:" + partID + ",   data:" + data);
-			Part part = myFile.new Part();
-			part.partNumber = partID;
-			String eTag = data;
-			eTag = eTag.substring(3);
-			eTag = eTag.substring(0, eTag.length() - 2);
-			part.eTag = eTag;
-			myFile.parts.add(part);
-
-			myFile.partSuccessCount++;
-			part.status = part.PART_SUCCESS;
-			log.e("SuccessCount:" + myFile.partSuccessCount);
+			Gson gson = new Gson();
+			HashMap<String, String> responseInfo = gson.fromJson(data, new TypeToken<HashMap<String, String>>() {
+			}.getType());
+			log.e(responseInfo.get("ETag") + "-____----------------------------------");
+			// Part part = myFile.new Part();
+			// part.partNumber = partID;
+			// String eTag = data;
+			// eTag = eTag.substring(3);
+			// eTag = eTag.substring(0, eTag.length() - 2);
+			// part.eTag = eTag;
+			// myFile.parts.add(part);
+			//
+			// myFile.partSuccessCount++;
+			// part.status = part.PART_SUCCESS;
+			// log.e("SuccessCount:" + myFile.partSuccessCount);
 			if (myFile.partSuccessCount == myFile.partCount) {
 				completeFile(myFile);
 			}
@@ -449,7 +457,7 @@ public class MyHttpHandler {
 	public void send(String method, String url, MyRequestParams params, int partId) {
 		byte[] data = splicingRequestHeader(method, url, params);
 		if (data == null) {
-			log.e("REDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDREDRED");
+			log.e("----------------------------------");
 		}
 		MyHttpJNI myHttpJNI = MyHttpJNI.getInstance();
 		log.e("bytes#######################:" + data.length);

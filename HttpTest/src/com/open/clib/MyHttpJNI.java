@@ -109,8 +109,7 @@ public class MyHttpJNI {
 						// myHttp.responseHandler.onSuccess(result);
 						// }
 					} else if (myCallBack.type == type.Received) {
-						String eTag = new String(myCallBack.eTag);
-						myHttp.responseHandler.onSuccess(eTag, (int) myCallBack.param);
+						myHttp.responseHandler.onSuccess(myCallBack.result, (int) myCallBack.param);
 						log.e("Received");
 					} else if (myCallBack.type == type.Failed) {
 						log.e("Failed");
@@ -126,9 +125,8 @@ public class MyHttpJNI {
 	class MyCallBack {
 		public int type;
 		public byte data[];
-		public byte eTag[];
 		public int id;
-		public String dataStr;
+		public String result;
 		public float param = 0;
 	}
 
@@ -136,12 +134,11 @@ public class MyHttpJNI {
 
 	CallBackRunnable callBackRunnable;
 
-	public void callback(int type, byte data[], byte eTag[], int id, float param) {
+	public void callback(int type, byte data[], int id, float param) {
 		MyCallBack myCallBack = new MyCallBack();
 		myCallBack.type = type;
 		myCallBack.data = data;
-		myCallBack.dataStr = new String(data);
-		myCallBack.eTag = eTag;
+		myCallBack.result = new String(data);
 		myCallBack.id = id;
 		myCallBack.param = param;
 		myCallBackQueue.offerE(myCallBack);

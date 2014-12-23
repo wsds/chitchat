@@ -92,8 +92,7 @@ bool JSON::set(char* key, JSObject* value) {
 	object->key = key;
 	object->value = value;
 
-	JSObject* oldObject = this->hashTable->set(((JSKeyValue*) object)->key,
-			(JSObject*) object);
+	JSObject* oldObject = this->hashTable->set(((JSKeyValue*) object)->key, (JSObject*) object);
 
 	if (oldObject == NULL) //new entry
 	{
@@ -147,8 +146,7 @@ int stringifyJSObject(JSObject* object, char* string1, int index) {
 		offset = offset + i;
 	} else if (object->type == JSNUMBER) {
 		JSNumber * js_number = (JSNumber*) object;
-		offset = parseNubmerToString(((JSObject*) js_number)->number,
-				string1 + index);
+		offset = parseNubmerToString(((JSObject*) js_number)->number, string1 + index);
 	} else if (object->type == JSSTRING) {
 		JSString * js_string = (JSString*) object;
 		if (js_string->length == 1) {
@@ -159,9 +157,7 @@ int stringifyJSObject(JSObject* object, char* string1, int index) {
 		} else {
 			bool hasQuote = false;
 			for (int j = 0; j < js_string->length; j++) {
-				if (((JSObject*) js_string)->char_string[j] == SINGLEQUOTE
-						|| ((JSObject*) js_string)->char_string[j]
-								== DOUBLEQUOTES) {
+				if (((JSObject*) js_string)->char_string[j] == SINGLEQUOTE || ((JSObject*) js_string)->char_string[j] == DOUBLEQUOTES) {
 					hasQuote = true;
 					break;
 				}
@@ -235,9 +231,7 @@ int stringifyJSObject(JSObject* object, char* string1, int index) {
 				sub_offset++;
 			}
 			sub_object = ((JSON*) object)->list->find(i);
-			sub_offset = sub_offset
-					+ stringifyJSObject(sub_object, string1,
-							index + sub_offset);
+			sub_offset = sub_offset + stringifyJSObject(sub_object, string1, index + sub_offset);
 		}
 
 		string1[index + sub_offset] = RIGHTBRACKET;
@@ -264,8 +258,7 @@ JSObject * cloneJSObject(JSObject* object, JSON * parent) {
 		clone = js_number;
 	} else if (object->type == JSSTRING) {
 		JSString * js_string = new JSString();
-		js_string->char_string = (char *) JSMalloc(
-				strlen(((JSString *) object)->char_string) + 1);
+		js_string->char_string = (char *) JSMalloc(strlen(((JSString *) object)->char_string) + 1);
 		strcopy(((JSString *) object)->char_string, js_string->char_string);
 		js_string->length = ((JSString *) object)->length;
 		clone = js_string;
@@ -376,206 +369,12 @@ JSON* parseJSON(char* string) {
 	JSONIndicator** json_indicators = (JSONIndicator**) JSMalloc(mem_size);
 
 	int key_value_mem_size = key_value_stack_size * sizeof(KeyValueIndicator*);
-	KeyValueIndicator** key_value_indicators = (KeyValueIndicator**) JSMalloc(
-			key_value_mem_size);
+	KeyValueIndicator** key_value_indicators = (KeyValueIndicator**) JSMalloc(key_value_mem_size);
 
 	for (int i = 0; i < string_length; i++) {
 		localChar = string[i];
 		if (parsingStatus == 1) {
 			//*************************************parsingStatus == 1*****************************************************************************************************
-			if (localChar == COMMA) {
-				if (i > last_COMMA_index) {
-					object_indicator = new JSONIndicator(); //get from pool//to do
-					object_indicator->head = last_COMMA_index;
-					object_indicator->tail = i;
-					object_indicator->quotes_count =
-							json_indicator->quotes_count;
-					json_indicator->quotes_count = 0;
-
-					last_COMMA_index = i + 1;
-
-					JSObject* object = parseObject(string, object_indicator,
-							false);
-					if (key_value_stack_top
-							> 0&& key_value_indicators[key_value_stack_top - 1]->key_value->value == NULL) {if (object != NULL) {
-						key_value_indicators[key_value_stack_top - 1]->key_value->value = object;
-						key_value_stack_top--;
-					}
-					else {
-						//report error,value cannot be NULL
-					}
-				}
-				else {
-					if (object != NULL) {
-						((JSON*)(json_indicator->json))->push(object);
-					}
-				}
-
-			}
-		}
-		else if (localChar == COLON) {
-			if (i > last_COMMA_index) {
-				object_indicator = new JSONIndicator(); //get from pool//to do
-				object_indicator->head = last_COMMA_index;
-				object_indicator->tail = i;
-				object_indicator->quotes_count = json_indicator->quotes_count;
-				json_indicator->quotes_count = 0;
-
-				last_COMMA_index = i + 1;
-
-				JSObject* object = parseObject(string, object_indicator, true);
-				if (key_value_stack_top < key_value_stack_size) {
-					if (object != NULL) {
-						key_value_indicators[key_value_stack_top] = new KeyValueIndicator();
-						key_value_indicators[key_value_stack_top]->key_value = (JSKeyValue *)object;
-						key_value_indicators[key_value_stack_top]->json_indicators_stack_top = json_indicators_stack_top;
-						key_value_indicators[key_value_stack_top]->key_value->value = NULL;
-						((JSON*)(json_indicator->json))->push(object);
-						key_value_stack_top++;
-					}
-					else {
-						//report error,key cannot be NULL
-					}
-				}
-				else {
-					//report error;
-				}
-			}
-		}
-		else if (localChar == SINGLEQUOTE) {
-			QuoteStatus = 11;
-			parsingStatus = 2;
-		}
-		else if (localChar == DOUBLEQUOTES) {
-			QuoteStatus = 21;
-			parsingStatus = 2;
-		}
-		else if (localChar == LEFTBRACKET) {
-			if (json_indicators_stack_top < json_indicators_stack_size) {
-
-				JSON* json = new JSON();
-				json->initialize();
-
-				json->json_indicator = new JSONIndicator(); //get from pool//to do
-				json->json_indicator->head = i;
-				json->json_indicator->json = (JSObject*)json;
-				json->json_indicator->quotes_count = 0;
-
-				json_indicators[json_indicators_stack_top] = json->json_indicator;
-				json_indicators_stack_top++;
-
-				if (i == 0 && json_indicator == NULL) {
-					result_json = json;
-				}
-				else {
-					if (key_value_stack_top > 0 && string[i - 1] == COLON) {
-						key_value_indicators[key_value_stack_top - 1]->key_value->value = (JSObject*)json;
-						key_value_indicators[key_value_stack_top - 1]->json_indicators_stack_top = json_indicators_stack_top;
-					}
-					else {
-						((JSON*)(json_indicator->json))->push((JSObject*)json);
-					}
-				}
-
-				json_indicator = json->json_indicator;
-
-				last_COMMA_index++;
-			}
-			else {
-				//report error
-			}
-		}
-		else if (localChar == RIGHTBRACKET) {
-
-			object_indicator = new JSONIndicator(); //get from pool//to do
-			object_indicator->head = last_COMMA_index;
-			object_indicator->tail = i;
-			object_indicator->quotes_count = json_indicator->quotes_count;
-			json_indicator->quotes_count = 0;
-
-			JSObject* object = parseObject(string, object_indicator, false);
-			if (key_value_stack_top > 0 && key_value_indicators[key_value_stack_top - 1]->json_indicators_stack_top == json_indicators_stack_top) {
-				if (key_value_indicators[key_value_stack_top - 1]->key_value->value == NULL) {
-					if (object != NULL) {
-						key_value_indicators[key_value_stack_top - 1]->key_value->value = object;
-					}
-					else {
-						//report error,value cannot be NULL
-					}
-				}
-				else if (key_value_stack_top > 0) {
-					if (object != NULL) {
-						((JSON*)(json_indicator->json))->push(object);
-					}
-				}
-				key_value_stack_top--;
-			}
-			else {
-				if (object != NULL) {
-					((JSON*)(json_indicator->json))->push(object);
-				}
-			}
-
-			last_COMMA_index = i + 1;
-
-			if (json_indicators_stack_top > 1) {
-				//resolve the last element spited by COMMA
-				json_indicator = json_indicators[json_indicators_stack_top - 1];
-				json_indicator->tail = i;
-
-				json_indicator = json_indicators[json_indicators_stack_top - 2];
-				//json_indicator->json = parseJSON(string, json_indicator);
-				json_indicators_stack_top--;
-			}
-			else if (json_indicators_stack_top == 1) {
-				if (i + 1 == string_length) {
-					//resolve the last element spited by COMMA
-					int p = 10;
-					p++;
-					//break;
-					return result_json;
-				}
-				else {
-					//report error
-				}
-			}
-			else {
-				//report error
-			}
-		}
-		//*************************************parsingStatus == 1*****************************************************************************************************
-
-	}
-	else if (parsingStatus == 3) {
-
-		if ((localChar == SINGLEQUOTE && QuoteStatus == 11) || (localChar == DOUBLEQUOTES && QuoteStatus == 21)) {
-			json_indicator->quotes_count = 1;
-			parsingStatus = 1;
-		}
-		else if ((localChar == SINGLEQUOTE && QuoteStatus == 13) || (localChar == DOUBLEQUOTES && QuoteStatus == 23)) {
-			parsingStatus = 5;
-		}
-	}
-	else if (parsingStatus == 2) {
-		if ((localChar == SINGLEQUOTE && QuoteStatus == 11) || (localChar == DOUBLEQUOTES && QuoteStatus == 21)) {
-			parsingStatus = 4;
-		}
-		else {
-			parsingStatus = 3;
-		}
-	}
-	else if (parsingStatus == 4) {
-		if (localChar == SINGLEQUOTE && QuoteStatus == 11) {
-			parsingStatus = 3;
-			QuoteStatus = 13;
-		}
-		else if (localChar == DOUBLEQUOTES && QuoteStatus == 21) {
-			parsingStatus = 3;
-			QuoteStatus = 23;
-		}
-		else {
-			json_indicator->quotes_count = 1;
-			parsingStatus = 1;
 			if (localChar == COMMA) {
 				if (i > last_COMMA_index) {
 					object_indicator = new JSONIndicator(); //get from pool//to do
@@ -591,20 +390,17 @@ JSON* parseJSON(char* string) {
 						if (object != NULL) {
 							key_value_indicators[key_value_stack_top - 1]->key_value->value = object;
 							key_value_stack_top--;
-						}
-						else {
+						} else {
 							//report error,value cannot be NULL
 						}
-					}
-					else {
+					} else {
 						if (object != NULL) {
-							((JSON*)(json_indicator->json))->push(object);
+							((JSON*) (json_indicator->json))->push(object);
 						}
 					}
 
 				}
-			}
-			else if (localChar == COLON) {
+			} else if (localChar == COLON) {
 				if (i > last_COMMA_index) {
 					object_indicator = new JSONIndicator(); //get from pool//to do
 					object_indicator->head = last_COMMA_index;
@@ -618,22 +414,56 @@ JSON* parseJSON(char* string) {
 					if (key_value_stack_top < key_value_stack_size) {
 						if (object != NULL) {
 							key_value_indicators[key_value_stack_top] = new KeyValueIndicator();
-							key_value_indicators[key_value_stack_top]->key_value = (JSKeyValue *)object;
+							key_value_indicators[key_value_stack_top]->key_value = (JSKeyValue *) object;
 							key_value_indicators[key_value_stack_top]->json_indicators_stack_top = json_indicators_stack_top;
 							key_value_indicators[key_value_stack_top]->key_value->value = NULL;
-							((JSON*)(json_indicator->json))->push(object);
+							((JSON*) (json_indicator->json))->push(object);
 							key_value_stack_top++;
-						}
-						else {
+						} else {
 							//report error,key cannot be NULL
 						}
-					}
-					else {
+					} else {
 						//report error;
 					}
 				}
-			}
-			else if (localChar == RIGHTBRACKET) {
+			} else if (localChar == SINGLEQUOTE) {
+				QuoteStatus = 11;
+				parsingStatus = 2;
+			} else if (localChar == DOUBLEQUOTES) {
+				QuoteStatus = 21;
+				parsingStatus = 2;
+			} else if (localChar == LEFTBRACKET) {
+				if (json_indicators_stack_top < json_indicators_stack_size) {
+
+					JSON* json = new JSON();
+					json->initialize();
+
+					json->json_indicator = new JSONIndicator(); //get from pool//to do
+					json->json_indicator->head = i;
+					json->json_indicator->json = (JSObject*) json;
+					json->json_indicator->quotes_count = 0;
+
+					json_indicators[json_indicators_stack_top] = json->json_indicator;
+					json_indicators_stack_top++;
+
+					if (i == 0 && json_indicator == NULL) {
+						result_json = json;
+					} else {
+						if (key_value_stack_top > 0 && string[i - 1] == COLON) {
+							key_value_indicators[key_value_stack_top - 1]->key_value->value = (JSObject*) json;
+							key_value_indicators[key_value_stack_top - 1]->json_indicators_stack_top = json_indicators_stack_top;
+						} else {
+							((JSON*) (json_indicator->json))->push((JSObject*) json);
+						}
+					}
+
+					json_indicator = json->json_indicator;
+
+					last_COMMA_index++;
+				} else {
+					//report error
+				}
+			} else if (localChar == RIGHTBRACKET) {
 
 				object_indicator = new JSONIndicator(); //get from pool//to do
 				object_indicator->head = last_COMMA_index;
@@ -646,21 +476,18 @@ JSON* parseJSON(char* string) {
 					if (key_value_indicators[key_value_stack_top - 1]->key_value->value == NULL) {
 						if (object != NULL) {
 							key_value_indicators[key_value_stack_top - 1]->key_value->value = object;
-						}
-						else {
+						} else {
 							//report error,value cannot be NULL
 						}
-					}
-					else if (key_value_stack_top > 0) {
+					} else if (key_value_stack_top > 0) {
 						if (object != NULL) {
-							((JSON*)(json_indicator->json))->push(object);
+							((JSON*) (json_indicator->json))->push(object);
 						}
 					}
 					key_value_stack_top--;
-				}
-				else {
+				} else {
 					if (object != NULL) {
-						((JSON*)(json_indicator->json))->push(object);
+						((JSON*) (json_indicator->json))->push(object);
 					}
 				}
 
@@ -674,44 +501,166 @@ JSON* parseJSON(char* string) {
 					json_indicator = json_indicators[json_indicators_stack_top - 2];
 					//json_indicator->json = parseJSON(string, json_indicator);
 					json_indicators_stack_top--;
-				}
-				else if (json_indicators_stack_top == 1) {
+				} else if (json_indicators_stack_top == 1) {
 					if (i + 1 == string_length) {
 						//resolve the last element spited by COMMA
 						int p = 10;
 						p++;
 						//break;
 						return result_json;
-					}
-					else {
+					} else {
 						//report error
 					}
-				}
-				else {
+				} else {
 					//report error
 				}
 			}
-		}
-	}
-	else if (parsingStatus == 5) {
-		if ((localChar == SINGLEQUOTE && QuoteStatus == 13) || (localChar == DOUBLEQUOTES && QuoteStatus == 23)) {
-			parsingStatus = 6;
-		}
-		else {
-			parsingStatus = 3;
-		}
-	}
-	else if (parsingStatus == 6) {
-		if ((localChar == SINGLEQUOTE && QuoteStatus == 13) || (localChar == DOUBLEQUOTES && QuoteStatus == 23)) {
-			json_indicator->quotes_count = 3;
-			parsingStatus = 1;
-		}
-		else {
-			parsingStatus = 3;
-		}
-	}
+			//*************************************parsingStatus == 1*****************************************************************************************************
 
-}
+		} else if (parsingStatus == 3) {
+
+			if ((localChar == SINGLEQUOTE && QuoteStatus == 11) || (localChar == DOUBLEQUOTES && QuoteStatus == 21)) {
+				json_indicator->quotes_count = 1;
+				parsingStatus = 1;
+			} else if ((localChar == SINGLEQUOTE && QuoteStatus == 13) || (localChar == DOUBLEQUOTES && QuoteStatus == 23)) {
+				parsingStatus = 5;
+			}
+		} else if (parsingStatus == 2) {
+			if ((localChar == SINGLEQUOTE && QuoteStatus == 11) || (localChar == DOUBLEQUOTES && QuoteStatus == 21)) {
+				parsingStatus = 4;
+			} else {
+				parsingStatus = 3;
+			}
+		} else if (parsingStatus == 4) {
+			if (localChar == SINGLEQUOTE && QuoteStatus == 11) {
+				parsingStatus = 3;
+				QuoteStatus = 13;
+			} else if (localChar == DOUBLEQUOTES && QuoteStatus == 21) {
+				parsingStatus = 3;
+				QuoteStatus = 23;
+			} else {
+				json_indicator->quotes_count = 1;
+				parsingStatus = 1;
+				if (localChar == COMMA) {
+					if (i > last_COMMA_index) {
+						object_indicator = new JSONIndicator(); //get from pool//to do
+						object_indicator->head = last_COMMA_index;
+						object_indicator->tail = i;
+						object_indicator->quotes_count = json_indicator->quotes_count;
+						json_indicator->quotes_count = 0;
+
+						last_COMMA_index = i + 1;
+
+						JSObject* object = parseObject(string, object_indicator, false);
+						if (key_value_stack_top > 0 && key_value_indicators[key_value_stack_top - 1]->key_value->value == NULL) {
+							if (object != NULL) {
+								key_value_indicators[key_value_stack_top - 1]->key_value->value = object;
+								key_value_stack_top--;
+							} else {
+								//report error,value cannot be NULL
+							}
+						} else {
+							if (object != NULL) {
+								((JSON*) (json_indicator->json))->push(object);
+							}
+						}
+
+					}
+				} else if (localChar == COLON) {
+					if (i > last_COMMA_index) {
+						object_indicator = new JSONIndicator(); //get from pool//to do
+						object_indicator->head = last_COMMA_index;
+						object_indicator->tail = i;
+						object_indicator->quotes_count = json_indicator->quotes_count;
+						json_indicator->quotes_count = 0;
+
+						last_COMMA_index = i + 1;
+
+						JSObject* object = parseObject(string, object_indicator, true);
+						if (key_value_stack_top < key_value_stack_size) {
+							if (object != NULL) {
+								key_value_indicators[key_value_stack_top] = new KeyValueIndicator();
+								key_value_indicators[key_value_stack_top]->key_value = (JSKeyValue *) object;
+								key_value_indicators[key_value_stack_top]->json_indicators_stack_top = json_indicators_stack_top;
+								key_value_indicators[key_value_stack_top]->key_value->value = NULL;
+								((JSON*) (json_indicator->json))->push(object);
+								key_value_stack_top++;
+							} else {
+								//report error,key cannot be NULL
+							}
+						} else {
+							//report error;
+						}
+					}
+				} else if (localChar == RIGHTBRACKET) {
+
+					object_indicator = new JSONIndicator(); //get from pool//to do
+					object_indicator->head = last_COMMA_index;
+					object_indicator->tail = i;
+					object_indicator->quotes_count = json_indicator->quotes_count;
+					json_indicator->quotes_count = 0;
+
+					JSObject* object = parseObject(string, object_indicator, false);
+					if (key_value_stack_top > 0 && key_value_indicators[key_value_stack_top - 1]->json_indicators_stack_top == json_indicators_stack_top) {
+						if (key_value_indicators[key_value_stack_top - 1]->key_value->value == NULL) {
+							if (object != NULL) {
+								key_value_indicators[key_value_stack_top - 1]->key_value->value = object;
+							} else {
+								//report error,value cannot be NULL
+							}
+						} else if (key_value_stack_top > 0) {
+							if (object != NULL) {
+								((JSON*) (json_indicator->json))->push(object);
+							}
+						}
+						key_value_stack_top--;
+					} else {
+						if (object != NULL) {
+							((JSON*) (json_indicator->json))->push(object);
+						}
+					}
+
+					last_COMMA_index = i + 1;
+
+					if (json_indicators_stack_top > 1) {
+						//resolve the last element spited by COMMA
+						json_indicator = json_indicators[json_indicators_stack_top - 1];
+						json_indicator->tail = i;
+
+						json_indicator = json_indicators[json_indicators_stack_top - 2];
+						//json_indicator->json = parseJSON(string, json_indicator);
+						json_indicators_stack_top--;
+					} else if (json_indicators_stack_top == 1) {
+						if (i + 1 == string_length) {
+							//resolve the last element spited by COMMA
+							int p = 10;
+							p++;
+							//break;
+							return result_json;
+						} else {
+							//report error
+						}
+					} else {
+						//report error
+					}
+				}
+			}
+		} else if (parsingStatus == 5) {
+			if ((localChar == SINGLEQUOTE && QuoteStatus == 13) || (localChar == DOUBLEQUOTES && QuoteStatus == 23)) {
+				parsingStatus = 6;
+			} else {
+				parsingStatus = 3;
+			}
+		} else if (parsingStatus == 6) {
+			if ((localChar == SINGLEQUOTE && QuoteStatus == 13) || (localChar == DOUBLEQUOTES && QuoteStatus == 23)) {
+				json_indicator->quotes_count = 3;
+				parsingStatus = 1;
+			} else {
+				parsingStatus = 3;
+			}
+		}
+
+	}
 
 	JSONIndicator* e[7];
 
@@ -724,16 +673,14 @@ JSON* parseJSON(char* string) {
 
 }
 
-JSObject* parseObject(char* string, JSONIndicator* object_indicator,
-		bool isJSKeyValue) {
+JSObject* parseObject(char* string, JSONIndicator* object_indicator, bool isJSKeyValue) {
 	JSObject* object;
 	int start = object_indicator->head;
 	int end = object_indicator->tail;
 	char localChar;
 	while (true) {
 		localChar = string[start];
-		if (localChar == TAB || localChar == COMMA || localChar == ENTER
-				|| localChar == BR || localChar == BLANK) {
+		if (localChar == TAB || localChar == COMMA || localChar == ENTER || localChar == BR || localChar == BLANK) {
 			start++;
 		} else {
 			break;
@@ -742,8 +689,7 @@ JSObject* parseObject(char* string, JSONIndicator* object_indicator,
 
 	while (true) {
 		localChar = string[end - 1];
-		if (localChar == TAB || localChar == COMMA || localChar == ENTER
-				|| localChar == BR || localChar == BLANK) {
+		if (localChar == TAB || localChar == COMMA || localChar == ENTER || localChar == BR || localChar == BLANK) {
 			end--;
 		} else {
 			break;
@@ -756,10 +702,8 @@ JSObject* parseObject(char* string, JSONIndicator* object_indicator,
 	int length = end - start - object_indicator->quotes_count * 2;
 	//std::cout << length << std::endl;
 	char *tartget_string = (char*) JSMalloc(length + 1);
-	for (int i = start + object_indicator->quotes_count;
-			i < end - object_indicator->quotes_count; i++) {
-		tartget_string[i - (start + object_indicator->quotes_count)] =
-				string[i];
+	for (int i = start + object_indicator->quotes_count; i < end - object_indicator->quotes_count; i++) {
+		tartget_string[i - (start + object_indicator->quotes_count)] = string[i];
 	}
 	tartget_string[length] = STREND;
 
@@ -775,8 +719,7 @@ JSObject* parseObject(char* string, JSONIndicator* object_indicator,
 			object = (JSObject *) js_string;
 		} else {
 			JSNumber * js_number = new JSNumber();
-			((JSObject*) js_number)->number = parseStringToNubmer(
-					tartget_string, length);
+			((JSObject*) js_number)->number = parseStringToNubmer(tartget_string, length);
 			object = (JSObject *) js_number;
 
 			//std::cout << "number: " << js_nubmer->number << std::endl;
@@ -797,15 +740,12 @@ JSObject* parseObject(char* string, JSONIndicator* object_indicator,
 
 void testJSONParse() {
 
-	char * json_str =
-			"[a:1,'''abc''',123,[1,2,[a:1,b:[123,[1,12],456],123],'a':2,'b:3':\"123456\"],'''a''', '''b''']";
-	char * json_str1 =
-			"[123,[1,12,13,[123,[1,12],456],14,15,16,17],456,789,101112]";
+	char * json_str = "[a:1,'''abc''',123,[1,2,[a:1,b:[123,[1,12],456],123],'a':2,'b:3':\"123456\"],'''a''', '''b''']";
+	char * json_str1 = "[123,[1,12,13,[123,[1,12],456],14,15,16,17],456,789,101112]";
 	char * json_str2 = "[123,[1,'''abc'''],456,\"def\",'''b''','''abc''']";
 	char * json_str3 = "[123,[1,'''abc'''],\"a\":\"\"\"456\"\"\",\"def\"]";
 	char * json_str4 = "[123,567:[012,456,'123123123'],567]";
-	char * json_str5 =
-			"[123,567:[012,[\"hello\"],456,'''''',123:[123,'123123'],123],567]";
+	char * json_str5 = "[123,567:[012,[\"hello\"],456,'''''',123:[123,'123123'],123],567]";
 
 	JSON* json = parseJSON(json_str5);
 

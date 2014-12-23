@@ -330,7 +330,7 @@ void test2() {
 //	openHttp->openSend((char *) ("192.168.1.7"), 8091, (char *) buffer, 1024 * 3, 0, NULL, NULL);
 //}
 
-void CallBack(int id, int type, const signed char * buffer, const signed char * etag, int param) {
+void CallBack(int id, int type, const signed char * responseInfo, int param) {
 	OpenHttp * openHttp = OpenHttp::getInstance();
 	if (openHttp != NULL) {
 		JNIEnv * env = NULL;
@@ -344,15 +344,15 @@ void CallBack(int id, int type, const signed char * buffer, const signed char * 
 		if (env == NULL) {
 			return;
 		}
-		int buffer_length = strlen((char *) buffer);
+		int buffer_length = strlen((char *) responseInfo);
 		jbyteArray body = env->NewByteArray(buffer_length);
-		env->SetByteArrayRegion(body, 0, buffer_length, buffer);
+		env->SetByteArrayRegion(body, 0, buffer_length, responseInfo);
 
-		int etag_length = strlen((char *) etag);
-		jbyteArray bodyetag = env->NewByteArray(etag_length);
-		env->SetByteArrayRegion(bodyetag, 0, etag_length, etag);
+//		int etag_length = strlen((char *) etag);
+//		jbyteArray bodyetag = env->NewByteArray(etag_length);
+//		env->SetByteArrayRegion(bodyetag, 0, etag_length, etag);
 
-		env->CallVoidMethod(openHttp->callback_object, openHttp->callback_method, type, body, bodyetag, id, param);
+		env->CallVoidMethod(openHttp->callback_object, openHttp->callback_method, type, body, id, param);
 		if (openHttp->callback_jvm->DetachCurrentThread() != JNI_OK) {
 			Log((char *) "FFAILED");
 		}
@@ -365,7 +365,7 @@ _jmethodID * GetClassMethodID(JNIEnv* env) {
 		return NULL;
 	}
 
-	_jmethodID * jcallback = env->GetMethodID(clazz, "callback", "(I[B[BIF)V");
+	_jmethodID * jcallback = env->GetMethodID(clazz, "callback", "(I[BIF)V");
 	if (jcallback == NULL) {
 		Log((char*) "[GetClassMethod()]Failed to find method callback");
 		return NULL;

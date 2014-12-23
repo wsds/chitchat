@@ -58,11 +58,9 @@ public:
 	int id;
 	int socketFD;
 
-
 	epoll_event * event;
 
 	bool keep_alive = false;
-
 
 	int sendDataLength = 0;
 	int sentLength = 0;
@@ -98,6 +96,8 @@ public:
 	char * receiveDataBuffer;
 
 	float receive_percent = 0;
+
+	JSON * receiveHeaders;
 
 	int partId;
 
@@ -198,7 +198,7 @@ public:
 	void epollLooper(int epollFD);
 };
 extern "C" {
-extern void CallBack(int id, int type, const signed char * buffer, const signed char * etag, int partId);
+extern void CallBack(int id, int type, const signed char * responseInfo, int partId);
 }
 #endif /* OPENHTTP_H */
 
