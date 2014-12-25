@@ -49,47 +49,22 @@ bool OpenHttp::initialize() {
 	return true;
 }
 
-int OpenHttp::openSend(char * ip, int remotePort, char * buffer, int length, int partId) {
+int OpenHttp::openSend(char * ip, int remotePort, char * buffer, int length, int id) {
 
 	HttpEntity * httpEntity = this->getNewHttpEntity();
 	httpEntity->ip = (const char *) ip;
 	httpEntity->remotePort = remotePort;
 	httpEntity->sendData = buffer;
 	httpEntity->sendDataLength = length;
-	httpEntity->partId = partId;
+	httpEntity->id = id;
+	httpEntity->type = 0;
 
 	this->openSend(httpEntity);
 
 //TO DO reuse the httpEntity
 	return 1;
 }
-int OpenHttp::openDownload(char * ip, int remotePort, char * body, char * path, int id, int length) {
 
-	Log((char*) "openDownload");
-
-	HttpEntity * httpEntity = this->getNewHttpEntity();
-	httpEntity->ip = (const char *) ip;
-	httpEntity->remotePort = remotePort;
-	httpEntity->sendData = body;
-	httpEntity->sendDataLength = length;
-	httpEntity->id = id;
-	httpEntity->path = path;
-	httpEntity->type = 0;
-
-	httpEntity->receiveFD = open(path, O_CREAT | O_RDWR, 777);
-
-	if (httpEntity->receiveFD < 0) {
-		Log((char *) ("Download File,Can not open !"));
-		Log((char *) "errno:", errno);
-		this->setState(httpEntity, httpEntity->status->Failed);
-		return 0;
-	}
-
-	ftruncate(httpEntity->receiveFD, 1);
-
-	this->openSend(httpEntity);
-	return 1;
-}
 int OpenHttp::openUpload(char * ip, int remotePort, char * head, char * path, int id, int head_length, int start, int length) {
 	Log((char *) "openUpload");
 	HttpEntity * httpEntity = this->getNewHttpEntity();
@@ -123,13 +98,43 @@ int OpenHttp::openUpload(char * ip, int remotePort, char * head, char * path, in
 
 	return 1;
 }
-int OpenHttp::openLongPull(char * ip, int remotePort, char * buffer, int length, int partId) {
+
+int OpenHttp::openDownload(char * ip, int remotePort, char * body, char * path, int id, int length) {
+
+	Log((char*) "openDownload");
+
+	HttpEntity * httpEntity = this->getNewHttpEntity();
+	httpEntity->ip = (const char *) ip;
+	httpEntity->remotePort = remotePort;
+	httpEntity->sendData = body;
+	httpEntity->sendDataLength = length;
+	httpEntity->id = id;
+	httpEntity->path = path;
+	httpEntity->type = 2;
+
+	httpEntity->receiveFD = open(path, O_CREAT | O_RDWR, 777);
+
+	if (httpEntity->receiveFD < 0) {
+		Log((char *) ("Download File,Can not open !"));
+		Log((char *) "errno:", errno);
+		this->setState(httpEntity, httpEntity->status->Failed);
+		return 0;
+	}
+
+	ftruncate(httpEntity->receiveFD, 1);
+
+	this->openSend(httpEntity);
+	return 1;
+}
+
+int OpenHttp::openLongPull(char * ip, int remotePort, char * buffer, int length, int id) {
 	HttpEntity * httpEntity = this->getNewHttpEntity();
 	httpEntity->ip = (const char *) ip;
 	httpEntity->remotePort = remotePort;
 	httpEntity->sendData = buffer;
 	httpEntity->sendDataLength = length;
-	httpEntity->partId = partId;
+	httpEntity->partId = id;
+	httpEntity->type = 3;
 
 	this->openSend(httpEntity);
 	return 0;
@@ -668,14 +673,16 @@ void OpenHttp::setState(HttpEntity * httpEntity, int state) {
 		this->closeSocketFd(httpEntity);
 
 		if (httpEntity->type != 1 && httpEntity->type != 2) {
-			char * data = (char *) (httpEntity->receiveBuffer + httpEntity->receiveHeadLength);
-			JSKeyValue * jskeyvalue = new JSKeyValue();
-			jskeyvalue->key = (char *) "result";
-			JSString * jsstring = new JSString(data);
-			jskeyvalue->value = jsstring;
-			httpEntity->receiveHeaders->push(jskeyvalue);
+//			char * data = (char *) (httpEntity->receiveBuffer + httpEntity->receiveHeadLength);
+//			JSKeyValue * jskeyvalue = new JSKeyValue();
+//			jskeyvalue->key = (char *) "result";
+//			JSString * jsstring = new JSString(data);
+//			jskeyvalue->value = jsstring;
+//			httpEntity->receiveHeaders->push(jskeyvalue);
+//			char * base64 = this->base64_encode(data, strlen(data));
+//			Log("base64:", base64);
 		}
-		const signed char * responseInfo = stringifyJSON(httpEntity->receiveHeaders);
+		const signed char * responseInfo = (const signed char *) stringifyJSON(httpEntity->receiveHeaders);
 		CallBack(httpEntity->id, httpEntity->status->state, responseInfo, httpEntity->partId);
 		this->onEndConnect(httpEntity);
 
@@ -794,50 +801,65 @@ void OpenHttp::resolveLine(char * start, int length, int lineNumber, HashTable *
 			isKeyValue = true;
 			strcopy(start, this->lineKey, i + 1);
 			if (strcmp(this->lineKey, this->ContentLengthMark) == 0) {
-				strcopy(start + i + 1, this->lineValue, length - i - 1);
-				int content_Length = parseStringToNubmer(this->lineValue, length - i - 1);
+				char * length_string = (char *) JSMalloc(50 * sizeof(char));
+				strcopy(start + i + 3, length_string, length - i - 4);
+				int content_Length = parseStringToNubmer(length_string, length - i - 1);
 				JSObject * jsObject = new JSObject();
 				jsObject->number = content_Length;
+				jsObject->char_string = length_string;
 				headMap->set(this->ContentLengthMark, jsObject);
 			} else if (strcmp(this->lineKey, this->ETagMark) == 0) {
 				char * etag_string = (char *) JSMalloc(50 * sizeof(char));
-				strcopy(start + i + 1, etag_string, length - i - 1);
+
+				strcopy(start + i + 4, etag_string, length - i - 6);
+//				Log("----------------------------");
+//				Log(etag_string);
+//				int i = 10/0;
+//				Log(i);
 				JSObject * jsObject = new JSObject();
 				jsObject->char_string = etag_string;
 				headMap->set(this->ETagMark, jsObject);
 			} else if (strcmp(this->lineKey, this->DateMark) == 0) {
-				char * date_string = (char *) JSMalloc(50 * sizeof(char));
-				strcopy(start + i + 1, date_string, length - i - 1);
-				JSObject * jsObject = new JSObject();
-				jsObject->char_string = date_string;
-				headMap->set(this->DateMark, jsObject);
-			} else if (strcmp(this->lineKey, this->ContentTypeMark) == 0) {
-				char * contentType_string = (char *) JSMalloc(50 * sizeof(char));
-				strcopy(start + i + 1, contentType_string, length - i - 1);
-				JSObject * jsObject = new JSObject();
-				jsObject->char_string = contentType_string;
-				headMap->set(this->ContentTypeMark, jsObject);
-			} else if (strcmp(this->lineKey, this->ServerMark) == 0) {
-				char * server_string = (char *) JSMalloc(50 * sizeof(char));
-				strcopy(start + i + 1, server_string, length - i - 1);
-				JSObject * jsObject = new JSObject();
-				jsObject->char_string = server_string;
-				headMap->set(this->ServerMark, jsObject);
+//				char * date_string = (char *) JSMalloc(50 * sizeof(char));
+//				strcopy(start + i + 3, date_string, length - i - 4);
+//				JSObject * jsObject = new JSObject();
+//				jsObject->char_string = date_string;
+//				headMap->set(this->DateMark, jsObject);
+			} //else if (strcmp(this->lineKey, this->ContentTypeMark) == 0) {
+//				char * contentType_string = (char *) JSMalloc(50 * sizeof(char));
+//				strcopy(start + i + 1, contentType_string, length - i - 1);
+//				JSObject * jsObject = new JSObject();
+//				jsObject->char_string = contentType_string;
+//				headMap->set(this->ContentTypeMark, jsObject);
+//			}
+			else if (strcmp(this->lineKey, this->ServerMark) == 0) {
+//				char * server_string = (char *) JSMalloc(50 * sizeof(char));
+//				strcopy(start + i + 3, server_string, length - i - 4);
+//				JSObject * jsObject = new JSObject();
+//				jsObject->char_string = server_string;
+//				headMap->set(this->ServerMark, jsObject);
 			} else if (strcmp(this->lineKey, this->ConnectionMark) == 0) {
-				char * connection_string = (char *) JSMalloc(50 * sizeof(char));
-				strcopy(start + i + 1, connection_string, length - i - 1);
-				JSObject * jsObject = new JSObject();
-				jsObject->char_string = connection_string;
-				headMap->set(this->ConnectionMark, jsObject);
+//				char * connection_string = (char *) JSMalloc(50 * sizeof(char));
+//				strcopy(start + i + 3, connection_string, length - i - 4);
+//				JSObject * jsObject = new JSObject();
+//				jsObject->char_string = connection_string;
+//				headMap->set(this->ConnectionMark, jsObject);
 			}
 		}
 	}
 	if (isKeyValue == false) {
 		strcopy(start, this->lineKey, 4);
-		if (strcmp(this->lineKey, this->HttpMark) == 0) {
+		if (strcmp(this->lineKey, this->HttpMark) == 0) { // Format : HTTP/1.1 404 Not Found    Status Code
+			char * server_string = (char *) JSMalloc(50 * sizeof(char));
+			strcopy(start + 9, server_string, 3);
+
 			JSObject * jsObject = new JSObject();
 			jsObject->number = 1;
 			headMap->set(this->HttpMark, jsObject);
+
+			JSObject * char_jsObject = new JSObject();
+			char_jsObject->char_string = server_string;
+			headMap->set(this->StatusCode, char_jsObject);
 		}
 	}
 }
@@ -849,6 +871,18 @@ bool OpenHttp::setReceiceHead(HttpEntity * httpEntity, HashTable * headMap) {
 		return false;
 	}
 
+	jsObject = headMap->get(this->StatusCode);
+	if (jsObject == NULL) {
+		Log((char *) "StatusCode");
+		return false;
+	} else {
+		JSKeyValue * jsKeyValue = new JSKeyValue();
+		jsKeyValue->key = this->StatusCode;
+		JSString * jsString = new JSString(jsObject->char_string);
+		jsKeyValue->value = jsString;
+		httpEntity->receiveHeaders->push(jsKeyValue);
+	}
+
 	jsObject = headMap->get(this->ContentLengthMark);
 	if (jsObject == NULL) {
 		Log((char *) "ContentLengthMark");
@@ -856,8 +890,8 @@ bool OpenHttp::setReceiceHead(HttpEntity * httpEntity, HashTable * headMap) {
 	} else {
 		httpEntity->receiveContentLength = jsObject->number;
 		JSKeyValue * jsKeyValue = new JSKeyValue();
-		jsKeyValue->key = ContentLengthMark;
-		JSNumber * jsNumber = new JSNumber(jsObject->number);
+		jsKeyValue->key = this->ContentLengthMark;
+		JSString * jsNumber = new JSString(jsObject->char_string);
 		jsKeyValue->value = jsNumber;
 		httpEntity->receiveHeaders->push(jsKeyValue);
 	}
@@ -873,7 +907,7 @@ bool OpenHttp::setReceiceHead(HttpEntity * httpEntity, HashTable * headMap) {
 	} else {
 		httpEntity->receivETag = jsObject->char_string;
 		JSKeyValue * jsKeyValue = new JSKeyValue();
-		jsKeyValue->key = ETagMark;
+		jsKeyValue->key = this->ETagMark;
 		JSString * jsString = new JSString(jsObject->char_string);
 		jsKeyValue->value = jsString;
 		httpEntity->receiveHeaders->push(jsKeyValue);
@@ -882,7 +916,7 @@ bool OpenHttp::setReceiceHead(HttpEntity * httpEntity, HashTable * headMap) {
 	if (jsObject == NULL) {
 	} else {
 		JSKeyValue * jsKeyValue = new JSKeyValue();
-		jsKeyValue->key = DateMark;
+		jsKeyValue->key = this->DateMark;
 		JSString * jsString = new JSString(jsObject->char_string);
 		jsKeyValue->value = jsString;
 		httpEntity->receiveHeaders->push(jsKeyValue);
@@ -891,7 +925,7 @@ bool OpenHttp::setReceiceHead(HttpEntity * httpEntity, HashTable * headMap) {
 	if (jsObject == NULL) {
 	} else {
 		JSKeyValue * jsKeyValue = new JSKeyValue();
-		jsKeyValue->key = ContentTypeMark;
+		jsKeyValue->key = this->ContentTypeMark;
 		JSString * jsString = new JSString(jsObject->char_string);
 		jsKeyValue->value = jsString;
 		httpEntity->receiveHeaders->push(jsKeyValue);
@@ -900,7 +934,7 @@ bool OpenHttp::setReceiceHead(HttpEntity * httpEntity, HashTable * headMap) {
 	if (jsObject == NULL) {
 	} else {
 		JSKeyValue * jsKeyValue = new JSKeyValue();
-		jsKeyValue->key = ServerMark;
+		jsKeyValue->key = this->ServerMark;
 		JSString * jsString = new JSString(jsObject->char_string);
 		jsKeyValue->value = jsString;
 		httpEntity->receiveHeaders->push(jsKeyValue);
@@ -909,7 +943,7 @@ bool OpenHttp::setReceiceHead(HttpEntity * httpEntity, HashTable * headMap) {
 	if (jsObject == NULL) {
 	} else {
 		JSKeyValue * jsKeyValue = new JSKeyValue();
-		jsKeyValue->key = ConnectionMark;
+		jsKeyValue->key = this->ConnectionMark;
 		JSString * jsString = new JSString(jsObject->char_string);
 		jsKeyValue->value = jsString;
 		httpEntity->receiveHeaders->push(jsKeyValue);
@@ -924,3 +958,57 @@ long OpenHttp::getCurrentMillisecond() {
 	return millisecond;
 }
 
+char * OpenHttp::base64_encode(const char* data, int data_len) {
+	int prepare = 0;
+	int ret_len;
+	int temp = 0;
+	char *ret = NULL;
+	char *f = NULL;
+	int tmp = 0;
+	char changed[4];
+	int i = 0;
+	ret_len = data_len / 3;
+	temp = data_len % 3;
+	if (temp > 0) {
+		ret_len += 1;
+	}
+	ret_len = ret_len * 4 + 1;
+	ret = (char *) malloc(ret_len);
+
+	if (ret == NULL) {
+//		printf("No enough memory.\n");
+		Log((char *) "No enough memory.\n");
+		exit(0);
+	}
+	memset(ret, 0, ret_len);
+	f = ret;
+	while (tmp < data_len) {
+		temp = 0;
+		prepare = 0;
+		memset(changed, '\0', 4);
+		while (temp < 3) {
+			//printf("tmp = %d\n", tmp);
+			if (tmp >= data_len) {
+				break;
+			}
+			prepare = ((prepare << 8) | (data[tmp] & 0xFF));
+			tmp++;
+			temp++;
+		}
+		prepare = (prepare << ((3 - temp) * 8));
+		//printf("before for : temp = %d, prepare = %d\n", temp, prepare);
+		for (i = 0; i < 4; i++) {
+			if (temp < i) {
+				changed[i] = 0x40;
+			} else {
+				changed[i] = (prepare >> ((3 - i) * 6)) & 0x3F;
+			}
+			*f = this->base[changed[i]];
+			//printf("%.2X", changed[i]);
+			f++;
+		}
+	}
+	*f = '\0';
+
+	return ret;
+}

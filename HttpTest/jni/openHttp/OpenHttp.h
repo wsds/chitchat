@@ -12,6 +12,7 @@
 #include <jni.h>
 
 #include <sys/socket.h>
+#include <string.h>
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -120,6 +121,8 @@ public:
 	_jobject * callback_object;
 	_jmethodID * callback_method;
 
+	const char base[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
 	Queue * portPool;
 
 	int startPortNumber = 9060;
@@ -133,6 +136,7 @@ public:
 	bool is_initialized = false;
 
 	char * HttpMark = (char *) ("HTTP");
+	char * StatusCode = (char *) ("StatusCode");
 	char * ContentLengthMark = (char *) ("Content-Length");
 	char * HeadLengthMark = (char *) ("Head-Length");
 	char * ETagMark = (char *) ("ETag");
@@ -147,7 +151,7 @@ public:
 	bool initialize();
 	bool freeHttpEntity(HttpEntity * httpEntity);
 
-	int openSend(char * ip, int remotePort, char * buffer, int length, int partId);
+	int openSend(char * ip, int remotePort, char * buffer, int length, int id);
 	int openDownload(char * ip, int remotePort, char * body, char * path, int id, int length);
 	int openUpload(char * ip, int remotePort, char * head, char * path, int id, int head_length, int start, int length);
 	int openLongPull(char * ip, int remotePort, char * buffer, int length, int partId);
@@ -182,6 +186,8 @@ public:
 	timeval * iTimeval;
 	long start_time;
 	long getCurrentMillisecond();
+
+	char * base64_encode(const char* data, int data_len);
 
 	tcp_info * i_tcp_info;
 	int tcp_info_length;

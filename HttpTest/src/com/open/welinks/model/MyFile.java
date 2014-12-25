@@ -29,7 +29,7 @@ public class MyFile {
 	public float progress = 0;// 0~100
 
 	public void onProgress() {
-
+		
 	}
 
 	public String path = "";
@@ -61,8 +61,8 @@ public class MyFile {
 	
 
 	public class Part {
-		public int partNumber;
-		public String eTag;
+		public int partNumber = 0;
+		public String eTag = "";
 
 		public int PART_DEFAULT = 0x10;
 		public int PART_INIT = 0x11;
@@ -73,8 +73,6 @@ public class MyFile {
 		public int status = PART_DEFAULT;
 
 		public Part() {
-			this.partNumber = 0;
-			this.eTag = "";
 			status = PART_DEFAULT;
 		}
 

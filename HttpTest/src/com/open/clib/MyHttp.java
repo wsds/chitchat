@@ -3,8 +3,6 @@ package com.open.clib;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import android.util.Log;
-
 import com.open.lib.MyLog;
 import com.open.welinks.model.MyFile;
 
@@ -104,6 +102,6 @@ public class MyHttp {
 			}
 			this.header += temp;
 		}
-		Log.e("MyHttp", this.header);
+		log.e(this.header);
 	}
 }

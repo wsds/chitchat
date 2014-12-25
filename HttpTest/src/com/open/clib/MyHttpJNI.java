@@ -4,6 +4,8 @@ import java.util.HashMap;
 
 import android.annotation.SuppressLint;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.open.lib.MyLog;
 import com.open.welinks.model.MyLinkedListQueue;
 
@@ -11,6 +13,12 @@ public class MyHttpJNI {
 
 	public String tag = "MyHttpJNI:>>>";
 	public MyLog log = new MyLog(tag, true);
+
+	public MyHttpHandler myHttpHandler = MyHttpHandler.getInstance();
+
+	public MyLinkedListQueue<MyCallBack> myCallBackQueue;
+
+	public CallBackRunnable callBackRunnable;
 
 	public static MyHttpJNI instance;
 
@@ -41,7 +49,6 @@ public class MyHttpJNI {
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
-
 	}
 
 	HashMap<Integer, MyHttp> myHttpPool;
@@ -58,14 +65,13 @@ public class MyHttpJNI {
 			byte ip[] = myHttp.IP.getBytes();
 			byte path[] = myHttp.myFile.uploadPath.getBytes();
 			int length = openUpload(ip, myHttp.port, header, path, myHttp.start, myHttp.length, globalID);
-
+			log.e(length + "");
 		} else if (myHttp.type == 2) {
 
 		} else if (myHttp.type == 3) {
 
 		}
 		globalID++;
-
 	}
 
 	public class Type {
@@ -75,8 +81,6 @@ public class MyHttpJNI {
 	}
 
 	public Type type = new Type();
-
-	MyHttpHandler myHttpHandler = MyHttpHandler.getInstance();
 
 	class CallBackRunnable implements Runnable {
 
@@ -103,11 +107,6 @@ public class MyHttpJNI {
 						log.e("Sent");
 					} else if (myCallBack.type == type.Receiving) {
 						log.e("Receiving");
-						// String result = new String(myCallBack.data);
-						// MyHttp myHttp = myHttpPool.get(myCallBack.id);
-						// if (myHttp != null && result != null) {
-						// myHttp.responseHandler.onSuccess(result);
-						// }
 					} else if (myCallBack.type == type.Received) {
 						myHttp.responseHandler.onSuccess(myCallBack.result, (int) myCallBack.param);
 						log.e("Received");
@@ -130,10 +129,6 @@ public class MyHttpJNI {
 		public float param = 0;
 	}
 
-	public MyLinkedListQueue<MyCallBack> myCallBackQueue;
-
-	CallBackRunnable callBackRunnable;
-
 	public void callback(int type, byte data[], int id, float param) {
 		MyCallBack myCallBack = new MyCallBack();
 		myCallBack.type = type;
@@ -155,6 +150,10 @@ public class MyHttpJNI {
 	public native int openDownload(byte ip[], int port, byte body[], byte path[], int id);
 
 	public native int openUpload(byte ip[], int port, byte head[], byte path[], int start, int length, int id);
+
+	public native int openSend(byte ip[], int port, byte body[], int id);
+
+	public native int openLongPull(byte ip[], int port, byte body[], int id);
 
 	public native float updateStates(int id);
 

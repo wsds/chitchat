@@ -27,8 +27,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 import org.xmlpull.v1.XmlSerializer;
 
-import android.util.TypedValue;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.lidroid.xutils.HttpUtils;
@@ -106,7 +104,7 @@ public class MyHttpHandler {
 
 	public void test() {
 		try {
-			File file = new File("/storage/sdcard0/welinks/test0023.png");
+			File file = new File("/storage/sdcard1/welinks/test11.jpg");
 			FileInputStream fileInputStream = new FileInputStream(file);
 			byte[] bytes = StreamParser.parseToByteArray(fileInputStream);
 			String head = "PUT /api2/bug/send? HTTP/1.1\r\nHost: 192.168.1.11\r\nConnection: keep-alive\r\nContent-Length: " + bytes.length + "\r\n\r\n";
@@ -116,6 +114,18 @@ public class MyHttpHandler {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void testOpenSend() {
+		// MyHttp myHttp = new MyHttp();
+		// myHttp.IP = "112.126.71.180";
+		// myHttp.port = 80;
+		// myHttp.url = "aa.html";
+		// myHttp.send();
+		MyHttpJNI myHttpJNI = MyHttpJNI.getInstance();
+		String ip = "112.126.71.180";
+		String head = "GET /aa.html HTTP/1.1\r\nHost: 112.126.71.180\r\nConnection: keep-alive\r\nContent-Length: " + 0 + "\r\n\r\n";
+		myHttpJNI.openSend(ip.getBytes(), 80, head.getBytes(), myHttpJNI.globalID);
 	}
 
 	public void testDownload() {
@@ -167,7 +177,7 @@ public class MyHttpHandler {
 		MyFile myFile = new MyFile();
 
 		myFile.Oss_Directory = "";
-		myFile.fileName = "song.jpg";
+		myFile.fileName = "test11.jpg";
 
 		initiateUpLoad(myFile);
 	}
@@ -263,10 +273,10 @@ public class MyHttpHandler {
 
 	int partSuccessCount = 0;
 	int partCount = 0;
-	String fileName = "test0024.png";
+	String fileName = "test11.jpg";
 
 	public void startUpload(MyFile myFile) {
-		myFile.uploadPath = "/storage/sdcard0/song.jpg";
+		myFile.uploadPath = "/storage/sdcard1/welinks/test11.jpg";
 		File file = new File(myFile.uploadPath);
 		log.e("File::::" + file.exists());
 		long fileLength = file.length();
@@ -372,21 +382,28 @@ public class MyHttpHandler {
 		@Override
 		public void onSuccess(String data, int partId) {
 			log.e("partId:" + partID + ",   data:" + data);
+			data = data.replace("[", "{");
+			data = data.replace("]", "}");
+			// log.e(data);
 			Gson gson = new Gson();
 			HashMap<String, String> responseInfo = gson.fromJson(data, new TypeToken<HashMap<String, String>>() {
 			}.getType());
+			String statusCode = responseInfo.get("StatusCode");
+			if (!"200".equals(statusCode)) {
+				return;
+			}
 			log.e(responseInfo.get("ETag") + "-____----------------------------------");
-			// Part part = myFile.new Part();
-			// part.partNumber = partID;
+			Part part = myFile.new Part();
+			part.partNumber = partID;
 			// String eTag = data;
 			// eTag = eTag.substring(3);
 			// eTag = eTag.substring(0, eTag.length() - 2);
-			// part.eTag = eTag;
-			// myFile.parts.add(part);
-			//
-			// myFile.partSuccessCount++;
-			// part.status = part.PART_SUCCESS;
-			// log.e("SuccessCount:" + myFile.partSuccessCount);
+			part.eTag = responseInfo.get("ETag");
+			myFile.parts.add(part);
+
+			myFile.partSuccessCount++;
+			part.status = part.PART_SUCCESS;
+			log.e("SuccessCount:" + myFile.partSuccessCount);
 			if (myFile.partSuccessCount == myFile.partCount) {
 				completeFile(myFile);
 			}

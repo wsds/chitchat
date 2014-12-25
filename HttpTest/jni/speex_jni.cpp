@@ -178,6 +178,43 @@ extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_openUpload(JNIEnv *env, j
 	return (jint) 1;
 }
 
+extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_openSend(JNIEnv *env, jobject obj, jbyteArray ip, jint port, jbyteArray body, jint id) {
+
+	int body_length = env->GetArrayLength(body);
+	signed char * body_buffer = (signed char*) malloc(body_length);
+	env->GetByteArrayRegion(body, 0, body_length, body_buffer);
+	body_buffer[body_length] = 0;
+
+	int ip_length = env->GetArrayLength(ip);
+	signed char * ip_buffer = (signed char*) malloc(ip_length + 1 * sizeof(char));
+	env->GetByteArrayRegion(ip, 0, ip_length, ip_buffer);
+	ip_buffer[ip_length] = 0;
+
+	OpenHttp * openHttp = OpenHttp::getInstance();
+	openHttp->initialize();
+	openHttp->openSend((char *) ip_buffer, port, (char *) body_buffer, body_length, (int) id);
+
+	return (jint) 1;
+}
+extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_openLongPull(JNIEnv *env, jobject obj, jbyteArray ip, jint port, jbyteArray body, jint id) {
+
+	int body_length = env->GetArrayLength(body);
+	signed char * body_buffer = (signed char*) malloc(body_length);
+	env->GetByteArrayRegion(body, 0, body_length, body_buffer);
+	body_buffer[body_length] = 0;
+
+	int ip_length = env->GetArrayLength(ip);
+	signed char * ip_buffer = (signed char*) malloc(ip_length + 1 * sizeof(char));
+	env->GetByteArrayRegion(ip, 0, ip_length, ip_buffer);
+	ip_buffer[ip_length] = 0;
+
+	OpenHttp * openHttp = OpenHttp::getInstance();
+	openHttp->initialize();
+	openHttp->openLongPull((char *) ip_buffer, port, (char *) body_buffer, body_length, (int) id);
+
+	return (jint) 1;
+}
+
 extern "C" JNIEXPORT jfloat Java_com_open_clib_MyHttpJNI_updateStates(JNIEnv *env, jobject obj, jint id) {
 
 	OpenHttp * openHttp = OpenHttp::getInstance();
