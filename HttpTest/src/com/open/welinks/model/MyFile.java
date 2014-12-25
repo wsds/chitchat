@@ -29,7 +29,7 @@ public class MyFile {
 	public float progress = 0;// 0~100
 
 	public void onProgress() {
-		
+
 	}
 
 	public String path = "";
@@ -58,16 +58,15 @@ public class MyFile {
 	public int partSuccessCount = 0;
 	public int partCount = 0;
 	public List<Part> parts = new ArrayList<Part>();
-	
 
 	public class Part {
 		public int partNumber = 0;
 		public String eTag = "";
 
 		public int PART_DEFAULT = 0x10;
-		public int PART_INIT = 0x11;
+		public int PART_INIT = 0x11;// use
 		public int PART_LOADING = 0x12;
-		public int PART_SUCCESS = 0x13;
+		public int PART_SUCCESS = 0x13;// use
 		public int PART_FAILED = 0x14;
 
 		public int status = PART_DEFAULT;

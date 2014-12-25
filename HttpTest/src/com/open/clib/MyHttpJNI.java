@@ -4,8 +4,6 @@ import java.util.HashMap;
 
 import android.annotation.SuppressLint;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.open.lib.MyLog;
 import com.open.welinks.model.MyLinkedListQueue;
 
@@ -61,10 +59,11 @@ public class MyHttpJNI {
 
 		} else if (myHttp.type == 1) {
 
-			byte header[] = myHttp.header.getBytes();
+			byte header[] = myHttp.requestHeader.getBytes();
 			byte ip[] = myHttp.IP.getBytes();
 			byte path[] = myHttp.myFile.uploadPath.getBytes();
-			int length = openUpload(ip, myHttp.port, header, path, myHttp.start, myHttp.length, globalID);
+			myHttp.id = globalID;
+			int length = openUpload(ip, myHttp.port, header, path, myHttp.start, myHttp.length, myHttp.id);
 			log.e(length + "");
 		} else if (myHttp.type == 2) {
 
@@ -155,6 +154,8 @@ public class MyHttpJNI {
 
 	public native int openLongPull(byte ip[], int port, byte body[], int id);
 
-	public native float updateStates(int id);
+	public native float[] updateStates(int[] ids);
+
+	public native float updateState(int id);
 
 }

@@ -91,7 +91,6 @@ public class MyHttpHandler {
 		public static String GET = "GET";
 		public static String POST = "POST";
 		public static String PUT = "PUT";
-		public static String GETPUT = "GETPUT";// unuse
 	}
 
 	public Status status = new Status();
@@ -100,6 +99,16 @@ public class MyHttpHandler {
 	public class Status {
 		public int None = 0, InitUpload = 1, Uploading = 2, UploadComplete = 3, UploadFailed = 4;
 		public int state = None;
+	}
+
+	public void testUpdateStatus() {
+
+		int[] ids = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+		MyHttpJNI myHttpJNI = MyHttpJNI.getInstance();
+		float[] percent = myHttpJNI.updateStates(ids);
+		for (int t = 0; t < percent.length; t++) {
+			log.e(t + " : " + percent[t]);
+		}
 	}
 
 	public void test() {
@@ -140,7 +149,7 @@ public class MyHttpHandler {
 			@Override
 			public void run() {
 				while (true) {
-					float percent = myHttpJNI.updateStates(1001);
+					float percent = myHttpJNI.updateState(1001);
 					if (percent != 1.0) {
 						log.e("percent>>>>>>>>>:" + percent);
 					} else {
@@ -316,14 +325,14 @@ public class MyHttpHandler {
 		// "?partNumber=" + partID + "&uploadId=" + myFile.uploadId;
 
 		myHttp.url = OSS_HOST_URL + myFile.Oss_Directory + myFile.fileName;
-		myHttp.urlParams = new HashMap<String, String>();
-		myHttp.urlParams.put("partNumber", partID + "");
-		myHttp.urlParams.put("uploadId", myFile.uploadId + "");
-		myHttp.headerParams = new HashMap<String, String>();
-		myHttp.headerParams.put("OSSAccessKeyId", OSSACCESSKEYID);
-		myHttp.headerParams.put("Expires", expires + "");
-		myHttp.headerParams.put("Signature", signature);
-		myHttp.headerParams.put("Host", "images2.we-links.com");
+
+		myHttp.putUrlParam("partNumber", partID + "");
+		myHttp.putUrlParam("uploadId", myFile.uploadId + "");
+
+		myHttp.putHeaderParam("OSSAccessKeyId", OSSACCESSKEYID);
+		myHttp.putHeaderParam("Expires", expires + "");
+		myHttp.putHeaderParam("Signature", signature);
+		myHttp.putHeaderParam("Host", "images2.we-links.com");
 
 		myHttp.url = OSS_HOST_URL + myFile.Oss_Directory + myFile.fileName;
 
@@ -340,15 +349,17 @@ public class MyHttpHandler {
 
 			myHttp.headerParams.put("Content-Length", myHttp.length + "");
 
-			// Part part = myFile.new Part(partID);
-			// part.status = part.PART_INIT;
-			// if (!myFile.parts.contains(part)) {
-			// myFile.parts.add(part);
-			// }
+			Part part = myFile.new Part(partID);
+			part.status = part.PART_INIT;
+			if (!myFile.parts.contains(part)) {
+				myFile.parts.add(part);
+			} else {
+				part = myFile.parts.get(partID - 1);
+			}
 			UploadResponseHandler uploadResponseHandler = new UploadResponseHandler();
 			uploadResponseHandler.partID = partID;
 			uploadResponseHandler.myFile = myFile;
-			// uploadResponseHandler.part = part;
+			uploadResponseHandler.part = part;
 			myHttp.responseHandler = uploadResponseHandler;
 			myHttp.send();
 			// httpUtils.send(HttpMethod.PUT, url, params,
@@ -364,7 +375,7 @@ public class MyHttpHandler {
 		public int partID = 0;
 		public MyFile myFile;
 
-		// public Part part;
+		public Part part;
 
 		@Override
 		public void onStart() {
@@ -393,13 +404,13 @@ public class MyHttpHandler {
 				return;
 			}
 			log.e(responseInfo.get("ETag") + "-____----------------------------------");
-			Part part = myFile.new Part();
-			part.partNumber = partID;
+			// Part part = myFile.new Part();
+			// part.partNumber = partID;
 			// String eTag = data;
 			// eTag = eTag.substring(3);
 			// eTag = eTag.substring(0, eTag.length() - 2);
 			part.eTag = responseInfo.get("ETag");
-			myFile.parts.add(part);
+			// myFile.parts.add(part);
 
 			myFile.partSuccessCount++;
 			part.status = part.PART_SUCCESS;
@@ -528,21 +539,6 @@ public class MyHttpHandler {
 			int length = params.bytes.length;
 			head += (method + " " + url + " HTTP/1.1\r\n" + header + "Host: " + host + "\r\nUser-Agent: Mozilla/5.0 (Linux; U; Android 4.4.2; zh-cn; NX507J Build/KVT49L) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1\r\nAccept-Encoding: gzip\r\nConnection: keep-alive\r\n" + "Content-Length: " + length + "\r\n\r\n");
 			bytes = byteMerger(head.getBytes(), params.bytes);
-		} else if (method.equals(MyHttpMethod.GETPUT)) {
-			String data = "";
-			for (int i = 0; i < params.keys.size(); i++) {
-				String key = params.keys.get(i);
-				String value = params.keysMap.get(key);
-				if (i == 0) {
-					data += (key + "=" + value);
-				} else {
-					data += ("&" + key + "=" + value);
-				}
-			}
-			int length = params.bytes.length + data.length();
-			head += ("POST" + " " + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\nConnection: keep-alive\r\n" + "Content-Length: " + length + "\r\n\r\n");
-			head += data;
-			bytes = byteMerger(head.getBytes(), params.bytes);
 		}
 		return bytes;
 	}
@@ -569,15 +565,11 @@ public class MyHttpHandler {
 			xmlSerializer.startDocument("utf-8", true);
 			xmlSerializer.startTag(null, "CompleteMultipartUpload");
 			for (int i = 0; i < partCount; i++) {
-				Part part = null;
-				for (int j = 0; j < partCount; j++) {
-					Part scanPart = parts.get(j);
-					if (scanPart.partNumber == i + 1) {
-						part = scanPart;
-						break;
-					}
-				}
+				Part part = parts.get(i);
 				if (part == null) {
+					break;
+				}
+				if (part.status != part.PART_SUCCESS) {
 					break;
 				}
 				xmlSerializer.startTag(null, "Part");

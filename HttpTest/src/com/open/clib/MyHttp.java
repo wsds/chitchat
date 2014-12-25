@@ -17,13 +17,13 @@ public class MyHttp {
 	int type = 0;
 	MyHttpJNI myHttpJNI = MyHttpJNI.getInstance();
 
-	String id;
-	String method;
+	int id;
+	String method = "PUT";// GET POST PUT
 	String url;
 	String IP;
 	int port;
 
-	String header;
+	String requestHeader;
 	HashMap<String, String> urlParams;
 	HashMap<String, String> headerParams;
 	HashMap<String, String> bodyParams;
@@ -59,9 +59,8 @@ public class MyHttp {
 		bodyParams.put(key, value);
 	}
 
-	public void splicingRequestHeaders() {
-		method = "PUT";
-		this.header = method + " ";
+	void splicingRequestHeaders() {
+		this.requestHeader = method + " ";
 		String temp = this.url;
 		if (urlParams != null) {
 			for (Entry<String, String> entity : urlParams.entrySet()) {
@@ -73,8 +72,8 @@ public class MyHttp {
 					temp += "&" + key + "=" + value;
 				}
 			}
-			this.header += temp;
-			this.header += " HTTP/1.1\r\nConnection: keep-alive\r\n";
+			this.requestHeader += temp;
+			this.requestHeader += " HTTP/1.1\r\nConnection: keep-alive\r\n";
 		} else {
 			return;
 		}
@@ -86,8 +85,8 @@ public class MyHttp {
 				String value = entity.getValue();
 				temp += key + ":" + value + "\r\n";
 			}
-			this.header += temp;
-			this.header += "\r\n";
+			this.requestHeader += temp;
+			this.requestHeader += "\r\n";
 		}
 		if (bodyParams != null) {
 			temp = "";
@@ -100,8 +99,8 @@ public class MyHttp {
 					temp += "&" + key + "=" + value;
 				}
 			}
-			this.header += temp;
+			this.requestHeader += temp;
 		}
-		log.e(this.header);
+		log.e(this.requestHeader);
 	}
 }

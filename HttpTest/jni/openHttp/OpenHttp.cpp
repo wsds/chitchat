@@ -208,7 +208,7 @@ HttpEntity * OpenHttp::intializeHttpEntity(HttpEntity * httpEntity, JSObject * p
 	memset(httpEntity->localAddress, 0, sizeof(struct sockaddr_in));
 	httpEntity->localAddress->sin_family = AF_INET;
 	httpEntity->localAddress->sin_port = htons(httpEntity->localPort->number);
-	httpEntity->localAddress->sin_addr.s_addr = htonl(INADDR_ANY);
+	httpEntity->localAddress->sin_addr.s_addr = htonl(INADDR_ANY); //INADDR_LOOPBACK
 
 	setsockopt(httpEntity->socketFD, SOL_SOCKET, SO_REUSEADDR, &(this->isReUsedPort), sizeof(int));
 
@@ -283,6 +283,7 @@ int OpenHttp::startConnect(HttpEntity * httpEntity) {
 
 	int status = connect(httpEntity->socketFD, (sockaddr *) httpEntity->remoteAddress, sizeof(sockaddr_in));
 
+
 	if (status != 0) {
 		if (errno == EINPROGRESS) {
 			this->setState(httpEntity, httpEntity->status->Connecting);
@@ -327,7 +328,7 @@ void OpenHttp::sendPackeges(HttpEntity * httpEntity) {
 			break;
 		}
 		httpEntity->sentLength += sentPackegeLength;
-		buffer = buffer + this->PackegeSize;
+		buffer = buffer + size;
 		httpEntity->send_percent = (float) httpEntity->sentLength / (httpEntity->sendDataLength + httpEntity->sendFileLength);
 	}
 
@@ -360,7 +361,7 @@ void OpenHttp::sendPackeges(HttpEntity * httpEntity) {
 			break;
 		}
 		httpEntity->sentLength += sentPackegeLength;
-		buffer = buffer + this->PackegeSize;
+		buffer = buffer + size;
 		httpEntity->send_percent = (float) httpEntity->sentLength / (httpEntity->sendDataLength + httpEntity->sendFileLength);
 	}
 
@@ -370,47 +371,6 @@ void OpenHttp::sendPackeges(HttpEntity * httpEntity) {
 	}
 }
 
-//void OpenHttp::sendPackeges(HttpEntity * httpEntity) {
-//	Log((char*) "sendPackeges");
-//
-//	if (httpEntity->type == 1) {
-//		this->sendUploadPackeges(httpEntity);
-//		return;
-//	}
-//
-////	Log((char*) "sendDataLength", httpEntity->sendDataLength);
-////	Log((char*) "sendPackegesNum", httpEntity->sendPackegesNum);
-////	Log((char*) "sendLastPackegeSize", httpEntity->sendLastPackegeSize);
-//	if (httpEntity->sendPackegesNum <= 0 || httpEntity->sentLength >= httpEntity->sendDataLength) {
-//		if (httpEntity->sentLength >= httpEntity->sendDataLength) {
-//			this->setState(httpEntity, httpEntity->status->Waiting);
-//		}
-//		return;
-//	}
-//	this->setState(httpEntity, httpEntity->status->Sending);
-//	char * buffer = httpEntity->sendData + httpEntity->sentLength;
-//
-//	for (int i = httpEntity->sentLength / this->PackegeSize; i < httpEntity->sendPackegesNum - 1; i++) {
-//
-//		int sentPackegeLength = this->sendPackege(httpEntity, buffer, this->PackegeSize);
-//
-//		if (httpEntity->isSendBufferFull) {
-//			return;
-//		}
-//		httpEntity->sentLength += sentPackegeLength;
-//		buffer = buffer + this->PackegeSize;
-//	}
-//	if (httpEntity->sendLastPackegeSize != 0) {
-//		httpEntity->sentLength += this->sendPackege(httpEntity, buffer, httpEntity->sendLastPackegeSize);
-//	} else {
-//		httpEntity->sentLength += this->sendPackege(httpEntity, buffer, this->PackegeSize);
-//	}
-//	if (httpEntity->sentLength >= httpEntity->sendDataLength) {
-//		this->setState(httpEntity, httpEntity->status->Sent);
-//		Log((char *) ("发送完成"), httpEntity->sentLength);
-//	}
-//}
-
 int OpenHttp::sendPackege(HttpEntity * httpEntity, const void * buffer, int PackegeSize) {
 	Log((char*) "send one Packege");
 	int sentPackegeLength = send(httpEntity->socketFD, buffer, PackegeSize, 0);
@@ -418,7 +378,6 @@ int OpenHttp::sendPackege(HttpEntity * httpEntity, const void * buffer, int Pack
 		if (errno == EAGAIN) {
 			httpEntity->isSendBufferFull = true;
 			Log((char*) "缓冲区已满");
-
 		} else if (errno == ECONNRESET) {
 			// 对端重置,对方发送了RST
 			Log((char *) ("sendPackege errno == ECONNRESET"));
@@ -527,9 +486,11 @@ bool OpenHttp::checkReceive(HttpEntity * httpEntity, int receiveLength) {
 			}
 		} else {
 			if (receiveLength == 0) {
-				//TODO 超时处理
 				Log((char *) ("tcp 超时."));
 				Log((char *) "error:*zero*");
+				if (httpEntity->type == 3) {
+					//TODO TCP timeout
+				}
 			} else {
 				Log((char *) "error:", receiveLength);
 			}

@@ -39,7 +39,8 @@ public class AudioActivity extends Activity implements OnClickListener {
 		// myHttp.myHttpJNI.test(("this is java!").getBytes(),
 		// myHttp.myHttpJNI);
 		// myHttpHandler.testOpenUpload();
-		myHttpHandler.testOpenSend();
+		// myHttpHandler.testOpenSend();
+		// myHttpHandler.testUpdateStatus();
 	}
 
 	@Override

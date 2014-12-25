@@ -215,7 +215,36 @@ extern "C" JNIEXPORT jint Java_com_open_clib_MyHttpJNI_openLongPull(JNIEnv *env,
 	return (jint) 1;
 }
 
-extern "C" JNIEXPORT jfloat Java_com_open_clib_MyHttpJNI_updateStates(JNIEnv *env, jobject obj, jint id) {
+extern "C" JNIEXPORT jfloatArray Java_com_open_clib_MyHttpJNI_updateStates(JNIEnv *env, jobject obj, jintArray ids) {
+
+	OpenHttp * openHttp = OpenHttp::getInstance();
+
+	jsize idsLength = env->GetArrayLength(ids);
+
+	jfloatArray ret = env->NewFloatArray(idsLength);
+
+	float * percents = (float *) JSMalloc(idsLength * sizeof(float));
+
+	jint * body = env->GetIntArrayElements(ids, 0);
+	if (openHttp != NULL) {
+		for (int t = 0; t < idsLength; t++) {
+			jint id = body[t];
+			HttpEntity * httpEntity = (HttpEntity *) openHttp->httpEntitiesIdMap->get(id);
+			if (httpEntity != NULL) {
+				percents[t] = httpEntity->receive_percent;
+			} else {
+				percents[t] = 0;
+			}
+		}
+	} else {
+		return ret;
+	}
+	env->SetFloatArrayRegion(ret, 0, idsLength, percents);
+
+	return ret;
+}
+
+extern "C" JNIEXPORT jfloat Java_com_open_clib_MyHttpJNI_updateState(JNIEnv *env, jobject obj, jint id) {
 
 	OpenHttp * openHttp = OpenHttp::getInstance();
 
