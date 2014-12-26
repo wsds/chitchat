@@ -68,7 +68,11 @@ public class MyHttpJNI {
 		} else if (myHttp.type == 2) {
 
 		} else if (myHttp.type == 3) {
-
+			byte header[] = myHttp.requestHeader.getBytes();
+			byte ip[] = myHttp.IP.getBytes();
+			myHttp.id = globalID;
+			int result = openLongPull(ip, myHttp.port, header, myHttp.id);
+			log.e(result + "");
 		}
 		globalID++;
 	}

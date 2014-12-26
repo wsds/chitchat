@@ -11,13 +11,17 @@ public class MyHttp {
 	public static String tag = "MyHttp";
 	public MyLog log = new MyLog(tag, true);
 
+	MyHttpJNI myHttpJNI = MyHttpJNI.getInstance();
+
 	/*
 	 * 0 API||1 UPLOAD||2 DOWNLOAD||3 LONGPULL
 	 */
 	int type = 0;
-	MyHttpJNI myHttpJNI = MyHttpJNI.getInstance();
 
 	int id;
+	/**
+	 * GET POST PUT
+	 */
 	String method = "PUT";// GET POST PUT
 	String url;
 	String IP;
@@ -30,12 +34,39 @@ public class MyHttp {
 
 	MyResponseHandler responseHandler;
 	MyFile myFile;
-	int length = 0;
 	int start = 0;
+	int length = 0;
 
 	void send() {
-		this.splicingRequestHeaders();
-		myHttpJNI.send(this);
+		boolean flag = this.splicingRequestHeaders();
+		if (flag == true) {
+			myHttpJNI.send(this);
+		} else {
+			log.e("request params incomplete.");
+		}
+	}
+
+	void send(int type, String IP, int port, String method, String url) {
+		this.type = type;
+		this.IP = IP;
+		this.port = port;
+		this.method = method;
+		this.url = url;
+		send();
+	}
+
+	void send(int type, String IP, int port, String method, String url, MyResponseHandler responseHandler) {
+		this.responseHandler = responseHandler;
+		send(type, IP, port, method, url);
+	}
+
+	/**
+	 * upload part
+	 */
+	void send(int type, String IP, int port, String method, String url, int start, int length) {
+		this.start = start;
+		this.length = length;
+		send(type, IP, port, method, url);
 	}
 
 	public void putUrlParam(String key, String value) {
@@ -44,6 +75,10 @@ public class MyHttp {
 		}
 		urlParams.put(key, value);
 	}
+
+	// public void putUrlParam(String key, int value) {
+	// this.putUrlParam(key, value);
+	// }
 
 	public void putHeaderParam(String key, String value) {
 		if (headerParams == null) {
@@ -59,7 +94,7 @@ public class MyHttp {
 		bodyParams.put(key, value);
 	}
 
-	void splicingRequestHeaders() {
+	boolean splicingRequestHeaders() {
 		this.requestHeader = method + " ";
 		String temp = this.url;
 		if (urlParams != null) {
@@ -75,7 +110,7 @@ public class MyHttp {
 			this.requestHeader += temp;
 			this.requestHeader += " HTTP/1.1\r\nConnection: keep-alive\r\n";
 		} else {
-			return;
+			return false;
 		}
 
 		if (headerParams != null) {
@@ -102,5 +137,6 @@ public class MyHttp {
 			this.requestHeader += temp;
 		}
 		log.e(this.requestHeader);
+		return true;
 	}
 }

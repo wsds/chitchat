@@ -41,6 +41,7 @@ public class AudioActivity extends Activity implements OnClickListener {
 		// myHttpHandler.testOpenUpload();
 		// myHttpHandler.testOpenSend();
 		// myHttpHandler.testUpdateStatus();
+		// myHttpHandler.testOpenLongPull();
 	}
 
 	@Override

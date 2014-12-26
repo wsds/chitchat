@@ -125,12 +125,36 @@ public class MyHttpHandler {
 		}
 	}
 
+	public void testOpenLongPull() {
+		MyHttp myHttp = new MyHttp();
+		String IP = "112.126.71.180";
+		int port = 80;
+		String method = "GET";
+		String url = "/api2/session/event";
+		myHttp.putUrlParam("phone", "15210721344");
+		myHttp.putUrlParam("accessKey", "lejoying");
+		myHttp.putHeaderParam("Content-Length", "0");
+		myHttp.putHeaderParam("Host", "www.we-links.com");
+
+		TestOpenLongPull longPull = new TestOpenLongPull();
+
+		myHttp.send(3, IP, port, method, url, longPull);
+	}
+
+	class TestOpenLongPull extends MyResponseHandler {
+
+		@Override
+		public void onSuccess(String data, int param) {
+			log.e(data);
+		}
+
+		@Override
+		public void onFailure(int error, String message) {
+			log.e(message);
+		}
+	}
+
 	public void testOpenSend() {
-		// MyHttp myHttp = new MyHttp();
-		// myHttp.IP = "112.126.71.180";
-		// myHttp.port = 80;
-		// myHttp.url = "aa.html";
-		// myHttp.send();
 		MyHttpJNI myHttpJNI = MyHttpJNI.getInstance();
 		String ip = "112.126.71.180";
 		String head = "GET /aa.html HTTP/1.1\r\nHost: 112.126.71.180\r\nConnection: keep-alive\r\nContent-Length: " + 0 + "\r\n\r\n";
@@ -236,6 +260,7 @@ public class MyHttpHandler {
 	}
 
 	public class InitUpload extends ResponseHandler<String> {
+
 		MyFile myFile;
 
 		@Override
@@ -290,7 +315,7 @@ public class MyHttpHandler {
 		log.e("File::::" + file.exists());
 		long fileLength = file.length();
 		myFile.length = fileLength;
-		partSuccessCount = 0;
+		myFile.partSuccessCount = 0;
 		partCount = (int) Math.ceil((double) fileLength / (double) PartSize);
 		myFile.partCount = partCount;
 		log.e("partCount:" + partCount + ",   fileLength:" + fileLength);
@@ -323,7 +348,7 @@ public class MyHttpHandler {
 
 		// String url = OSS_HOST_URL + myFile.Oss_Directory + myFile.fileName +
 		// "?partNumber=" + partID + "&uploadId=" + myFile.uploadId;
-
+		myHttp.method = "PUT";
 		myHttp.url = OSS_HOST_URL + myFile.Oss_Directory + myFile.fileName;
 
 		myHttp.putUrlParam("partNumber", partID + "");
@@ -401,6 +426,7 @@ public class MyHttpHandler {
 			}.getType());
 			String statusCode = responseInfo.get("StatusCode");
 			if (!"200".equals(statusCode)) {
+				log.e("result:" + responseInfo.get("result"));
 				return;
 			}
 			log.e(responseInfo.get("ETag") + "-____----------------------------------");
@@ -422,8 +448,8 @@ public class MyHttpHandler {
 
 		@Override
 		public void onFailure(int error, String message) {
-			// part.status = part.PART_FAILED;
-			// uploadPart(myFile, partID);
+			part.status = part.PART_FAILED;
+			uploadPart(myFile, partID);
 			StackTraceElement ste = new Throwable().getStackTrace()[1];
 			log.e("Exception@UploadResponseHandler" + ste.getLineNumber());
 		};
@@ -459,6 +485,7 @@ public class MyHttpHandler {
 	}
 
 	public class CompleteUpload extends ResponseHandler<String> {
+
 		MyFile myFile;
 
 		@Override

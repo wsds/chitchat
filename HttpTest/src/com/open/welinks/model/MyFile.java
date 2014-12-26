@@ -29,7 +29,7 @@ public class MyFile {
 	public float progress = 0;// 0~100
 
 	public void onProgress() {
-
+		// task.onProgress();
 	}
 
 	public String path = "";
@@ -51,7 +51,7 @@ public class MyFile {
 	public int UPLOAD_TYPE_HEAD = 0x03;
 	public int UPLOAD_TYPE_BACKGROUND = 0x04;
 	public int uploadFileType;
-	public String Oss_Directory;
+	public String Oss_Directory = "";
 
 	public Task task;
 

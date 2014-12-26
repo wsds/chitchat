@@ -133,11 +133,11 @@ int OpenHttp::openLongPull(char * ip, int remotePort, char * buffer, int length,
 	httpEntity->remotePort = remotePort;
 	httpEntity->sendData = buffer;
 	httpEntity->sendDataLength = length;
-	httpEntity->partId = id;
+	httpEntity->id = id;
 	httpEntity->type = 3;
 
 	this->openSend(httpEntity);
-	return 0;
+	return 1;
 }
 
 void OpenHttp::openSend(HttpEntity * httpEntity) {
@@ -282,7 +282,6 @@ int OpenHttp::startConnect(HttpEntity * httpEntity) {
 	epoll_ctl(this->epollFD, EPOLL_CTL_ADD, httpEntity->socketFD, httpEntity->event);
 
 	int status = connect(httpEntity->socketFD, (sockaddr *) httpEntity->remoteAddress, sizeof(sockaddr_in));
-
 
 	if (status != 0) {
 		if (errno == EINPROGRESS) {
@@ -631,20 +630,22 @@ void OpenHttp::setState(HttpEntity * httpEntity, int state) {
 
 	} else if (httpEntity->status->state == httpEntity->status->Received) {
 		httpEntity->status->time_received = this->getCurrentMillisecond();
-		this->closeSocketFd(httpEntity);
 
 		if (httpEntity->type != 1 && httpEntity->type != 2) {
-//			char * data = (char *) (httpEntity->receiveBuffer + httpEntity->receiveHeadLength);
-//			JSKeyValue * jskeyvalue = new JSKeyValue();
-//			jskeyvalue->key = (char *) "result";
-//			JSString * jsstring = new JSString(data);
-//			jskeyvalue->value = jsstring;
-//			httpEntity->receiveHeaders->push(jskeyvalue);
+			char * data = (char *) (httpEntity->receiveBuffer + httpEntity->receiveHeadLength);
+			JSKeyValue * jskeyvalue = new JSKeyValue();
+			jskeyvalue->key = (char *) "result";
+			JSString * jsstring = new JSString(data);
+			jskeyvalue->value = jsstring;
+			httpEntity->receiveHeaders->push(jskeyvalue);
 //			char * base64 = this->base64_encode(data, strlen(data));
 //			Log("base64:", base64);
 		}
 		const signed char * responseInfo = (const signed char *) stringifyJSON(httpEntity->receiveHeaders);
 		CallBack(httpEntity->id, httpEntity->status->state, responseInfo, httpEntity->partId);
+		if (httpEntity->type != 3) {
+			this->closeSocketFd(httpEntity);
+		}
 		this->onEndConnect(httpEntity);
 
 	} else if (httpEntity->status->state == httpEntity->status->Failed) {
@@ -670,6 +671,8 @@ void OpenHttp::closeSocketFd(HttpEntity * httpEntity) {
 //	setsockopt(httpEntity->socketFD, SOL_SOCKET, SO_LINGER, (const char*) &m_sLinger, sizeof(linger));
 	//关闭socket的读写
 //	shutdown(httpEntity->socketFD, SHUT_RDWR);
+	free(httpEntity->receiveBuffer);
+	free(httpEntity->receiveDataBuffer);
 	free(httpEntity->sendData);
 	free(httpEntity->localAddress);
 	free(httpEntity->remoteAddress);
