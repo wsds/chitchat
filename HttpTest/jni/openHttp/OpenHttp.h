@@ -121,8 +121,6 @@ public:
 	_jobject * callback_object;
 	_jmethodID * callback_method;
 
-	const char base[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-
 	Queue * portPool;
 
 	int startPortNumber = 9060;
@@ -186,8 +184,6 @@ public:
 	timeval * iTimeval;
 	long start_time;
 	long getCurrentMillisecond();
-
-	char * base64_encode(const char* data, int data_len);
 
 	tcp_info * i_tcp_info;
 	int tcp_info_length;

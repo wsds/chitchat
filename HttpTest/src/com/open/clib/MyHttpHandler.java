@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +38,7 @@ import com.open.lib.MyLog;
 import com.open.lib.ResponseHandler;
 import com.open.welinks.model.MyFile;
 import com.open.welinks.model.MyFile.Part;
+import com.open.welinks.model.Task;
 import com.open.welinks.utils.Base64;
 import com.open.welinks.utils.StreamParser;
 
@@ -326,6 +328,120 @@ public class MyHttpHandler {
 		}
 	}
 
+	MyHttpJNI myHttpJNI = MyHttpJNI.getInstance();
+
+	public ArrayList<Task> myTaskList = new ArrayList<Task>();
+
+	public MyTaskRunnable myTaskRunnable = new MyTaskRunnable();
+
+	public int rate = 200;
+
+	ArrayList<Task> deleteTask = new ArrayList<Task>();
+
+	public void putTask(Task task) {
+		myTaskList.add(task);
+		if (!myTaskRunnable.isRunning) {
+			myTaskRunnable.isRunning = true;
+			new Thread(myTaskRunnable).start();
+		}
+	}
+
+	class MyTaskRunnable implements Runnable {
+
+		boolean isRunning = false;
+
+		@Override
+		public void run() {
+			while (isRunning) {
+				try {
+					if (myTaskList.size() == 0) {
+						isRunning = false;
+						break;
+					}
+					deleteTask.clear();
+					for (int x = 0; x < myTaskList.size(); x++) {
+						Task task = myTaskList.get(x);
+						float currentBytes = 0;
+						float totalBytes = 0;
+						for (int y = 0; y < task.myFileList.size(); y++) {
+							MyFile myFile = task.myFileList.get(y);
+							int size = myFile.parts.size();
+							int[] ids = new int[size];
+
+							for (int z = 0; z < size; z++) {
+								Part part = myFile.parts.get(z);
+								ids[z] = part.id;
+							}
+
+							float[] percents = myHttpJNI.updateStates(ids);
+
+							float currentUploadBytes = 0;
+							for (int z = 0; z < percents.length; z++) {
+								float percent = percents[z];
+								Part part = myFile.parts.get(z);
+								if (part.status == part.PART_LOADING) {
+									part.progress = percent;
+									currentUploadBytes += part.length * percent;
+								} else if (part.status == part.PART_SUCCESS) {
+									currentUploadBytes += part.length;
+								}
+								totalBytes += part.length;
+							}
+							float percent = currentUploadBytes / myFile.length;
+							myFile.progress = percent;
+							currentBytes += currentUploadBytes;
+						}
+						float percent = currentBytes / totalBytes;
+						if (task.progress != percent) {
+							task.progress = percent;
+							task.onProgress();
+						}
+						if (task.progress == 1) {
+							deleteTask.add(task);
+						}
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					log.e("Exception:@MyTaskRunnable" + e.toString());
+				}
+
+				try {
+					myTaskList.removeAll(deleteTask);
+					deleteTask.clear();
+					Thread.sleep(rate);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	public ArrayList<MyFile> myFileList = new ArrayList<MyFile>();
+
+	public MyFileRunnable myFileRunnable;
+
+	class MyFileRunnable implements Runnable {
+
+		@Override
+		public void run() {
+			while (true) {
+				try {
+					for (int i = 0; i < myFileList.size(); i++) {
+
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					log.e("Exception:@MyFileRunnable" + e.toString());
+				}
+				try {
+					Thread.sleep(rate);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
 	public int PartSize = 262144;
 
 	public void uploadPart(MyFile myFile, int partID) {
@@ -375,12 +491,12 @@ public class MyHttpHandler {
 			myHttp.headerParams.put("Content-Length", myHttp.length + "");
 
 			Part part = myFile.new Part(partID);
-			part.status = part.PART_INIT;
 			if (!myFile.parts.contains(part)) {
 				myFile.parts.add(part);
 			} else {
 				part = myFile.parts.get(partID - 1);
 			}
+			part.status = part.PART_LOADING;
 			UploadResponseHandler uploadResponseHandler = new UploadResponseHandler();
 			uploadResponseHandler.partID = partID;
 			uploadResponseHandler.myFile = myFile;
@@ -394,6 +510,8 @@ public class MyHttpHandler {
 			log.e("Exception@uploadPart" + ste.getLineNumber());
 		}
 	}
+
+	Gson gson = new Gson();
 
 	class UploadResponseHandler extends MyResponseHandler {
 
@@ -421,7 +539,6 @@ public class MyHttpHandler {
 			data = data.replace("[", "{");
 			data = data.replace("]", "}");
 			// log.e(data);
-			Gson gson = new Gson();
 			HashMap<String, String> responseInfo = gson.fromJson(data, new TypeToken<HashMap<String, String>>() {
 			}.getType());
 			String statusCode = responseInfo.get("StatusCode");

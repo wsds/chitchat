@@ -30,8 +30,6 @@ public class FileHandler {
 	public static FileHandler getInstance() {
 		if (fileHandlers == null) {
 			fileHandlers = new FileHandler();
-
-			log.e("FileHandler getInstance()》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》");
 		}
 		return fileHandlers;
 	}

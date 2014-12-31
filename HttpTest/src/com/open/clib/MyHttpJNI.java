@@ -12,7 +12,7 @@ public class MyHttpJNI {
 	public String tag = "MyHttpJNI:>>>";
 	public MyLog log = new MyLog(tag, true);
 
-	public MyHttpHandler myHttpHandler = MyHttpHandler.getInstance();
+	// public MyHttpHandler myHttpHandler = MyHttpHandler.getInstance();
 
 	public MyLinkedListQueue<MyCallBack> myCallBackQueue;
 

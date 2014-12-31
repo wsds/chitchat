@@ -25,7 +25,7 @@ public class MyHttp {
 	String method = "PUT";// GET POST PUT
 	String url;
 	String IP;
-	int port;
+	int port = 0;
 
 	String requestHeader;
 	HashMap<String, String> urlParams;
@@ -39,6 +39,9 @@ public class MyHttp {
 
 	void send() {
 		boolean flag = this.splicingRequestHeaders();
+		if (IP == null || port == 0 || url == null) {
+			throw new IllegalArgumentException("IP == null || port == 0 || url == null");
+		}
 		if (flag == true) {
 			myHttpJNI.send(this);
 		} else {
